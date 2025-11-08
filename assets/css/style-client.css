@@ -1350,29 +1350,29 @@ ul {
 /* (ĐÃ SỬA) Đặt lại vị trí (so với .container) */
 .floating-icon.icon-cube {
   top: -10%; /* Bay ở trên cao */
-  left: 0%; /* Gần lề trái của container */
+  left: 40%; /* Gần lề trái của container */
   animation-delay: 0s;
   font-size: 18px;
 }
 .floating-icon.icon-flame {
   top: 60%; /* Bay ở dưới thấp */
-  left: 0%;
+  left: 30%;
   animation-delay: 3s;
 }
 .floating-icon.icon-lightning {
   top: 65%;
-  right: 0%; /* Gần lề phải của container */
+  right: -50%; /* Gần lề phải của container */
   animation-delay: 6s;
 }
 .floating-icon.icon-star {
   top: 0%;
-  right: 15%; /* Gần lề phải */
+  right: 45%; /* Gần lề phải */
   animation-delay: 1.5s;
   font-size: 20px;
 }
 .floating-icon.icon-rocket {
   top: 40%;
-  left: 15%; /* Gần lề trái */
+  left: 35%; /* Gần lề trái */
   animation-delay: 8s;
   font-size: 22px;
 }

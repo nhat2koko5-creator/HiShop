@@ -1,7 +1,6 @@
 <section class="hero">
     
     <div class="container">
-        
         <div class="floating-icon icon-cube">🧊</div>
         <div class="floating-icon icon-flame">🔥</div>
         <div class="floating-icon icon-lightning">💻</div>
