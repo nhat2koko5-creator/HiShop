@@ -37,18 +37,14 @@
     <script>
         // Khởi tạo Swiper cho carousel sản phẩm
         const productSwiper = new Swiper('.product-carousel', {
-            // Cài đặt
-            slidesPerView: 4,      // Hiển thị 4 sản phẩm cùng lúc
-            spaceBetween: 24,      // Khoảng cách 24px giữa các sản phẩm
-            loop: true,            // Cho phép lặp vòng (cuộn vô tận)
-            
-            // Kích hoạt 2 nút (<) và (>)
+            slidesPerView: 4,      
+            spaceBetween: 24,      
+            loop: true,            
             navigation: {
                 nextEl: '.swiper-button-next',
                 prevEl: '.swiper-button-prev',
             },
         });
     </script>
-
 </body>
 </html>

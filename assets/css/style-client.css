@@ -6,7 +6,7 @@
   --color-primary: #4f46e5; /* Màu xanh Indigo (cho nút, link) */
   --color-secondary: #3b82f6; /* Màu xanh dương (cho hero) */
   --color-bg-page: #ffffff; /* Nền trang (trắng) */
-  --color-bg-subtle: #f4f7fc; /* Nền xám xanh nhạt (cho Hero) */
+  --color-bg-subtle: #F4F7FC; /* Nền xám xanh nhạt (cho Hero) */
   --color-fg-base: #1f2937; /* Màu chữ chính (đen xám) */
   --color-fg-muted: #6b7280; /* Màu chữ phụ (xám) */
   --color-border: #e5e7eb; /* Màu đường viền (xám rất nhạt) */
@@ -200,39 +200,51 @@ ul {
 }
 
 /* === 5. STYLES TRANG CHỦ (Home) (ĐÃ VIẾT LẠI) === */
-.hero {
-  text-align: center;
-  padding: var(--spacing-64) 0;
-  background-color: var(--color-bg-subtle); /* Nền xám xanh nhạt */
-  border-radius: var(--radius-lg);
-  margin-top: var(--spacing-32);
-  position: relative; /* <<<< QUAN TRỌNG: Để chứa các icon */
-  overflow: hidden; /* <<<< QUAN TRỌNG: Ẩn icon khi bay ra ngoài */
+.hero { 
+  text-align: center; 
+  padding: var(--spacing-64) 0; 
+  border:1px solid; 
+  margin-top: var(--spacing-32); 
+  position: relative; /* Giữ nguyên để chứa icon */
+  overflow: hidden;   /* Giữ nguyên để chứa icon */
+  
+  /* --- PHẦN THAY THẾ --- */
+  /* 1. Xóa 'background-color' và thay bằng ảnh nền */
+  /* (Hãy thay 'assets/images/your-banner.jpg' bằng đường dẫn đến ảnh của bạn) */
+  background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), 
+                    url('../img/banner.jpg');
+                    
+  background-size: cover;     /* Đảm bảo ảnh lấp đầy khung */
+  background-position: center;  /* Căn ảnh vào giữa */
+  background-repeat: no-repeat; /* Không lặp lại ảnh */
 }
-/* (MỚI) .container bên trong .hero cũng phải là relative */
+/* (MỚI) Đổi màu chữ trong .hero thành TRẮNG để dễ đọc trên nền ảnh */
+.hero h1 { 
+  font: var(--font-h1); 
+  color: var(--color-white); /* << Đổi thành màu trắng */
+  margin-bottom: var(--spacing-16); 
+  position: relative; z-index: 1; 
+}
+.hero p { 
+  font: var(--font-body-m); 
+  font-size: 18px; 
+  color: rgba(255, 255, 255, 0.9); /* << Đổi thành màu trắng mờ */
+  margin-bottom: var(--spacing-32); 
+  position: relative; z-index: 1; 
+}
+/* (Giữ nguyên) */
 .hero .container {
-  position: relative;
+  position: relative; 
 }
-/* (MỚI) Bọc nội dung hero để đặt z-index */
 .hero-content {
   position: relative;
-  z-index: 1; /* Đảm bảo chữ + nút nằm TRÊN icon */
-}
-.hero h1 {
-  font: var(--font-h1);
-  color: var(--color-fg-base);
-  margin-bottom: var(--spacing-16);
-}
-.hero p {
-  font: var(--font-body-m);
-  font-size: 18px;
-  color: var(--color-fg-muted);
-  margin-bottom: var(--spacing-32);
+  z-index: 1; 
 }
 .hero .btn-group {
   display: flex;
   justify-content: center;
   gap: var(--spacing-16);
+  position: relative; z-index: 1; 
 }
 /* Mục "Tại sao chọn chúng tôi" */
 .why-us-section {
@@ -1227,6 +1239,20 @@ ul {
   z-index: 10;
   padding: var(--spacing-8);
   margin-top: 8px; /* Thêm khoảng cách nhỏ với menu cha */
+}
+.dropdown-menu::before {
+    content: '';         /* Bắt buộc phải có */
+    position: absolute;  /* Định vị tuyệt đối (so với .dropdown-menu) */
+    bottom: 100%;        /* Đặt nó nằm NGAY TRÊN (dưới đáy của nó là 100% menu) */
+    left: 0;
+    right: 0;
+    
+    /* Đây là "cây cầu" của bạn: 
+      Nó có chiều cao 8px, bằng đúng với cái 'margin-top' 8px của menu.
+    */
+    height: 8px; 
+    
+    background-color: transparent; /* Hoàn toàn vô hình */
 }
 .nav-item.has-dropdown:hover .dropdown-menu {
   display: block;
