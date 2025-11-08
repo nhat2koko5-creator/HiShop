@@ -67,5 +67,76 @@ function getFeaturedProducts(PDO $pdo) {
     }
 }
 
-// (Thêm các hàm back-end khác của bạn ở đây...)
+/**
+ * Lấy thông tin chi tiết của một người dùng.
+ * Khớp với bảng: `nguoi_dung`
+ */
+function getUserProfile(PDO $pdo, $user_id) {
+    try {
+        $stmt = $pdo->prepare("SELECT ho_ten, email, so_dien_thoai, ngay_sinh, gioi_tinh 
+                              FROM nguoi_dung WHERE id = ?");
+        $stmt->execute([$user_id]);
+        return $stmt->fetch();
+    } catch (PDOException $e) {
+        error_log($e->getMessage());
+        return null; // Trả về null nếu có lỗi
+    }
+}
+
+/**
+ * Cập nhật thông tin cá nhân của người dùng.
+ * Khớp với bảng: `nguoi_dung`
+ */
+function updateUserProfile(PDO $pdo, $user_id, $ho_ten, $so_dien_thoai, $ngay_sinh, $gioi_tinh) {
+    try {
+        $sql = "UPDATE nguoi_dung 
+                SET ho_ten = ?, so_dien_thoai = ?, ngay_sinh = ?, gioi_tinh = ?
+                WHERE id = ?";
+        $stmt = $pdo->prepare($sql);
+        
+        // Xử lý các giá trị rỗng
+        $so_dien_thoai = empty($so_dien_thoai) ? null : $so_dien_thoai;
+        $ngay_sinh = empty($ngay_sinh) ? null : $ngay_sinh;
+
+        $stmt->execute([$ho_ten, $so_dien_thoai, $ngay_sinh, $gioi_tinh, $user_id]);
+        return true; // Trả về true nếu thành công
+    } catch (PDOException $e) {
+        error_log($e->getMessage());
+        return false; // Trả về false nếu thất bại
+    }
+}
+
+/**
+ * Lấy lịch sử đơn hàng của người dùng.
+ * Khớp với bảng: `don_hang`
+ */
+function getUserOrders(PDO $pdo, $user_id) {
+    try {
+        $stmt = $pdo->prepare("SELECT id, ngay_dat, tong_tien, trang_thai 
+                              FROM don_hang WHERE nguoi_dung_id = ? 
+                              ORDER BY ngay_dat DESC");
+        $stmt->execute([$user_id]);
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        error_log($e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Lấy danh sách địa chỉ của người dùng.
+ * Khớp với bảng: `dia_chi`
+ */
+function getUserAddresses(PDO $pdo, $user_id) {
+    try {
+        // (CSDL của bạn chỉ có cột `dia_chi_cu_the`, chúng ta sẽ dùng nó)
+        $stmt = $pdo->prepare("SELECT id, dia_chi_cu_the 
+                              FROM dia_chi WHERE nguoi_dung_id = ?");
+        $stmt->execute([$user_id]);
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        error_log($e->getMessage());
+        return [];
+    }
+}
 ?>

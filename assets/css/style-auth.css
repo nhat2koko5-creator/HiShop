@@ -1,0 +1,170 @@
+/* === CSS CHO CÁC TRANG AUTH (Đăng nhập, Đăng ký, Quên MK) === */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Colors */
+  --color-primary: #4F46E5;
+  --color-bg-subtle: #F4F7FC;
+  --color-fg-base: #1F2937;
+  --color-fg-muted: #6B7280;
+  --color-border: #E5E7EB;
+  --color-white: #FFFFFF;
+  --color-red-error: #EF4444; /* Màu báo lỗi */
+
+  /* Typography */
+  --font-h2: 700 32px/40px 'Inter', sans-serif;
+  --font-h3: 600 24px/32px 'Inter', sans-serif;
+  --font-body-m: 400 16px/24px 'Inter', sans-serif;
+  --font-body-s: 400 14px/20px 'Inter', sans-serif;
+
+  /* Radius, Spacing, Shadow */
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-48: 48px;
+  --shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* === 2. BỐ CỤC CƠ BẢN === */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Trang auth có nền xám và căn giữa mọi thứ */
+body {
+  font: var(--font-body-m);
+  background-color: var(--color-bg-subtle); 
+  color: var(--color-fg-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--spacing-24);
+}
+
+/* === 3. THẺ AUTH (Auth Card) === */
+.auth-card {
+  width: 100%;
+  max-width: 450px; 
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-32);
+  box-shadow: var(--shadow);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: var(--spacing-24);
+}
+.auth-header .logo {
+  font: var(--font-h3);
+  font-weight: 700;
+  color: var(--color-fg-base);
+  text-decoration: none;
+  margin-bottom: var(--spacing-16);
+  display: block;
+}
+.auth-header h1 {
+  font: var(--font-h2);
+  margin-bottom: var(--spacing-8);
+}
+.auth-header p {
+  font: var(--font-body-m);
+  color: var(--color-fg-muted);
+}
+
+/* === 4. FORM === */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16); 
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+.form-label {
+  font: var(--font-body-s);
+  font-weight: 600;
+  color: var(--color-fg-base);
+}
+.form-input,
+.form-select {
+  width: 100%;
+  padding: var(--spacing-12);
+  font: var(--font-body-m);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-white);
+}
+
+/* Chia lưới 2 cột */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-16);
+}
+
+/* Nút bấm */
+.btn {
+  display: inline-block;
+  padding: var(--spacing-12) var(--spacing-24);
+  border-radius: var(--radius-md);
+  font: var(--font-body-m);
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: center;
+  margin-top: var(--spacing-8);
+}
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+/* Link phụ (Quên MK, Đăng nhập) */
+.auth-footer {
+  font: var(--font-body-s);
+  color: var(--color-fg-muted);
+  text-align: center;
+  margin-top: var(--spacing-24);
+}
+.form-link {
+  font: var(--font-body-s);
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+.form-link:hover {
+  text-decoration: underline;
+}
+
+/* Khối báo lỗi */
+.error-message {
+  background-color: #FFF5F5;
+  color: #C53030;
+  border: 1px solid #FC8181;
+  padding: var(--spacing-12);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: var(--spacing-16);
+}
+.error-message ul {
+  list-style-position: inside;
+  padding-left: 5px;
+}

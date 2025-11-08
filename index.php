@@ -15,7 +15,11 @@ $categories = getActiveCategories($pdo);
 
 // 4. Lấy trang người dùng muốn xem
 $page = $_GET['page'] ?? 'home';
-
+if ($page === 'logout') {
+    session_destroy(); // Hủy toàn bộ session
+    header('Location: index.php?page=home'); // Chuyển về trang chủ
+    exit;
+}
 // 5. Danh sách các trang "auth" (không dùng header/footer chung)
 $auth_pages = ['login', 'register', 'forgot_password', 'reset_password'];
 
@@ -25,15 +29,13 @@ if (in_array($page, $auth_pages)) {
     if (file_exists($auth_file)) {
         require_once $auth_file;
     } else {
-        // Tạm thời chuyển về trang 404 nếu file auth không tồn tại
         $page_file = 'client/pages/404.php';
-        require_once 'client/layouts/header.php'; // Vẫn cần layout
+        require_once 'client/layouts/header.php';
         require_once $page_file;
         require_once 'client/layouts/footer.php';
     }
-    exit; // Dừng lại, không chạy code bên dưới
+    exit;
 }
-
 // 7. Xử lý các trang người dùng bình thường
 switch ($page) {
     case 'home':
@@ -76,9 +78,9 @@ switch ($page) {
         $page_title = 'Kết Quả Tìm Kiếm';
         $page_file = 'client/pages/search_results.php';
         break;
-    case 'account':
+   case 'account':
         $page_title = 'Tài Khoản Của Tôi';
-        $page_file = 'client/pages/account.php'; // (File account.php này sẽ là 1 router con)
+        $page_file = 'client/pages/account.php';
         break;
     default:
         $page_title = '404 - Không Tìm Thấy';

@@ -330,6 +330,9 @@ ul {
   gap: var(--spacing-24);
 }
 .product-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   background-color: var(--color-white);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -367,6 +370,9 @@ ul {
   border-radius: var(--radius-sm);
 }
 .card-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
   padding: var(--spacing-16);
   border-top: 1px solid var(--color-border);
 }
@@ -397,6 +403,7 @@ ul {
   margin-bottom: var(--spacing-16);
 }
 .card-btn-green {
+  margin-top: auto;
   width: 100%; /* Nút chiếm 100% chiều rộng thẻ */
 }
 /* Mục "Tin tức" */
