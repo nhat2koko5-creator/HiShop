@@ -1,6 +1,6 @@
 <?php
 // FILE: index.php (Thư mục gốc)
-
+session_start();
 // 1. GỌI CONFIG (Tạo kết nối $pdo)
 require_once 'src/config.php'; 
 

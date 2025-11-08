@@ -24,12 +24,9 @@
             
             <div class="nav-center-links">
                 <a href="index.php?page=home">Trang Chủ</a>
-                
                 <div class="nav-item has-dropdown">
                     <a href="index.php?page=product_list">Danh Mục</a>
-                    
                     <div class="dropdown-menu">
-                        
                         <?php if (isset($categories) && !empty($categories)): ?>
                             <?php foreach ($categories as $category): ?>
                                 <a href="index.php?page=product_list&category_id=<?php echo $category['id']; ?>">
@@ -39,16 +36,15 @@
                         <?php else: ?>
                             <a href="#">Không có danh mục</a>
                         <?php endif; ?>
-                        
                     </div>
                 </div>
-                
                 <a href="index.php?page=product_list">Sản Phẩm</a>
                 <a href="index.php?page=static_about">Về Chúng Tôi</a>
                 <a href="index.php?page=contact">Liên Hệ</a>
             </div>
 
             <div class="nav-right-actions">
+                
                 <form action="index.php" method="GET" class="nav-search-form">
                     <input type="hidden" name="page" value="search_results">
                     <input type="text" name="query" class="nav-search-input" placeholder="Tìm kiếm sản phẩm...">
@@ -58,8 +54,21 @@
                 </form>
                 
                 <a href="index.php?page=cart" class="icon-btn">🛒</a>
-                <a href="index.php?page=login" class="icon-btn">👤</a>
-            </div>
+                
+                
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    
+                    <a href="index.php?page=account" class="icon-btn">👤</a>
+
+                <?php else: ?>
+
+                    <div class="auth-buttons">
+                        <a href="index.php?page=register" class="btn btn-primary">Đăng Ký</a>
+                        <a href="index.php?page=login" class="btn btn-primary">Đăng Nhập</a>
+                    </div>
+                    
+                <?php endif; ?>
+                </div>
         </nav>
     </header>
 
