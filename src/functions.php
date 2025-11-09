@@ -139,4 +139,50 @@ function getUserAddresses(PDO $pdo, $user_id) {
         return [];
     }
 }
+// IMPORT THƯ VIỆN PHPMAILER
+// (Phải có dòng "use" này ở đầu file hoặc ngay trên hàm)
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
+/**
+ * Hàm gửi email chung cho dự án
+ */
+function sendEmail($to_email, $to_name, $subject, $body) {
+    // Khởi tạo PHPMailer
+    $mail = new PHPMailer(true);
+
+    try {
+        // Cấu hình Server (SMTP)
+        // $mail->SMTPDebug = SMTP::DEBUG_SERVER; // Bật debug (nếu cần xem lỗi)
+        $mail->isSMTP();
+        $mail->Host       = MAIL_HOST;       // Lấy từ config.php
+        $mail->SMTPAuth   = true;
+        $mail->Username   = MAIL_USERNAME;   // Lấy từ config.php
+        $mail->Password   = MAIL_PASSWORD;   // Lấy từ config.php
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // Dùng SSL
+        $mail->Port       = 465;             // Port cho Gmail SSL
+        $mail->CharSet    = 'UTF-8';
+
+        // Người gửi (Lấy từ config.php)
+        $mail->setFrom(MAIL_USERNAME, MAIL_FROM_NAME);
+
+        // Người nhận
+        $mail->addAddress($to_email, $to_name);
+
+        // Nội dung Email
+        $mail->isHTML(true); // Gửi mail dạng HTML
+        $mail->Subject = $subject;
+        $mail->Body    = $body;
+        $mail->AltBody = strip_tags($body); // Nội dung (dạng text)
+
+        $mail->send();
+        return true; // Gửi thành công
+    } catch (Exception $e) {
+        // Ghi log lỗi
+        error_log("Lỗi gửi mail: {$mail->ErrorInfo}");
+        return false; // Gửi thất bại
+    }
+}
+
 ?>

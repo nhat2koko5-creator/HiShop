@@ -1,6 +1,7 @@
 <?php
 // FILE: index.php (Thư mục gốc)
 session_start();
+require_once 'vendor/autoload.php';
 // 1. GỌI CONFIG (Tạo kết nối $pdo)
 require_once 'src/config.php'; 
 
@@ -21,7 +22,7 @@ if ($page === 'logout') {
     exit;
 }
 // 5. Danh sách các trang "auth" (không dùng header/footer chung)
-$auth_pages = ['login', 'register', 'forgot_password', 'reset_password'];
+$auth_pages = ['login', 'register', 'forgot_password', 'reset_password', 'verify_otp'];
 
 // 6. Xử lý trang "auth"
 if (in_array($page, $auth_pages)) {
