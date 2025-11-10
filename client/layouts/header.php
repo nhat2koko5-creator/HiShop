@@ -76,18 +76,18 @@
                 <!-- Dropdown Danh Mục -->
                 <div class="nav-item has-dropdown" id="categoryDropdown">
                     <a href="javascript:void(0)" id="toggleCategory">Danh Mục</a>
-                    <div class="dropdown-menu" id="categoryMenu">
-                        <?php if (isset($categories) && !empty($categories)): ?>
-                            <?php foreach ($categories as $category): ?>
-                                <!-- ✅ Sửa đúng URL để lọc sản phẩm -->
-                                <a href="index.php?page=product_list&cat=<?= $category['id'] ?>">
-                                    <?= htmlspecialchars($category['ten']) ?>
-                                </a>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <a href="#">Không có danh mục</a>
-                        <?php endif; ?>
-                    </div>
+<div class="dropdown-menu" id="categoryMenu">
+    <?php if (isset($categories) && !empty($categories)): ?>
+        <?php foreach ($categories as $category): ?>
+            <a href="index.php?page=product_list&category_id=<?= $category['id'] ?>">
+                <?= htmlspecialchars($category['ten']) ?>
+            </a>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <a href="#">Không có danh mục</a>
+    <?php endif; ?>
+</div>
+
                 </div>
 
                 <a href="index.php?page=product_list">Sản Phẩm</a>

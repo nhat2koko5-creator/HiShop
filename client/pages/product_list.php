@@ -1,102 +1,158 @@
 <?php
-// client/pages/product_list.php
 require_once 'client/layouts/header.php';
 
-// Thư mục ảnh (chỉnh nếu cần)
-$img_folder = 'assets/img/products';
-$default_img = 'assets/img/no-image.png';
+// Lấy category_id từ URL
+$category_id = isset($_GET['category_id']) ? (int)$_GET['category_id'] : 0;
 
-// Lấy param cat (có thể là id hoặc tên)
-$cat_param = $_GET['cat'] ?? '';
+// Tên danh mục (mặc định)
+$category_name = "Tất cả sản phẩm";
 
-// Nếu không có cat => hiển thị tất cả (hoặc redirect)
-if ($cat_param === '' || $cat_param === '0') {
-    // Hiển thị tất cả sản phẩm
-    $cat_name = 'Tất cả sản phẩm';
-    $stmt = $pdo->prepare("SELECT id, ten, gia, hinh_anh, danh_muc_id FROM san_pham ORDER BY id DESC");
-    $stmt->execute();
-    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} else {
-    // Nếu cat_param là số (id) -> lọc theo id
-    if (ctype_digit((string)$cat_param)) {
-        $cat_id = (int)$cat_param;
-        // Kiểm tra danh mục tồn tại
-        $stmt_cat = $pdo->prepare("SELECT id, ten FROM danh_muc WHERE id = ? LIMIT 1");
-        $stmt_cat->execute([$cat_id]);
-        $cat = $stmt_cat->fetch(PDO::FETCH_ASSOC);
-        if (!$cat) {
-            // Danh mục không tồn tại
-            $cat_name = "Danh mục không tồn tại";
-            $products = [];
-        } else {
-            $cat_name = $cat['ten'];
-            // Lấy sản phẩm thuộc danh mục (lọc chính xác bằng danh_muc_id)
-            $stmt = $pdo->prepare("SELECT id, ten, gia, hinh_anh, danh_muc_id FROM san_pham WHERE danh_muc_id = ? ORDER BY id DESC");
-            $stmt->execute([$cat_id]);
-            $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        }
+// Nếu có category_id hợp lệ → lọc sản phẩm theo danh mục
+if ($category_id > 0) {
+    // Lấy tên danh mục
+    $stmt = $pdo->prepare("SELECT ten FROM danh_muc WHERE id = ?");
+    $stmt->execute([$category_id]);
+    $cat_name = $stmt->fetchColumn();
+
+    if ($cat_name) {
+        $category_name = $cat_name;
+        $stmt = $pdo->prepare("SELECT * FROM san_pham WHERE danh_muc_id = ?");
+        $stmt->execute([$category_id]);
+        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } else {
-        // Nếu cat_param là chuỗi -> coi như tên danh mục (ten) -> tìm id trước
-        $cat_slug = trim($cat_param);
-        $stmt_cat = $pdo->prepare("SELECT id, ten FROM danh_muc WHERE ten = ? LIMIT 1");
-        $stmt_cat->execute([$cat_slug]);
-        $cat = $stmt_cat->fetch(PDO::FETCH_ASSOC);
-        if (!$cat) {
-            $cat_name = "Danh mục không tồn tại";
-            $products = [];
-        } else {
-            $cat_name = $cat['ten'];
-            $cat_id = $cat['id'];
-            $stmt = $pdo->prepare("SELECT id, ten, gia, hinh_anh, danh_muc_id FROM san_pham WHERE danh_muc_id = ? ORDER BY id DESC");
-            $stmt->execute([$cat_id]);
-            $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        }
+        // Nếu không tìm thấy danh mục → hiển thị tất cả
+        $products = $pdo->query("SELECT * FROM san_pham")->fetchAll(PDO::FETCH_ASSOC);
     }
+} else {
+    // Không có category_id → hiển thị tất cả
+    $products = $pdo->query("SELECT * FROM san_pham")->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// Hàm format giá
-function price_format($n) {
-    return number_format($n, 0, ',', '.') . '₫';
+// Xử lý ảnh sản phẩm
+$img_folder = "assets/img/products";
+$default_img = "assets/img/no-image.png";
+
+function format_price($price) {
+    return number_format($price, 0, ',', '.') . "₫";
 }
 ?>
 
 <style>
-.container{max-width:1200px;margin:40px auto;padding:0 20px;font-family:Inter,Arial,Helvetica,sans-serif;}
-h1{font-size:28px;margin-bottom:18px;color:#111;}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;}
-.card{background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 6px 18px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;height:100%;}
-.card img{width:100%;height:170px;object-fit:contain;margin-bottom:10px;}
-.name{font-size:15px;font-weight:600;color:#111;min-height:42px;margin-bottom:8px;}
-.price{color:#ef4444;font-weight:700;margin-bottom:10px;}
-.btn-primary{background:#0f62fe;color:#fff;border:0;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:600;text-decoration:none;display:inline-block;}
-.empty{padding:30px;text-align:center;color:#666;}
-.meta{font-size:13px;color:#555;margin-bottom:8px;}
+body {
+    font-family: "Inter", Arial, sans-serif;
+    background: #f6f8fb;
+    color: #1f2937;
+}
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 32px 16px;
+}
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 24px;
+    text-align: center;
+}
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+.card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(18,38,63,.05);
+    padding: 16px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(18,38,63,.08);
+}
+.image-wrapper {
+    width: 100%;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+.image-wrapper img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+.image-wrapper img:hover {
+    transform: scale(1.05);
+}
+.card .name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 8px;
+    line-height: 1.3;
+    min-height: 40px;
+}
+.card .price {
+    color: #ef4444;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+.card .btn {
+    display: inline-block;
+    width: 100%;
+    padding: 10px 0;
+    border-radius: 8px;
+    background: #0f62fe;
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s ease;
+}
+.card .btn:hover {
+    background: #0043ce;
+}
+.no-products {
+    text-align: center;
+    color: #6b7280;
+    font-size: 16px;
+    margin-top: 40px;
+}
 </style>
 
 <div class="container">
-  <h1><?= htmlspecialchars($cat_name) ?></h1>
+    <h1 class="page-title">
+        <?= htmlspecialchars($category_name) ?>
+    </h1>
 
-  <?php if (empty($products)): ?>
-    <div class="empty">Không tìm thấy sản phẩm trong danh mục này.</div>
-  <?php else: ?>
-    <div class="grid">
-      <?php foreach ($products as $p):
-        $img = (!empty($p['hinh_anh']) && file_exists($img_folder . '/' . $p['hinh_anh'])) ? $img_folder . '/' . $p['hinh_anh'] : $default_img;
-      ?>
-        <div class="card">
-          <div>
-            <img src="<?= htmlspecialchars($img) ?>" alt="<?= htmlspecialchars($p['ten']) ?>">
-            <div class="name"><?= htmlspecialchars($p['ten']) ?></div>
-            <div class="meta">Mã SP: <?= (int)$p['id'] ?></div>
-            <div class="price"><?= price_format($p['gia']) ?></div>
-          </div>
-          <div style="margin-top:10px">
-            <a class="btn-primary" href="index.php?page=product_detail&id=<?= $p['id'] ?>">Xem chi tiết</a>
-          </div>
+    <?php if (!empty($products)): ?>
+        <div class="product-grid">
+            <?php foreach ($products as $p): 
+                $img_path = (!empty($p['hinh_anh']) && file_exists($img_folder . '/' . $p['hinh_anh']))
+                    ? $img_folder . '/' . $p['hinh_anh']
+                    : $default_img;
+            ?>
+                <div class="card">
+                    <div class="image-wrapper">
+                        <img src="<?= htmlspecialchars($img_path) ?>" alt="<?= htmlspecialchars($p['ten']) ?>">
+                    </div>
+                    <div class="name"><?= htmlspecialchars($p['ten']) ?></div>
+                    <div class="price"><?= format_price($p['gia']) ?></div>
+                    <a href="index.php?page=product_detail&id=<?= $p['id'] ?>" class="btn">Xem chi tiết</a>
+                </div>
+            <?php endforeach; ?>
         </div>
-      <?php endforeach; ?>
-    </div>
-  <?php endif; ?>
+    <?php else: ?>
+        <p class="no-products">Không có sản phẩm nào trong danh mục này.</p>
+    <?php endif; ?>
 </div>
 
 <?php require_once 'client/layouts/footer.php'; ?>

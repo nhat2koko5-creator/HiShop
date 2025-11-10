@@ -67,10 +67,11 @@ $featuredProducts = getFeaturedProducts($pdo);
                         $colors = ['purple', 'cyan', 'pink'];
                         $colorClass = $colors[$index % count($colors)];
                     ?>
-                    <a href="index.php?page=product_list&category_id=<?php echo $category['id']; ?>" 
-                       class="btn pill-btn <?php echo $colorClass; ?>">
-                        <?php echo htmlspecialchars($category['ten']); ?>
-                    </a>
+<a href="index.php?page=product_list&category_id=<?= $category['id']; ?>" 
+   class="btn pill-btn <?= $colorClass; ?>">
+    <?= htmlspecialchars($category['ten']); ?>
+</a>
+
                 <?php endforeach; ?>
             <?php endif; ?>
             
