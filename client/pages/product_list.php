@@ -106,18 +106,38 @@ body {
     font-weight: 700;
     margin-bottom: 10px;
 }
+.card .btn-group {
+    display: flex;
+    flex-direction: column; /* Xếp dọc 2 nút */
+    gap: 10px;
+    margin-top: 10px;
+}
 .card .btn {
-    display: inline-block;
+    display: block;
     width: 100%;
     padding: 10px 0;
     border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    text-align: center;
+}
+.card .btn-detail {
+    background: #fff;
+    color: #111827;
+    border: 1px solid #d1d5db;
+}
+.card .btn-detail:hover {
+    background: #f9fafb;
+}
+.card .btn-buy {
     background: #0f62fe;
     color: #fff;
-    font-weight: 600;
-    text-decoration: none;
-    transition: background 0.2s ease;
+    border: none;
 }
-.card .btn:hover {
+.card .btn-buy:hover {
     background: #0043ce;
 }
 .no-products {
@@ -146,7 +166,10 @@ body {
                     </div>
                     <div class="name"><?= htmlspecialchars($p['ten']) ?></div>
                     <div class="price"><?= format_price($p['gia']) ?></div>
-                    <a href="index.php?page=product_detail&id=<?= $p['id'] ?>" class="btn">Xem chi tiết</a>
+                    <div class="btn-group">
+                        <a href="index.php?page=product_detail&id=<?= $p['id'] ?>" class="btn btn-detail">🔍 Xem chi tiết</a>
+                        <a href="index.php?page=checkout&id=<?= $p['id'] ?>" class="btn btn-buy">🛍️ Mua ngay</a>
+                    </div>
                 </div>
             <?php endforeach; ?>
         </div>
