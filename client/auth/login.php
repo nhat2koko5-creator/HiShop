@@ -33,18 +33,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($user && password_verify($mat_khau, $user['mat_khau'])) {
                 
                 // 7. ĐĂNG NHẬP THÀNH CÔNG!
+                
+                // (Bảo mật) Làm mới ID session
                 session_regenerate_id(true); 
+                
+                // (QUAN TRỌNG) Lưu thông tin người dùng vào SESSION
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['user_name'] = $user['ho_ten'];
                 $_SESSION['user_role_id'] = $user['vai_tro_id'];
                 
-                // 8. Chuyển hướng
-                header("Location: index.php?page=home");
-                exit;
+                // 8. (ĐÃ SỬA LỖI) PHÂN LUỒNG (REDIRECT) DỰA TRÊN VAI TRÒ
+                if ($user['vai_tro_id'] == 1) {
+                    // Nếu là Admin (vai_tro_id = 1), chuyển đến trang Admin
+                    header("Location: admin/index.php");
+                } else {
+                    // Nếu là User (vai_tro_id = 2), chuyển về trang chủ
+                    header("Location: index.php?page=home");
+                }
+                exit; // Dừng kịch bản ngay sau khi chuyển hướng
 
             } else {
                 // 9. ĐĂNG NHẬP THẤT BẠI
-                // (ĐÃ SỬA) Thêm lỗi vào mảng $errors
                 $errors[] = 'Email hoặc mật khẩu không chính xác.';
             }
         } catch (PDOException $e) {

@@ -1,0 +1,213 @@
+/* === 1. DESIGN TOKENS (Phiên bản Admin) === */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Colors */
+  --color-admin-bg: #F4F7FC; /* Nền xám rất nhạt */
+  --color-sidebar-bg: #1A202C; /* Nền menu bên trái (đen xám) */
+  --color-sidebar-text: #A0AEC0; /* Chữ menu */
+  --color-sidebar-text-active: #FFFFFF; /* Chữ menu (Active) */
+  --color-sidebar-active-bg: #2D3748; /* Nền menu (Active) */
+  --color-content-bg: #FFFFFF; /* Nền nội dung (trắng) */
+  --color-text-primary: #1F2937; /* Chữ chính (đen xám) */
+  --color-text-secondary: #6B7280; /* Chữ phụ (xám) */
+  --color-border: #E5E7EB; /* Viền */
+  --color-primary: #4F46E5; /* Màu Indigo */
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  
+  /* Typography */
+  --font-h1: 600 28px/36px 'Inter', sans-serif;
+  --font-h2: 600 22px/30px 'Inter', sans-serif;
+  --font-h3: 600 18px/26px 'Inter', sans-serif;
+  --font-body: 400 14px/20px 'Inter', sans-serif;
+  --font-small: 500 12px/16px 'Inter', sans-serif;
+
+  /* Radius & Spacing */
+  --radius: 8px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  
+  /* Shadow */
+  --shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* === 2. THIẾT KẾ CƠ BẢN === */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font: var(--font-body);
+  background-color: var(--color-admin-bg);
+  color: var(--color-text-primary);
+}
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+
+/* === 3. BỐ CỤC ADMIN (Layout) === */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* --- Cột trái: Sidebar --- */
+.admin-sidebar {
+  width: 260px;
+  background-color: var(--color-sidebar-bg);
+  color: var(--color-sidebar-text);
+  padding: var(--spacing-24);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: fixed;
+  height: 100%;
+}
+.sidebar-logo {
+  font: var(--font-h2);
+  color: var(--color-sidebar-text-active);
+  text-align: center;
+  margin-bottom: var(--spacing-32);
+}
+.sidebar-logo span {
+  font-weight: 400;
+  opacity: 0.7;
+}
+.nav-group {
+  margin-bottom: var(--spacing-24);
+}
+.nav-group-title {
+  font: var(--font-small);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--spacing-12);
+  padding-left: var(--spacing-12);
+}
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12);
+  padding: var(--spacing-12);
+  border-radius: var(--radius);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.nav-link:hover {
+  background-color: var(--color-sidebar-active-bg);
+  color: var(--color-sidebar-text-active);
+}
+.nav-link.active {
+  background-color: var(--color-primary);
+  color: var(--color-sidebar-text-active);
+}
+.admin-user {
+  margin-top: auto; /* Đẩy xuống cuối */
+  padding-top: var(--spacing-24);
+  border-top: 1px solid #2D3748; /* Viền mờ */
+  font-weight: 600;
+  color: var(--color-sidebar-text-active);
+}
+
+/* --- Cột phải: Nội dung chính --- */
+.admin-main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  padding-left: 260px; /* Bắt buộc: Khoảng trống cho sidebar */
+}
+
+/* --- Header của cột phải --- */
+.admin-topbar {
+  background-color: var(--color-content-bg);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--spacing-16) var(--spacing-32);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.topbar-title {
+  font: var(--font-h2);
+}
+.topbar-user {
+  font-weight: 600;
+}
+
+/* --- Vùng nội dung (Dashboard) --- */
+.admin-page-content {
+  padding: var(--spacing-32);
+}
+.content-card {
+  background-color: var(--color-content-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.card-header {
+  padding: var(--spacing-24);
+  border-bottom: 1px solid var(--color-border);
+}
+.card-header h2 {
+  font: var(--font-h3);
+}
+.card-body {
+  padding: var(--spacing-24);
+}
+
+/* Grid cho các thẻ thống kê */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-24);
+}
+.stat-card {
+  background-color: var(--color-content-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--spacing-24);
+  box-shadow: var(--shadow);
+}
+.stat-card h3 { 
+  font: var(--font-body); 
+  color: var(--color-text-secondary); 
+  margin-bottom: var(--spacing-8);
+}
+.stat-card p { 
+  font: var(--font-h1); 
+  font-size: 32px; 
+  line-height: 1;
+}
+
+/* Bảng */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.data-table th, .data-table td {
+  padding: var(--spacing-12);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  font: var(--font-body);
+}
+.data-table th {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 99px;
+  font-weight: 600;
+  font-size: 12px;
+}
+.status-badge.success {
+  background-color: #D1FAE5;
+  color: #065F46;
+}
+.status-badge.processing {
+  background-color: #DBEAFE;
+  color: #1E40AF;
+}
+.status-badge.cancelled {
+  background-color: #FFF5F5;
+  color: #C53030;
+}
