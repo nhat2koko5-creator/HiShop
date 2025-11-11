@@ -78,46 +78,14 @@ body {font-family: Inter, sans-serif; background: #f6f8fb; color:#1f2937;}
 .container {max-width: 1200px; margin: auto; padding: 30px;}
 img {max-width: 100%; display:block;}
 
-.grid {
-  display: grid;
-  gap: 28px;
-  grid-template-columns: 1fr;
-}
-@media(min-width: 900px){
-  .grid { grid-template-columns: 1fr 1fr; }
-}
+.grid {display: grid; gap: 28px; grid-template-columns: 1fr;}
+@media(min-width: 900px){ .grid { grid-template-columns: 1fr 1fr; } }
 
-.image-panel {
-  background: #fff;
-  border-radius: 14px;
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 6px 18px rgba(18,38,63,0.06);
-}
-.image-container {
-  width: 100%;
-  max-width: 320px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.image-container img {
-  max-width: 100%;
-  max-height: 340px;
-  object-fit: contain;
-}
-.stock-info {
-  margin-top: 12px;
-  font-weight: 600;
-  color: #1f2937;
-}
-.stock-info .out {
-  color: #dc2626;
-  font-weight: bold;
-}
+.image-panel {background: #fff; border-radius: 14px; padding: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(18,38,63,0.06);}
+.image-container {width: 100%; max-width: 320px; display: flex; justify-content: center; align-items: center;}
+.image-container img {max-width: 100%; max-height: 340px; object-fit: contain;}
+.stock-info {margin-top: 12px; font-weight: 600; color: #1f2937;}
+.stock-info .out {color: #dc2626; font-weight: bold;}
 
 .info h1 {font-size: 28px; margin-bottom: 10px;}
 .price {display:flex; align-items:baseline; gap:12px; margin-bottom:12px;}
@@ -127,7 +95,7 @@ img {max-width: 100%; display:block;}
 .btn-primary{background:#0f62fe;color:#fff;}
 .btn-ghost{background:#f3f4f6;color:#111827;}
 
-/* Tab Section */
+/* Tabs */
 .tab-container {margin-top: 30px; background:#fff; border-radius:12px; padding:20px; box-shadow:0 8px 20px rgba(0,0,0,0.05);}
 .tab-buttons {display:flex; gap:10px; margin-bottom:15px;}
 .tab-buttons button {flex:1; padding:12px; border:0; border-radius:10px; background:#f3f4f6; cursor:pointer; font-weight:600;}
@@ -135,40 +103,18 @@ img {max-width: 100%; display:block;}
 .tab-content {display:none;}
 .tab-content.active {display:block;}
 
-/* Related Products */
+/* Related */
 .section {margin-top:40px;}
-.related-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 18px;
-}
-.card {
-  background:#fff;
-  border-radius:12px;
-  padding:16px;
-  text-align:center;
-  box-shadow:0 8px 20px rgba(18,38,63,0.05);
-}
-.card img {
-  width:100%;
-  height:160px;
-  object-fit:contain;
-  margin-bottom:8px;
-}
+.related-grid {display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px;}
+.card {background:#fff; border-radius:12px; padding:16px; text-align:center; box-shadow:0 8px 20px rgba(18,38,63,0.05);}
+.card img {width:100%; height:160px; object-fit:contain; margin-bottom:8px;}
 .card .name {font-weight:600; font-size:15px; min-height:40px;}
 .card .price {color:#ef4444;font-weight:600;margin-bottom:6px;}
 .card .spec {font-size:13px; color:#6b7280; margin-bottom:10px;}
-.card .btn-group {display:flex; gap:8px; justify-content:center;}
-.card button {
-  flex:1;
-  border:0;
-  padding:10px;
-  border-radius:8px;
-  font-weight:600;
-  cursor:pointer;
-}
-.card .btn-detail {background:#f3f4f6; color:#111827;}
-.card .btn-buy {background:#0f62fe; color:#fff;}
+.card-actions {display:flex; flex-direction:column; gap:8px; margin-top:10px;}
+.card .btn-primary {background:#0f62fe;color:#fff;border:none;padding:10px;border-radius:8px;font-weight:600;cursor:pointer;}
+.card .btn-ghost {background:#fff;color:#111827;border:1px solid #e5e7eb;padding:10px;border-radius:8px;font-weight:600;cursor:pointer;}
+.card .btn-ghost:hover {background:#f9fafb;}
 </style>
 
 <div class="container">
@@ -238,9 +184,9 @@ img {max-width: 100%; display:block;}
         <div class="name"><?= htmlspecialchars($r['ten']) ?></div>
         <div class="price"><?= price_format($r['gia']) ?></div>
         <div class="spec"><?= htmlspecialchars($r['cpu']) ?> | <?= htmlspecialchars($r['ram']) ?></div>
-        <div class="btn-group">
-          <button class="btn-detail" onclick="location.href='index.php?page=product_detail&id=<?= $r['id'] ?>'">🔍 Xem chi tiết</button>
-          <button class="btn-buy" onclick="location.href='index.php?page=checkout&id=<?= $r['id'] ?>'">🛍️ Mua ngay</button>
+        <div class="card-actions">
+          <button class="btn-ghost" onclick="window.location.href='index.php?page=product_detail&id=<?= $r['id'] ?>'">👁️ Xem chi tiết</button>
+          <button class="btn-primary" onclick="window.location.href='index.php?page=checkout&id=<?= $r['id'] ?>'">🛍️ Mua ngay</button>
         </div>
       </div>
       <?php endforeach; ?>
@@ -249,7 +195,7 @@ img {max-width: 100%; display:block;}
 </div>
 
 <script>
-// Tab chuyển nội dung
+// Tabs
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", function(){
     document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
@@ -259,11 +205,39 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
   });
 });
 
-// Nút "Mua ngay" chính
+// Mua ngay
 document.getElementById("buyNowBtn").addEventListener("click", function(){
   const id = this.dataset.id;
   window.location.href = `index.php?page=checkout&id=${id}`;
 });
+
+// Thêm vào giỏ hàng (AJAX)
+document.getElementById("addCartBtn").addEventListener("click", function(){
+  const id = this.dataset.id;
+  fetch('index.php?page=cart_add', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: `id=${id}&quantity=1`
+  })
+  .then(res => res.text())
+  .then(() => showPopup('🛒 Sản phẩm đã được thêm vào giỏ hàng!'))
+  .catch(() => alert('Lỗi, vui lòng thử lại.'));
+});
+
+// Popup nhỏ
+function showPopup(msg) {
+  const el = document.createElement('div');
+  el.textContent = msg;
+  Object.assign(el.style, {
+    position:'fixed', bottom:'30px', right:'30px',
+    background:'#0f62fe', color:'#fff', padding:'12px 20px',
+    borderRadius:'12px', boxShadow:'0 4px 10px rgba(0,0,0,0.2)',
+    zIndex:'9999', transition:'opacity 0.5s'
+  });
+  document.body.appendChild(el);
+  setTimeout(()=>el.style.opacity='0',2000);
+  setTimeout(()=>el.remove(),2500);
+}
 </script>
 
 <?php require_once 'client/layouts/footer.php'; ?>

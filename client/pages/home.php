@@ -20,39 +20,28 @@ $featuredProducts = getFeaturedProducts($pdo);
 </section>
 
 <section class="why-us-section container">
-    
     <h2 class="section-title">Tại sao chọn chúng tôi?</h2>
-    
     <div class="feature-grid">
-        
         <div class="feature-card">
-            <div class="feature-icon">
-                ✔ </div>
+            <div class="feature-icon">✔</div>
             <h3>Sản phẩm uy tín</h3>
             <p>Cam kết 100% hàng chính hãng.</p>
         </div>
-        
         <div class="feature-card">
-            <div class="feature-icon">
-                💻</div>
+            <div class="feature-icon">💻</div>
             <h3>Đa dạng Laptop</h3>
             <p>Đầy đủ các dòng máy mới nhất.</p>
         </div>
-        
         <div class="feature-card">
-            <div class="feature-icon">
-                💰 </div>
+            <div class="feature-icon">💰</div>
             <h3>Giá cả cạnh tranh</h3>
             <p>Luôn có ưu đãi tốt nhất thị trường.</p>
         </div>
-        
         <div class="feature-card">
-            <div class="feature-icon">
-                💬 </div>
+            <div class="feature-icon">💬</div>
             <h3>Hỗ trợ 24/7</h3>
             <p>Giải đáp mọi thắc mắc của bạn.</p>
         </div>
-
     </div>
 </section>
 
@@ -67,14 +56,12 @@ $featuredProducts = getFeaturedProducts($pdo);
                         $colors = ['purple', 'cyan', 'pink'];
                         $colorClass = $colors[$index % count($colors)];
                     ?>
-<a href="index.php?page=product_list&category_id=<?= $category['id']; ?>" 
-class="btn pill-btn <?= $colorClass; ?>">
-    <?= htmlspecialchars($category['ten']); ?>
-</a>
-
+                    <a href="index.php?page=product_list&category_id=<?= $category['id']; ?>" 
+                       class="btn pill-btn <?= $colorClass; ?>">
+                        <?= htmlspecialchars($category['ten']); ?>
+                    </a>
                 <?php endforeach; ?>
             <?php endif; ?>
-            
         </div>
     </div>
 </section>
@@ -86,16 +73,14 @@ class="btn pill-btn <?= $colorClass; ?>">
     <div class="product-carousel-wrapper">
         <div class="swiper product-carousel">
             <div class="swiper-wrapper">
-                
                 <?php if (!empty($featuredProducts)): ?>
                     <?php foreach ($featuredProducts as $sp): ?>
                     <div class="swiper-slide">
                         <div class="product-card">
-                            
                             <?php if (isset($sp['gia_moi'])): ?>
                                 <div class="sale-tag">
                                     <?php if ($sp['loai_giam_gia'] == 'percent'): ?>
-                                        -<?php echo (int)$sp['gia_tri_giam']; ?>%
+                                        -<?= (int)$sp['gia_tri_giam']; ?>%
                                     <?php else: ?>
                                         SALE
                                     <?php endif; ?>
@@ -103,21 +88,26 @@ class="btn pill-btn <?= $colorClass; ?>">
                             <?php endif; ?>
 
                             <div class="product-image">
-                               <img src="assets/img/products/<?php echo htmlspecialchars($sp['hinh_anh']); ?>" 
-                                    alt="<?php echo htmlspecialchars($sp['ten']); ?>">
+                                <img src="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>" 
+                                     alt="<?= htmlspecialchars($sp['ten']); ?>">
                             </div>
-                            
+
                             <div class="card-content">
-                                <h3 class="card-title"><?php echo htmlspecialchars($sp['ten']); ?></h3>
+                                <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
                                 <div class="card-price">
                                     <?php if (isset($sp['gia_moi'])): ?>
-                                        <span class="card-price-old"><?php echo number_format($sp['gia_goc']); ?>₫</span>
-                                        <span class="card-price-new"><?php echo number_format($sp['gia_moi']); ?>₫</span>
+                                        <span class="card-price-old"><?= number_format($sp['gia_goc']); ?>₫</span>
+                                        <span class="card-price-new"><?= number_format($sp['gia_moi']); ?>₫</span>
                                     <?php else: ?>
-                                        <span class="card-price-new"><?php echo number_format($sp['gia_goc']); ?>₫</span>
+                                        <span class="card-price-new"><?= number_format($sp['gia_goc']); ?>₫</span>
                                     <?php endif; ?>
                                 </div>
-                                <a href="index.php?page=product_detail&id=<?php echo $sp['id']; ?>" class="btn btn-green card-btn-green">Xem chi tiết</a>
+
+                                <div class="btn-group">
+                                    <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn btn-green card-btn-green">🔍 Xem chi tiết</a>
+                                    <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn btn-blue card-btn-blue">🛒 Thêm vào giỏ hàng</a>
+                                    <a href="index.php?page=checkout&id=<?= $sp['id']; ?>" class="btn btn-primary card-btn-primary">⚡ Mua ngay</a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -125,7 +115,10 @@ class="btn pill-btn <?= $colorClass; ?>">
                 <?php else: ?>
                     <p>Không tìm thấy sản phẩm nổi bật nào.</p>
                 <?php endif; ?>
+            </div>
+        </div>
 
-            </div> </div> <div class="swiper-button-prev"></div>
+        <div class="swiper-button-prev"></div>
         <div class="swiper-button-next"></div>
-    </div> </section>
+    </div>
+</section>
