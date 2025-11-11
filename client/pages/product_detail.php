@@ -73,49 +73,7 @@ $img_path = (!empty($product['hinh_anh'])) ? $img_folder . '/' . $product['hinh_
 if (!file_exists($img_path)) $img_path = $default_img;
 ?>
 
-<style>
-body {font-family: Inter, sans-serif; background: #f6f8fb; color:#1f2937;}
-.container {max-width: 1200px; margin: auto; padding: 30px;}
-img {max-width: 100%; display:block;}
 
-.grid {display: grid; gap: 28px; grid-template-columns: 1fr;}
-@media(min-width: 900px){ .grid { grid-template-columns: 1fr 1fr; } }
-
-.image-panel {background: #fff; border-radius: 14px; padding: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(18,38,63,0.06);}
-.image-container {width: 100%; max-width: 320px; display: flex; justify-content: center; align-items: center;}
-.image-container img {max-width: 100%; max-height: 340px; object-fit: contain;}
-.stock-info {margin-top: 12px; font-weight: 600; color: #1f2937;}
-.stock-info .out {color: #dc2626; font-weight: bold;}
-
-.info h1 {font-size: 28px; margin-bottom: 10px;}
-.price {display:flex; align-items:baseline; gap:12px; margin-bottom:12px;}
-.price .current {color:#ef4444;font-weight:700;font-size:22px;}
-.actions {display:flex; gap:10px; flex-wrap:wrap;}
-.btn {cursor:pointer;border:0;padding:12px 18px;border-radius:12px;font-weight:600;font-size:15px;}
-.btn-primary{background:#0f62fe;color:#fff;}
-.btn-ghost{background:#f3f4f6;color:#111827;}
-
-/* Tabs */
-.tab-container {margin-top: 30px; background:#fff; border-radius:12px; padding:20px; box-shadow:0 8px 20px rgba(0,0,0,0.05);}
-.tab-buttons {display:flex; gap:10px; margin-bottom:15px;}
-.tab-buttons button {flex:1; padding:12px; border:0; border-radius:10px; background:#f3f4f6; cursor:pointer; font-weight:600;}
-.tab-buttons button.active {background:#0f62fe; color:#fff;}
-.tab-content {display:none;}
-.tab-content.active {display:block;}
-
-/* Related */
-.section {margin-top:40px;}
-.related-grid {display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px;}
-.card {background:#fff; border-radius:12px; padding:16px; text-align:center; box-shadow:0 8px 20px rgba(18,38,63,0.05);}
-.card img {width:100%; height:160px; object-fit:contain; margin-bottom:8px;}
-.card .name {font-weight:600; font-size:15px; min-height:40px;}
-.card .price {color:#ef4444;font-weight:600;margin-bottom:6px;}
-.card .spec {font-size:13px; color:#6b7280; margin-bottom:10px;}
-.card-actions {display:flex; flex-direction:column; gap:8px; margin-top:10px;}
-.card .btn-primary {background:#0f62fe;color:#fff;border:none;padding:10px;border-radius:8px;font-weight:600;cursor:pointer;}
-.card .btn-ghost {background:#fff;color:#111827;border:1px solid #e5e7eb;padding:10px;border-radius:8px;font-weight:600;cursor:pointer;}
-.card .btn-ghost:hover {background:#f9fafb;}
-</style>
 
 <div class="container">
   <div class="breadcrumb">
