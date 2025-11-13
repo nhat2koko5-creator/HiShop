@@ -42,7 +42,7 @@
                     <ul>
                         <li>
                             <i class="fa-solid fa-location-dot"></i>
-                            <span>123, P.Nguyễn Trãi, Q.Hà Đông, Hà Nội</span>
+                            <span>128A, Hồ Tùng Mậu, Cầu Giấy, Hà Nội</span>
                         </li>
                         <li>
                             <i class="fa-solid fa-envelope"></i>
