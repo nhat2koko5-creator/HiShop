@@ -46,11 +46,11 @@
                         </li>
                         <li>
                             <i class="fa-solid fa-envelope"></i>
-                            <a href="mailto:contact@hishop.com">contact@hishop.com</a>
+                            <a href="mailto:contact@hishop.com">hishopNSHB@gmail.com</a>
                         </li>
                         <li>
                             <i class="fa-solid fa-phone"></i>
-                            <a href="tel:18001234">1800 1234</a>
+                            <a href="tel:18001234">1900 10009>
                         </li>
                     </ul>
                 </div>

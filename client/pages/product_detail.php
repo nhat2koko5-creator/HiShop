@@ -164,47 +164,6 @@ if (!file_exists($img_path)) $img_path = $default_img;
     </div>
   </div>
 </div>
-
-<style>
-.option-box {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 6px;
-}
-.option {
-  border: 1px solid #ccc;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  user-select: none;
-  transition: 0.2s;
-}
-.option:hover { border-color: #007bff; }
-.option.active {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
-}
-.actions {
-  margin-top: 20px;
-  display: flex;
-  gap: 20px;
-}
-.btn[disabled] {
-  background-color: #ccc !important;
-  color: #777 !important;
-  cursor: not-allowed !important;
-  opacity: 0.7;
-}
-.short-desc {
-  margin: 10px 0;
-  color: #444;
-  font-size: 15px;
-  line-height: 1.6;
-}
-</style>
-
 <script>
 // Tabs
 document.querySelectorAll(".tab-btn").forEach(btn => {
