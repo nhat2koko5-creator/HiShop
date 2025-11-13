@@ -9,8 +9,8 @@ if ($product_id <= 0) {
     exit;
 }
 
-// Truy vấn thông tin sản phẩm
-$stmt = $pdo->prepare("SELECT id, ten, gia, so_luong, hinh_anh, trang_thai, danh_muc_id FROM san_pham WHERE id = ?");
+// Truy vấn thông tin sản phẩm (có cả mô tả ngắn và mô tả chi tiết)
+$stmt = $pdo->prepare("SELECT id, ten, gia, so_luong, hinh_anh, trang_thai, danh_muc_id, mo_ta, mo_ta_chi_tiet FROM san_pham WHERE id = ?");
 $stmt->execute([$product_id]);
 $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -31,7 +31,7 @@ if (!empty($product['danh_muc_id'])) {
 
 // Lấy thông số kỹ thuật
 $stmt_specs = $pdo->prepare("
-    SELECT ts.id, ts.man_hinh, ts.o_cung, ts.cpu, ts.gpu, ts.ram
+    SELECT ts.man_hinh, ts.o_cung, ts.cpu, ts.gpu, ts.ram
     FROM san_pham_thong_so spts
     JOIN thong_so ts ON spts.thong_so_id = ts.id
     WHERE spts.san_pham_id = ?
@@ -40,27 +40,15 @@ $stmt_specs->execute([$product_id]);
 $specs = $stmt_specs->fetch(PDO::FETCH_ASSOC);
 
 // Lấy sản phẩm liên quan
-if (!empty($product['danh_muc_id'])) {
-    $stmt_related = $pdo->prepare("
-        SELECT sp.id, sp.ten, sp.gia, sp.hinh_anh, ts.cpu, ts.ram 
-        FROM san_pham sp
-        LEFT JOIN san_pham_thong_so spts ON sp.id = spts.san_pham_id
-        LEFT JOIN thong_so ts ON spts.thong_so_id = ts.id
-        WHERE sp.danh_muc_id = ? AND sp.id != ?
-        LIMIT 4
-    ");
-    $stmt_related->execute([$product['danh_muc_id'], $product_id]);
-} else {
-    $stmt_related = $pdo->prepare("
-        SELECT sp.id, sp.ten, sp.gia, sp.hinh_anh, ts.cpu, ts.ram 
-        FROM san_pham sp
-        LEFT JOIN san_pham_thong_so spts ON sp.id = spts.san_pham_id
-        LEFT JOIN thong_so ts ON spts.thong_so_id = ts.id
-        WHERE sp.id != ?
-        LIMIT 4
-    ");
-    $stmt_related->execute([$product_id]);
-}
+$stmt_related = $pdo->prepare("
+    SELECT sp.id, sp.ten, sp.gia, sp.hinh_anh, ts.cpu, ts.ram 
+    FROM san_pham sp
+    LEFT JOIN san_pham_thong_so spts ON sp.id = spts.san_pham_id
+    LEFT JOIN thong_so ts ON spts.thong_so_id = ts.id
+    WHERE sp.danh_muc_id = ? AND sp.id != ?
+    LIMIT 4
+");
+$stmt_related->execute([$product['danh_muc_id'], $product_id]);
 $related_products = $stmt_related->fetchAll(PDO::FETCH_ASSOC);
 
 function price_format($n) {
@@ -72,8 +60,6 @@ $default_img = 'assets/img/no-image.png';
 $img_path = (!empty($product['hinh_anh'])) ? $img_folder . '/' . $product['hinh_anh'] : $default_img;
 if (!file_exists($img_path)) $img_path = $default_img;
 ?>
-
-
 
 <div class="container">
   <div class="breadcrumb">
@@ -95,13 +81,36 @@ if (!file_exists($img_path)) $img_path = $default_img;
 
     <div class="info">
       <h1><?= htmlspecialchars($product['ten']) ?></h1>
-      <div class="price">
-        <div class="current"><?= price_format($product['gia']) ?></div>
+      <div class="price"><div class="current"><?= price_format($product['gia']) ?></div></div>
+
+      <!-- Mô tả ngắn -->
+      <?php if (!empty($product['mo_ta'])): ?>
+        <div class="short-desc"><?= nl2br(htmlspecialchars($product['mo_ta'])) ?></div>
+      <?php endif; ?>
+
+      <!-- Chọn màu sắc -->
+      <div class="option-group">
+        <h4>Màu sắc</h4>
+        <div class="option-box" id="colorOptions">
+          <div class="option" data-value="Đen">Đen</div>
+          <div class="option" data-value="Trắng">Trắng</div>
+          <div class="option" data-value="Bạc">Bạc</div>
+        </div>
+      </div>
+
+      <!-- Chọn SSD -->
+      <div class="option-group">
+        <h4>SSD</h4>
+        <div class="option-box" id="ssdOptions">
+          <div class="option" data-value="256GB">256GB</div>
+          <div class="option" data-value="512GB">512GB</div>
+          <div class="option" data-value="1TB">1TB</div>
+        </div>
       </div>
 
       <div class="actions">
-        <button class="btn btn-primary" id="addCartBtn" data-id="<?= $product['id'] ?>">🛒 Thêm vào giỏ</button>
-        <button class="btn btn-ghost" id="buyNowBtn" data-id="<?= $product['id'] ?>">🛍️ Mua ngay</button>
+        <button class="btn btn-primary" id="addCartBtn" data-id="<?= $product['id'] ?>" disabled>🛒 Thêm vào giỏ</button>
+        <button class="btn btn-ghost" id="buyNowBtn" data-id="<?= $product['id'] ?>" disabled>🛍️ Mua ngay</button>
       </div>
     </div>
   </div>
@@ -110,7 +119,7 @@ if (!file_exists($img_path)) $img_path = $default_img;
   <div class="tab-container">
     <div class="tab-buttons">
       <button class="tab-btn active" data-tab="specs">Thông số kỹ thuật</button>
-      <button class="tab-btn" data-tab="desc">Mô tả</button>
+      <button class="tab-btn" data-tab="desc">Mô tả chi tiết</button>
     </div>
     <div id="specs" class="tab-content active">
       <?php if ($specs): ?>
@@ -126,7 +135,11 @@ if (!file_exists($img_path)) $img_path = $default_img;
       <?php endif; ?>
     </div>
     <div id="desc" class="tab-content">
-      <p>Đang cập nhật mô tả sản phẩm...</p>
+      <?php if (!empty($product['mo_ta_chi_tiet'])): ?>
+        <?= nl2br(htmlspecialchars($product['mo_ta_chi_tiet'])) ?>
+      <?php else: ?>
+        <p>Đang cập nhật mô tả chi tiết...</p>
+      <?php endif; ?>
     </div>
   </div>
 
@@ -152,6 +165,46 @@ if (!file_exists($img_path)) $img_path = $default_img;
   </div>
 </div>
 
+<style>
+.option-box {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.option {
+  border: 1px solid #ccc;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: 0.2s;
+}
+.option:hover { border-color: #007bff; }
+.option.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+.actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 20px;
+}
+.btn[disabled] {
+  background-color: #ccc !important;
+  color: #777 !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+.short-desc {
+  margin: 10px 0;
+  color: #444;
+  font-size: 15px;
+  line-height: 1.6;
+}
+</style>
+
 <script>
 // Tabs
 document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -163,19 +216,53 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
   });
 });
 
-// Mua ngay
-document.getElementById("buyNowBtn").addEventListener("click", function(){
-  const id = this.dataset.id;
-  window.location.href = `index.php?page=checkout&id=${id}`;
+// Chọn màu & SSD
+let selectedColor = null;
+let selectedSSD = null;
+const buyNowBtn = document.getElementById("buyNowBtn");
+const addCartBtn = document.getElementById("addCartBtn");
+
+function checkSelections() {
+  const ready = selectedColor && selectedSSD;
+  buyNowBtn.disabled = !ready;
+  addCartBtn.disabled = !ready;
+}
+
+document.querySelectorAll("#colorOptions .option").forEach(opt => {
+  opt.addEventListener("click", () => {
+    document.querySelectorAll("#colorOptions .option").forEach(o => o.classList.remove("active"));
+    opt.classList.add("active");
+    selectedColor = opt.dataset.value;
+    checkSelections();
+  });
 });
 
-// Thêm vào giỏ hàng (AJAX)
-document.getElementById("addCartBtn").addEventListener("click", function(){
+document.querySelectorAll("#ssdOptions .option").forEach(opt => {
+  opt.addEventListener("click", () => {
+    document.querySelectorAll("#ssdOptions .option").forEach(o => o.classList.remove("active"));
+    opt.classList.add("active");
+    selectedSSD = opt.dataset.value;
+    checkSelections();
+  });
+});
+
+// Nút Mua ngay
+buyNowBtn.addEventListener("click", function(){
+  if (!selectedColor || !selectedSSD) return;
+  const id = this.dataset.id;
+  const color = encodeURIComponent(selectedColor);
+  const ssd = encodeURIComponent(selectedSSD);
+  window.location.href = `index.php?page=checkout&id=${id}&color=${color}&ssd=${ssd}`;
+});
+
+// Thêm vào giỏ
+addCartBtn.addEventListener("click", function(){
+  if (!selectedColor || !selectedSSD) return;
   const id = this.dataset.id;
   fetch('index.php?page=cart_add', {
     method: 'POST',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    body: `id=${id}&quantity=1`
+    body: `id=${id}&quantity=1&color=${encodeURIComponent(selectedColor)}&ssd=${encodeURIComponent(selectedSSD)}`
   })
   .then(res => res.text())
   .then(() => showPopup('🛒 Sản phẩm đã được thêm vào giỏ hàng!'))
