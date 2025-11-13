@@ -106,7 +106,6 @@ $featuredProducts = getFeaturedProducts($pdo);
                                 <div class="btn-group">
                                     <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn btn-green card-btn-green">🔍 Xem chi tiết</a>
                                     <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn btn-blue card-btn-blue">🛒 Thêm vào giỏ hàng</a>
-                                    <a href="index.php?page=checkout&id=<?= $sp['id']; ?>" class="btn btn-primary card-btn-primary">⚡ Mua ngay</a>
                                 </div>
                             </div>
                         </div>

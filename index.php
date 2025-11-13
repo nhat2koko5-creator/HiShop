@@ -1,43 +1,53 @@
 <?php
-// FILE: index.php (Thư mục gốc)
 session_start();
-require_once 'vendor/autoload.php';
-// 1. GỌI CONFIG (Tạo kết nối $pdo)
-require_once 'src/config.php'; 
 
-// 2. GỌI FUNCTIONS (Định nghĩa các hàm)
-require_once 'src/functions.php'; 
+$autoload = __DIR__ . '/vendor/autoload.php';
+if (file_exists($autoload)) {
+    require_once $autoload;
+} else {
+    require_once __DIR__ . '/libs/PHPMailer/src/Exception.php';
+    require_once __DIR__ . '/libs/PHPMailer/src/PHPMailer.php';
+    require_once __DIR__ . '/libs/PHPMailer/src/SMTP.php';
+}
 
-// 3. (FIX LỖI) GỌI HÀM ĐỂ LẤY DỮ LIỆU CHUNG (HEADER)
-// Chúng ta phải lấy $categories TRƯỚC KHI gọi header.php
+require_once __DIR__ . '/src/config.php';
+require_once __DIR__ . '/src/functions.php';
+// 3. GỌI HÀM ĐỂ LẤY DỮ LIỆU CHUNG (HEADER)
 $categories = getActiveCategories($pdo);
 
 // --- PHẦN ĐIỀU HƯỚNG (ROUTER) ---
 
 // 4. Lấy trang người dùng muốn xem
 $page = $_GET['page'] ?? 'home';
+
+// 5. Xử lý đăng xuất
 if ($page === 'logout') {
-    session_destroy(); // Hủy toàn bộ session
-    header('Location: index.php?page=home'); // Chuyển về trang chủ
+    session_destroy();
+    header('Location: index.php?page=home');
     exit;
 }
-// 5. Danh sách các trang "auth" (không dùng header/footer chung)
+
+// 6. Danh sách các trang "auth" (không dùng header/footer chung)
 $auth_pages = ['login', 'register', 'forgot_password', 'reset_password', 'verify_otp'];
 
-// 6. Xử lý trang "auth"
+// 7. Xử lý trang "auth"
 if (in_array($page, $auth_pages)) {
     $auth_file = "client/auth/{$page}.php";
     if (file_exists($auth_file)) {
+        // (Biến $pdo đã có sẵn cho các file auth)
         require_once $auth_file;
     } else {
+        // Tạm thời chuyển về trang 404 nếu file auth không tồn tại
+        $page_title = '404 - Không Tìm Thấy';
         $page_file = 'client/pages/404.php';
-        require_once 'client/layouts/header.php';
+        require_once 'client/layouts/header.php'; // Vẫn cần layout
         require_once $page_file;
         require_once 'client/layouts/footer.php';
     }
-    exit;
+    exit; // Dừng lại, không chạy code bên dưới
 }
-// 7. Xử lý các trang người dùng bình thường
+
+// 8. Xử lý các trang người dùng bình thường
 switch ($page) {
     case 'home':
         $page_title = 'HIShop - Trang Chủ';
@@ -79,7 +89,7 @@ switch ($page) {
         $page_title = 'Kết Quả Tìm Kiếm';
         $page_file = 'client/pages/search_results.php';
         break;
-   case 'account':
+    case 'account':
         $page_title = 'Tài Khoản Của Tôi';
         $page_file = 'client/pages/account.php';
         break;
@@ -89,11 +99,11 @@ switch ($page) {
         break;
 }
 
-// 8. "In" trang web ra
-// 8.1. Tải Header (File này giờ đã có thể dùng biến $categories)
+// 9. "In" trang web ra
+// 9.1. Tải Header (File này giờ đã có thể dùng biến $categories)
 require_once 'client/layouts/header.php';
 
-// 8.2. Tải Nội Dung Trang
+// 9.2. Tải Nội Dung Trang
 if (file_exists($page_file)) {
     require_once $page_file;
 } else {
@@ -101,7 +111,7 @@ if (file_exists($page_file)) {
     require_once 'client/pages/404.php';
 }
 
-// 8.3. Tải Footer
+// 9.3. Tải Footer
 require_once 'client/layouts/footer.php';
 
 ?>

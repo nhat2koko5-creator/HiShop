@@ -6,7 +6,7 @@
   --color-primary: #4f46e5; /* Màu xanh Indigo (cho nút, link) */
   --color-secondary: #3b82f6; /* Màu xanh dương (cho hero) */
   --color-bg-page: #ffffff; /* Nền trang (trắng) */
-  --color-bg-subtle: #F4F7FC; /* Nền xám xanh nhạt (cho Hero) */
+  --color-bg-subtle: #f4f7fc; /* Nền xám xanh nhạt (cho Hero) */
   --color-fg-base: #1f2937; /* Màu chữ chính (đen xám) */
   --color-fg-muted: #6b7280; /* Màu chữ phụ (xám) */
   --color-border: #e5e7eb; /* Màu đường viền (xám rất nhạt) */
@@ -200,51 +200,54 @@ ul {
 }
 
 /* === 5. STYLES TRANG CHỦ (Home) (ĐÃ VIẾT LẠI) === */
-.hero { 
-  text-align: center; 
-  padding: var(--spacing-64) 0; 
-  border:1px solid; 
-  margin-top: var(--spacing-32); 
+.hero {
+  text-align: center;
+  padding: var(--spacing-64) 0;
+  border: 1px solid;
+  margin-top: var(--spacing-32);
   position: relative; /* Giữ nguyên để chứa icon */
-  overflow: hidden;   /* Giữ nguyên để chứa icon */
-  
+  overflow: hidden; /* Giữ nguyên để chứa icon */
+
   /* --- PHẦN THAY THẾ --- */
   /* 1. Xóa 'background-color' và thay bằng ảnh nền */
   /* (Hãy thay 'assets/images/your-banner.jpg' bằng đường dẫn đến ảnh của bạn) */
-  background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), 
-                    url('../img/banner.jpg');
-                    
-  background-size: cover;     /* Đảm bảo ảnh lấp đầy khung */
-  background-position: center;  /* Căn ảnh vào giữa */
+  background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("../img/banner.jpg");
+
+  background-size: cover; /* Đảm bảo ảnh lấp đầy khung */
+  background-position: center; /* Căn ảnh vào giữa */
   background-repeat: no-repeat; /* Không lặp lại ảnh */
 }
 /* (MỚI) Đổi màu chữ trong .hero thành TRẮNG để dễ đọc trên nền ảnh */
-.hero h1 { 
-  font: var(--font-h1); 
+.hero h1 {
+  font: var(--font-h1);
   color: var(--color-white); /* << Đổi thành màu trắng */
-  margin-bottom: var(--spacing-16); 
-  position: relative; z-index: 1; 
+  margin-bottom: var(--spacing-16);
+  position: relative;
+  z-index: 1;
 }
-.hero p { 
-  font: var(--font-body-m); 
-  font-size: 18px; 
+.hero p {
+  font: var(--font-body-m);
+  font-size: 18px;
   color: rgba(255, 255, 255, 0.9); /* << Đổi thành màu trắng mờ */
-  margin-bottom: var(--spacing-32); 
-  position: relative; z-index: 1; 
+  margin-bottom: var(--spacing-32);
+  position: relative;
+  z-index: 1;
 }
 /* (Giữ nguyên) */
 .hero .container {
-  position: relative; 
+  position: relative;
 }
 .hero-content {
   position: relative;
-  z-index: 1; 
+  z-index: 1;
 }
 .hero .btn-group {
   display: flex;
   justify-content: center;
   gap: var(--spacing-16);
-  position: relative; z-index: 1; 
+  position: relative;
+  z-index: 1;
 }
 /* Mục "Tại sao chọn chúng tôi" */
 .why-us-section {
@@ -1248,18 +1251,18 @@ ul {
   margin-top: 8px; /* Thêm khoảng cách nhỏ với menu cha */
 }
 .dropdown-menu::before {
-    content: '';         /* Bắt buộc phải có */
-    position: absolute;  /* Định vị tuyệt đối (so với .dropdown-menu) */
-    bottom: 100%;        /* Đặt nó nằm NGAY TRÊN (dưới đáy của nó là 100% menu) */
-    left: 0;
-    right: 0;
-    
-    /* Đây là "cây cầu" của bạn: 
+  content: ""; /* Bắt buộc phải có */
+  position: absolute; /* Định vị tuyệt đối (so với .dropdown-menu) */
+  bottom: 100%; /* Đặt nó nằm NGAY TRÊN (dưới đáy của nó là 100% menu) */
+  left: 0;
+  right: 0;
+
+  /* Đây là "cây cầu" của bạn: 
       Nó có chiều cao 8px, bằng đúng với cái 'margin-top' 8px của menu.
     */
-    height: 8px; 
-    
-    background-color: transparent; /* Hoàn toàn vô hình */
+  height: 8px;
+
+  background-color: transparent; /* Hoàn toàn vô hình */
 }
 .nav-item.has-dropdown:hover .dropdown-menu {
   display: block;
@@ -1409,140 +1412,330 @@ ul {
   animation-delay: 8s;
   font-size: 22px;
 }
-.image-container img {max-width: 100%; display:block;}
+.image-container img {
+  max-width: 100%;
+  display: block;
+}
 
-.grid {display: grid; gap: 28px; grid-template-columns: 1fr;}
-@media(min-width: 900px){ .grid { grid-template-columns: 1fr 1fr; } }
+.grid {
+  display: grid;
+  gap: 28px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
 
-.image-panel {background: #fff; border-radius: 14px; padding: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(18,38,63,0.06);}
-.image-container {width: 100%; max-width: 320px; display: flex; justify-content: center; align-items: center;}
-.image-container img {max-width: 100%; max-height: 340px; object-fit: contain;}
-.stock-info {margin-top: 12px; font-weight: 600; color: #1f2937;}
-.stock-info .out {color: #dc2626; font-weight: bold;}
+.image-panel {
+  background: #fff;
+  border-radius: 14px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(18, 38, 63, 0.06);
+}
+.image-container {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.image-container img {
+  max-width: 100%;
+  max-height: 340px;
+  object-fit: contain;
+}
+.stock-info {
+  margin-top: 12px;
+  font-weight: 600;
+  color: #1f2937;
+}
+.stock-info .out {
+  color: #dc2626;
+  font-weight: bold;
+}
 
-.info h1 {font-size: 28px; margin-bottom: 10px;}
-.price {display:flex; align-items:baseline; gap:12px; margin-bottom:12px;}
-.price .current {color:#ef4444;font-weight:700;font-size:22px;}
-.actions {display:flex; gap:10px; flex-wrap:wrap;}
-.btn {cursor:pointer;border:0;padding:12px 18px;border-radius:12px;font-weight:600;font-size:15px;}
-.btn-primary{background:#0f62fe;color:#fff;}
-.btn-ghost{background:#f3f4f6;color:#111827;}
+.info h1 {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+.price {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.price .current {
+  color: #ef4444;
+  font-weight: 700;
+  font-size: 22px;
+}
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.btn {
+  cursor: pointer;
+  border: 0;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+}
+.btn-primary {
+  background: #0f62fe;
+  color: #fff;
+}
+.btn-ghost {
+  background: #f3f4f6;
+  color: #111827;
+}
 
 /* Tabs */
-.tab-container {margin-top: 30px; background:#fff; border-radius:12px; padding:20px; box-shadow:0 8px 20px rgba(0,0,0,0.05);}
-.tab-buttons {display:flex; gap:10px; margin-bottom:15px;}
-.tab-buttons button {flex:1; padding:12px; border:0; border-radius:10px; background:#f3f4f6; cursor:pointer; font-weight:600;}
-.tab-buttons button.active {background:#0f62fe; color:#fff;}
-.tab-content {display:none;}
-.tab-content.active {display:block;}
+.tab-container {
+  margin-top: 30px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+.tab-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.tab-buttons button {
+  flex: 1;
+  padding: 12px;
+  border: 0;
+  border-radius: 10px;
+  background: #f3f4f6;
+  cursor: pointer;
+  font-weight: 600;
+}
+.tab-buttons button.active {
+  background: #0f62fe;
+  color: #fff;
+}
+.tab-content {
+  display: none;
+}
+.tab-content.active {
+  display: block;
+}
 
 /* Related */
-.section {margin-top:40px;}
-.related-grid {display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px;}
-.card {background:#fff; border-radius:12px; padding:16px; text-align:center; box-shadow:0 8px 20px rgba(18,38,63,0.05);}
-.card img {width:100%; height:160px; object-fit:contain; margin-bottom:8px;}
-.card .name {font-weight:600; font-size:15px; min-height:40px;}
-.card .price {color:#ef4444;font-weight:600;margin-bottom:6px;}
-.card .spec {font-size:13px; color:#6b7280; margin-bottom:10px;}
-.card-actions {display:flex; flex-direction:column; gap:8px; margin-top:10px;}
-.card .btn-primary {background:#0f62fe;color:#fff;border:none;padding:10px;border-radius:8px;font-weight:600;cursor:pointer;}
-.card .btn-ghost {background:#fff;color:#111827;border:1px solid #e5e7eb;padding:10px;border-radius:8px;font-weight:600;cursor:pointer;}
-.card .btn-ghost:hover {background:#f9fafb;}
-.page-title {
-    font-size: 28px;
-    font-weight: 700;
-    color: #111827;
-    margin-bottom: 24px;
-    text-align: center;
+.section {
+  margin-top: 40px;
 }
-.product-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
+.related-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
 }
 .card {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(18,38,63,.05);
-    padding: 16px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(18, 38, 63, 0.05);
 }
-.card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 25px rgba(18,38,63,.08);
-}
-.image-wrapper {
-    width: 100%;
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    margin-bottom: 12px;
-}
-.image-wrapper img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    transition: transform 0.3s ease;
-}
-.image-wrapper img:hover {
-    transform: scale(1.05);
+.card img {
+  width: 100%;
+  height: 160px;
+  object-fit: contain;
+  margin-bottom: 8px;
 }
 .card .name {
-    font-size: 16px;
-    font-weight: 600;
-    color: #111827;
-    margin-bottom: 8px;
-    line-height: 1.3;
-    min-height: 40px;
+  font-weight: 600;
+  font-size: 15px;
+  min-height: 40px;
 }
 .card .price {
-    color: #ef4444;
-    font-weight: 700;
-    margin-bottom: 10px;
+  color: #ef4444;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.card .spec {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 10px;
+}
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.card .btn-primary {
+  background: #0f62fe;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.card .btn-ghost {
+  background: #fff;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.card .btn-ghost:hover {
+  background: #f9fafb;
+}
+.page-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(18, 38, 63, 0.05);
+  padding: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(18, 38, 63, 0.08);
+}
+.image-wrapper {
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.image-wrapper img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+.image-wrapper img:hover {
+  transform: scale(1.05);
+}
+.card .name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 8px;
+  line-height: 1.3;
+  min-height: 40px;
+}
+.card .price {
+  color: #ef4444;
+  font-weight: 700;
+  margin-bottom: 10px;
 }
 .card .btn-group {
-    display: flex;
-    flex-direction: column; /* Xếp dọc 2 nút */
-    gap: 10px;
-    margin-top: 10px;
+  display: flex;
+  flex-direction: column; /* Xếp dọc 2 nút */
+  gap: 10px;
+  margin-top: 10px;
 }
 .card .btn {
-    display: block;
-    width: 100%;
-    padding: 10px 0;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-decoration: none;
-    text-align: center;
+  display: block;
+  width: 100%;
+  padding: 10px 0;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  text-align: center;
 }
 .card .btn-detail {
-    background: #fff;
-    color: #111827;
-    border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111827;
+  border: 1px solid #d1d5db;
 }
 .card .btn-detail:hover {
-    background: #f9fafb;
+  background: #f9fafb;
 }
 .card .btn-buy {
-    background: #0f62fe;
-    color: #fff;
-    border: none;
+  background: #0f62fe;
+  color: #fff;
+  border: none;
 }
 .card .btn-buy:hover {
-    background: #0043ce;
+  background: #0043ce;
 }
 .no-products {
-    text-align: center;
-    color: #6b7280;
-    font-size: 16px;
-    margin-top: 40px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 16px;
+  margin-top: 40px;
+}
+/* === (MỚI) CSS BỔ SUNG CHO FOOTER ICONS === */
+
+/* 1. Icon Mạng Xã Hội (Cột 1) */
+.social-icons {
+  display: flex;
+  gap: var(--spacing-16);
+  margin-top: var(--spacing-24);
+}
+.social-icons a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: var(--color-bg-subtle);
+  border-radius: 50%;
+  color: var(--color-fg-muted);
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+.social-icons a:hover {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+/* 2. Icon Liên Hệ (Cột 4) */
+.footer-col.contact-info ul li {
+  display: flex;
+  align-items: flex-start; /* Căn trên nếu text dài */
+  gap: var(--spacing-12);
+  margin-bottom: var(--spacing-16);
+}
+.footer-col.contact-info ul li i {
+  font-size: 16px;
+  color: var(--color-primary); /* Cho icon màu nhấn */
+  margin-top: 4px; /* Căn chỉnh icon cho đẹp */
+}
+.footer-col.contact-info ul li span,
+.footer-col.contact-info ul li a {
+  /* Ghi đè style cũ để link và text giống nhau */
+  font: var(--font-body-s);
+  color: var(--color-fg-muted);
+  flex: 1;
+}
+.footer-col.contact-info ul li a:hover {
+  color: var(--color-primary);
 }

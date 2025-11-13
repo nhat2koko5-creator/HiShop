@@ -1,3 +1,4 @@
+
 <?php
 // FILE: client/auth/forgot_password.php
 // (Biến $pdo đã có sẵn từ file index.php)
