@@ -85,7 +85,7 @@ ul {
   border-color: var(--color-border);
 }
 .btn-green {
-  background-color: var(--color-green);
+  background-color: var(--color-secondary);
   color: var(--color-white);
   padding: var(--spacing-8) var(--spacing-16);
   font-size: 14px;
@@ -393,12 +393,14 @@ ul {
   color: var(--color-fg-muted);
   text-decoration: line-through;
   margin-right: var(--spacing-8);
+  
 }
 .card-price-new {
   font: var(--font-h4);
   font-size: 18px;
   color: var(--color-red);
   font-weight: 700;
+  
 }
 .card-rating {
   font: var(--font-small);
