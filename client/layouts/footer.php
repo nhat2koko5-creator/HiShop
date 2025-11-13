@@ -50,7 +50,7 @@
                         </li>
                         <li>
                             <i class="fa-solid fa-phone"></i>
-                            <a href="tel:18001234">1900 10009>
+                            <a href="tel:18001234">1900 10009
                         </li>
                     </ul>
                 </div>
