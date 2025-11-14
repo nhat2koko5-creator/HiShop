@@ -1311,9 +1311,12 @@ ul {
 
 /* --- GIÁ SẢN PHẨM --- */
 .card .price {
-  color: #ef4444;
-  font-weight: 700;
-  margin-bottom: 10px;
+    width: 100%;
+    text-align: center !important;
+    justify-content: center !important;
+    font-size: 18px;
+    font-weight: 700;
+    color: #ef4444;
 }
 
 /* --- NHÓM NÚT (Xếp dọc) --- */
