@@ -41,6 +41,21 @@ function format_price($price) {
 </style>
 
 <div class="container">
+
+    <!-- ========================================================= -->
+    <!-- BREADCRUMB -->
+    <!-- ========================================================= -->
+    <nav class="breadcrumb">
+        <a href="index.php">Trang chủ</a>
+        <span class="divider">›</span>
+        <a href="index.php?page=product_list">Danh sách sản phẩm</a>
+
+        <?php if ($category_id > 0): ?>
+            <span class="divider">›</span>
+            <span class="current"><?= htmlspecialchars($category_name) ?></span>
+        <?php endif; ?>
+    </nav>
+
     <h1 class="page-title">
         <?= htmlspecialchars($category_name) ?>
     </h1>
