@@ -986,7 +986,20 @@ ul {
   max-width: 100%;
   display: block;
 }
+/* ============================================================
+   CSS TRANG PRODUCT DETAIL (PDP)
+   Được tách riêng từ file style-client.css
+   Bao gồm:
+   - Gallery ảnh
+   - Thông tin sản phẩm
+   - Giá
+   - Biến thể (option)
+   - Nút hành động
+   - Tabs mô tả – đánh giá
+   - Related products
+   ============================================================ */
 
+/* --- LAYOUT CHUNG --- */
 .grid {
   display: grid;
   gap: 28px;
@@ -999,6 +1012,7 @@ ul {
   }
 }
 
+/* --- IMAGE PANEL --- */
 .image-panel {
   background: #fff;
   border-radius: 14px;
@@ -1024,6 +1038,7 @@ ul {
   object-fit: contain;
 }
 
+/* --- STOCK INFO --- */
 .stock-info {
   margin-top: 12px;
   font-weight: 600;
@@ -1035,11 +1050,20 @@ ul {
   font-weight: bold;
 }
 
+/* --- PRODUCT INFO --- */
 .info h1 {
   font-size: 28px;
   margin-bottom: 10px;
 }
 
+.short-desc {
+  margin: 10px 0;
+  color: #444;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* --- PRICE --- */
 .price {
   display: flex;
   align-items: baseline;
@@ -1053,32 +1077,47 @@ ul {
   font-size: 22px;
 }
 
-.actions {
+/* --- OPTIONS (COLOR / SSD / RAM / ANY) --- */
+.option-box {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  margin-top: 6px;
 }
 
-.btn {
+.option {
+  border: 1px solid #ccc;
+  padding: 8px 16px;
+  border-radius: 8px;
   cursor: pointer;
-  border: 0;
-  padding: 12px 18px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 15px;
+  transition: 0.2s;
 }
 
-.btn-primary {
-  background: #0f62fe;
-  color: #fff;
+.option:hover {
+  border-color: #007bff;
 }
 
-.btn-ghost {
-  background: #f3f4f6;
-  color: #111827;
+.option.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
 }
 
-/* Tabs */
+/* --- ACTION BUTTONS --- */
+.actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 20px;
+}
+
+.btn[disabled] {
+  background-color: #ccc !important;
+  color: #777 !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+/* --- TABS --- */
 .tab-container {
   margin-top: 30px;
   background: #fff;
@@ -1116,7 +1155,7 @@ ul {
   display: block;
 }
 
-/* Related */
+/* --- RELATED PRODUCTS --- */
 .section {
   margin-top: 40px;
 }
@@ -1191,6 +1230,20 @@ ul {
   background: #f9fafb;
 }
 
+/* ============================================================
+   CSS TRANG PRODUCT LIST (PLP)
+   Được tách riêng từ style-client.css
+   Bao gồm:
+   - Tiêu đề trang
+   - Lưới sản phẩm
+   - Card sản phẩm
+   - Ảnh sản phẩm
+   - Tên + Giá
+   - Nút xem chi tiết & mua ngay
+   - Trạng thái không có sản phẩm
+   ============================================================ */
+
+/* --- TIÊU ĐỀ TRANG --- */
 .page-title {
   font-size: 28px;
   font-weight: 700;
@@ -1199,12 +1252,14 @@ ul {
   text-align: center;
 }
 
+/* --- GRID SẢN PHẨM --- */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
 }
 
+/* --- CARD SẢN PHẨM --- */
 .card {
   background: #fff;
   border-radius: 12px;
@@ -1222,6 +1277,7 @@ ul {
   box-shadow: 0 10px 25px rgba(18, 38, 63, 0.08);
 }
 
+/* --- ẢNH SẢN PHẨM --- */
 .image-wrapper {
   width: 100%;
   height: 200px;
@@ -1243,6 +1299,7 @@ ul {
   transform: scale(1.05);
 }
 
+/* --- TÊN SẢN PHẨM --- */
 .card .name {
   font-size: 16px;
   font-weight: 600;
@@ -1252,19 +1309,22 @@ ul {
   min-height: 40px;
 }
 
+/* --- GIÁ SẢN PHẨM --- */
 .card .price {
   color: #ef4444;
   font-weight: 700;
   margin-bottom: 10px;
 }
 
+/* --- NHÓM NÚT (Xếp dọc) --- */
 .card .btn-group {
   display: flex;
-  flex-direction: column; /* Xếp dọc 2 nút */
+  flex-direction: column;
   gap: 10px;
   margin-top: 10px;
 }
 
+/* --- NÚT CHUNG --- */
 .card .btn {
   display: block;
   width: 100%;
@@ -1278,6 +1338,7 @@ ul {
   text-align: center;
 }
 
+/* --- NÚT XEM CHI TIẾT --- */
 .card .btn-detail {
   background: #fff;
   color: #111827;
@@ -1288,6 +1349,7 @@ ul {
   background: #f9fafb;
 }
 
+/* --- NÚT MUA NGAY --- */
 .card .btn-buy {
   background: #0f62fe;
   color: #fff;
@@ -1298,12 +1360,14 @@ ul {
   background: #0043ce;
 }
 
+/* --- KHÔNG CÓ SẢN PHẨM --- */
 .no-products {
   text-align: center;
   color: #6b7280;
   font-size: 16px;
   margin-top: 40px;
 }
+
 
 /* === (MỚI) CSS BỔ SUNG CHO FOOTER ICONS === */
 
@@ -1581,7 +1645,7 @@ ul {
     margin-bottom: var(--spacing-16);
 }
 
-.contact-form-card .form-group label {
+.contact-form-card .form-group label {  
     display: block;
     font: var(--font-body-s);
     font-weight: 600;
