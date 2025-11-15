@@ -241,7 +241,7 @@ $promo_key = isset($_SESSION['promo']) ? 'promo' : 'coupon';
                 <?php foreach ($cart as $key => $item): ?>
                     <?php $img_path = (!empty($item['image']) && file_exists($img_folder . '/' . $item['image'])) ? $img_folder . '/' . $item['image'] : $default_img; ?>
                     <div class="cart-item" id="item-<?php echo $key; ?>">
-                        <input type="checkbox" class="cart-item-select" data-key="<?php echo $key; ?>" data-price="<?php echo $item['price']; ?>" checked>
+                        <input type="checkbox" class="cart-item-select" data-key="<?php echo $key; ?>" data-price="<?php echo $item['price']; ?>">
                         <img src="<?php echo htmlspecialchars($img_path); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="cart-item-img">
                         <div class="cart-item-info">
                             <span class="cart-item-name"><?php echo htmlspecialchars($item['name']); ?></span>
