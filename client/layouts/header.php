@@ -4,6 +4,13 @@
         $page_title = 'HIShop - Giải Pháp Công Nghệ';
     }
 ?>
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../../src/config.php'; // hoặc đường dẫn đúng đến config
+?>
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
