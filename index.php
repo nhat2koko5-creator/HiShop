@@ -93,12 +93,22 @@ switch ($page) {
         $page_title = 'Tài Khoản Của Tôi';
         $page_file = 'client/pages/account.php';
         break;
+    case 'process_payment':
+        $page_file = 'client/pages/process_payment.php';
+    break;
     default:
         $page_title = '404 - Không Tìm Thấy';
         $page_file = 'client/pages/404.php';
         break;
 }
+// (MỚI) BƯỚC 8.5: KIỂM TRA BẢO MẬT (TRƯỚC KHI TẢI HEADER)
+$pages_that_require_login = ['checkout', 'account', 'process_payment'];
 
+if (in_array($page, $pages_that_require_login) && !isset($_SESSION['user_id'])) {
+    // Người dùng chưa đăng nhập VÀ đang cố vào trang bảo mật
+    header('Location: index.php?page=login');
+    exit; // Dừng lại ngay
+}
 // 9. "In" trang web ra
 // 9.1. Tải Header (File này giờ đã có thể dùng biến $categories)
 require_once 'client/layouts/header.php';

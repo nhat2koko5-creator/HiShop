@@ -47,7 +47,7 @@ $featuredProducts = getFeaturedProducts($pdo);
 
 <section class="category-section">
     <div class="container">
-        <span class="section-subtitle">& DANH MỤC SẢN PHẨM</span>
+        <span class="section-subtitle">DANH MỤC SẢN PHẨM</span>
         <h2 class="section-title">Khám phá theo danh mục</h2>
         <div class="category-pills">
             <?php if (!empty($categories)): ?>

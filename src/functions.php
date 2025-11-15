@@ -338,4 +338,36 @@ function getRecentOrders(PDO $pdo, $limit = 5) {
         return [];
     }
 }
+/**
+ * (MỚI) Lấy tất cả sản phẩm và tổng tiền trong giỏ hàng của người dùng
+ * Dựa trên bảng: `gio_hang`, `san_pham`
+ */
+function getCartItemsAndTotal(PDO $pdo, $user_id) {
+    $sql = "
+        SELECT 
+            sp.id AS san_pham_id,
+            sp.ten,
+            sp.hinh_anh,
+            sp.gia,
+            gh.so_luong
+        FROM gio_hang AS gh
+        JOIN san_pham AS sp ON gh.san_pham_id = sp.id
+        WHERE gh.nguoi_dung_id = ?
+    ";
+    
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$user_id]);
+    $items = $stmt->fetchAll();
+    
+    $total_amount = 0;
+    foreach ($items as $item) {
+        // (Bạn có thể thêm logic kiểm tra giảm giá ở đây)
+        $total_amount += $item['gia'] * $item['so_luong'];
+    }
+    
+    return [
+        'items' => $items,
+        'total' => $total_amount
+    ];
+}
 ?>
