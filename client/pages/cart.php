@@ -225,7 +225,7 @@ $promo_key = isset($_SESSION['promo']) ? 'promo' : 'coupon';
 </style>
 
 <div class="cart-page">
-    <h1>Giỏ Hàng Của Bạn</h1>
+    <h1 style ="margin-bottom: 30px">Giỏ Hàng Của Bạn</h1>
     <div class="cart-container" id="cart-wrapper">
         <?php if (empty($cart)): ?>
             <div class="cart-empty-msg" style="width: 100%; text-align: center; padding: 50px; background: #f9f9f9; border-radius: 8px;">
