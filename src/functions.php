@@ -370,4 +370,14 @@ function getCartItemsAndTotal(PDO $pdo, $user_id) {
         'total' => $total_amount
     ];
 }
+function getAvailableCoupons(PDO $pdo) {
+    // Chỉ lấy mã còn hạn và chưa bắt đầu
+    $sql = "SELECT * FROM ma_khuyen_mai 
+            WHERE (ngay_bat_dau IS NULL OR ngay_bat_dau <= NOW())
+              AND (ngay_ket_thuc IS NULL OR ngay_ket_thuc >= NOW())
+            ORDER BY gia_tri DESC";
+    
+    $stmt = $pdo->query($sql);
+    return $stmt->fetchAll();
+}
 ?>

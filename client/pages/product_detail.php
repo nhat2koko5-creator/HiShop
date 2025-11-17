@@ -218,14 +218,27 @@ buyNowBtn.addEventListener("click", function(){
 addCartBtn.addEventListener("click", function(){
   if (!selectedColor || !selectedSSD) return;
   const id = this.dataset.id;
-  fetch('index.php?page=cart_add', {
+
+  fetch('cart-handler.php', {
     method: 'POST',
-    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    body: `id=${id}&quantity=1&color=${encodeURIComponent(selectedColor)}&ssd=${encodeURIComponent(selectedSSD)}`
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `action=add&id=${id}&quantity=1&color=${encodeURIComponent(selectedColor)}&ssd=${encodeURIComponent(selectedSSD)}`
   })
-  .then(res => res.text())
-  .then(() => showPopup('🛒 Sản phẩm đã được thêm vào giỏ hàng!'))
-  .catch(() => alert('Lỗi, vui lòng thử lại.'));
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === "success") {
+      showPopup('🛒 Sản phẩm đã được thêm vào giỏ hàng!');
+
+      // Nếu icon ở header có hàm cập nhật
+      if (typeof updateCartIconCount === "function") {
+        updateCartIconCount(data.totalItems);
+      }
+
+    } else {
+      showPopup("Lỗi: " + data.message, true);
+    }
+  })
+  .catch(() => showPopup('Lỗi kết nối. Vui lòng thử lại.', true));
 });
 
 // Popup nhỏ

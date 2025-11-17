@@ -1737,3 +1737,437 @@ ul {
             order: 1;
         }
     }
+    /* (CSS Cũ CỦA BẠN - GIỮ NGUYÊN) */
+    .cart-page {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .cart-summary {
+        flex-basis: 320px;
+        background-color: #f9f9f9;
+        padding: 24px;
+        border-radius: 8px;
+        height: fit-content;
+    }
+
+    .cart-item {
+        display: flex;
+        gap: 15px;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #eee;
+        align-items: center;
+    }
+
+    .cart-item-img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    .cart-item-info {
+        flex: 1;
+    }
+
+    .cart-item-name {
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .cart-item-desc {
+        font-size: 14px;
+        color: #666;
+        margin: 4px 0;
+    }
+
+    .cart-item-remove {
+        font-size: 14px;
+        color: #d90000;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .quantity-control button {
+        background: #f5f5f5;
+        border: none;
+        padding: 0 10px;
+        cursor: pointer;
+        font-size: 18px;
+        height: 34px;
+    }
+
+    .quantity-control input {
+        width: 40px;
+        text-align: center;
+        border: none;
+        height: 32px;
+        padding: 0;
+    }
+
+    .quantity-control input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    .btn-checkout:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+    .cart-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+    }
+
+    .cart-items {
+        flex: 1;
+        min-width: 450px;
+    }
+
+    .cart-summary {
+        width: 100%;
+        position: sticky;
+        top: 20px;
+    }
+
+    .cart-item-price {
+        font-size: 18px;
+        font-weight: 600;
+        min-width: 120px;
+        text-align: right;
+    }
+
+    .cart-summary h2 {
+        margin-top: 0;
+        margin-bottom: 20px;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        font-size: 16px;
+    }
+
+    .summary-row span:last-child {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .summary-row.total {
+        font-size: 20px;
+        font-weight: 700;
+        border-top: 1px solid #ddd;
+        padding-top: 15px;
+        margin-top: 15px;
+    }
+
+    .summary-row.total span:last-child {
+        color: #d90000;
+    }
+
+    .coupon-form {
+        display: flex;
+        margin: 20px 0;
+    }
+
+    .coupon-form input[type="text"] {
+        flex: 1;
+        border: 1px solid #ccc;
+        padding: 10px 12px;
+        border-radius: 4px 0 0 4px;
+        outline: none;
+        font-size: 15px;
+        min-width: 100px;
+    }
+
+    .coupon-form button {
+        border: none;
+        background: #0f62fe;
+        color: white;
+        padding: 0 15px;
+        cursor: pointer;
+        border-radius: 0 4px 4px 0;
+        font-weight: 600;
+        font-size: 15px;
+        transition: background-color 0.2s;
+    }
+
+    .coupon-form button:hover {
+        background: #004ecc;
+    }
+
+    #coupon-message {
+        font-size: 14px;
+        margin-top: -10px;
+        margin-bottom: 15px;
+        text-align: left;
+    }
+
+    #coupon-message.success {
+        color: #15803d;
+    }
+
+    #coupon-message.error {
+        color: #dc2626;
+    }
+
+    #discount-row {
+        color: #15803d;
+    }
+
+    .btn-checkout {
+        width: 100%;
+        padding: 14px;
+        font-size: 18px;
+        font-weight: 700;
+        background: #0f62fe;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        text-align: center;
+    }
+
+    .btn-checkout:hover:not(:disabled) {
+        background: #004ecc;
+    }
+
+/* === (MỚI) CSS CHO TRANG CHECKOUT (FIX LỖI 2 CỘT + COUPON) === */
+
+/* 1. ĐỊNH NGHĨA LAYOUT 2 CỘT */
+.checkout-layout {
+    display: grid;
+    /* Tỉ lệ cột 1 (form) 1.5fr, Cột 2 (stack) 1fr */
+    grid-template-columns: 1.5fr 1fr; 
+    gap: var(--spacing-32);
+    align-items: flex-start; /* Căn các cột lên trên cùng */
+}
+
+/* 2. (MỚI) KHỐI XẾP CHỒNG (CỘT 2) */
+.checkout-summary-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-32); /* Khoảng cách giữa 2 card */
+    position: sticky; /* Dính lại khi cuộn */
+    top: 20px;
+}
+
+/* 3. ĐỊNH DẠNG "CARD" CHO (FORM, SUMMARY, PAYMENT) */
+.checkout-form, 
+.order-summary, 
+.payment-summary {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); /* Bo góc 12px */
+    padding: var(--spacing-32);
+    box-shadow: var(--shadow);
+}
+
+/* 4. Căn chỉnh Cột 1 (Form) */
+.checkout-form .form-section { margin-bottom: 0; }
+.checkout-form .form-group { margin-bottom: var(--spacing-16); }
+.checkout-form .form-group label {
+    display: block;
+    font: var(--font-body-s);
+    font-weight: 600;
+    margin-bottom: var(--spacing-8);
+}
+
+/* 5. Căn chỉnh Cột 2 - Card Tóm Tắt (Summary) */
+.order-summary h2 {
+    font: var(--font-h3);
+    font-size: 22px;
+    margin-top: 0;
+    margin-bottom: var(--spacing-24);
+}
+.summary-item-list { display: flex; flex-direction: column; gap: var(--spacing-16); }
+.summary-item { display: flex; align-items: center; gap: var(--spacing-12); }
+.summary-item-image {
+    width: 60px; height: 60px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 4px; flex-shrink: 0;
+}
+.summary-item-image img { width: 100%; height: 100%; object-fit: contain; }
+.summary-item-details { flex: 1; }
+.summary-item-details p { font-weight: 600; font: var(--font-body-s); margin: 0 0 4px 0; }
+.summary-item-details span { font: var(--font-small); color: var(--color-fg-muted); }
+.summary-item-price { font: var(--font-body-s); font-weight: 600; }
+.summary-divider {
+    border: none; height: 1px;
+    background-color: var(--color-border);
+    margin: var(--spacing-24) 0;
+}
+.summary-row { display: flex; justify-content: space-between; margin-bottom: var(--spacing-16); font: var(--font-body-m); }
+.summary-row span:first-child { color: var(--color-fg-muted); }
+.summary-row span:last-child { font-weight: 600; color: var(--color-fg-base); }
+.summary-row.total { font-size: 18px; font-weight: 700; }
+.summary-row.total span:first-child { color: var(--color-fg-base); }
+.summary-row.total span:last-child { color: var(--color-red) !important; }
+
+/* 6. Form Mã giảm giá (MỚI) */
+.coupon-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--spacing-24);
+}
+.coupon-header span { font-weight: 600; }
+.coupon-header a { font-size: 14px; font-weight: 600; text-decoration: none; }
+.coupon-form { display: flex; margin-top: var(--spacing-12); margin-bottom: var(--spacing-8); }
+.coupon-form input[type="text"] {
+    flex: 1; 
+    border: 1px solid var(--color-border);
+    padding: 10px 12px; 
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+    outline: none; font-size: 15px; min-width: 100px;
+    background: var(--color-white); 
+}
+.coupon-form button {
+    border: none; background: var(--color-primary); color: white;
+    padding: 0 15px; cursor: pointer; 
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    font-weight: 600; font-size: 15px;
+}
+#coupon-message { font-size: 14px; margin-bottom: var(--spacing-16); }
+#coupon-message.success { color: #15803d; font-weight: 600; }
+#coupon-message.error { color: #dc2626; font-weight: 600; }
+#discount-row span:last-child { color: #15803d; font-weight: 600; }
+
+/* 7. Card Phương thức thanh toán (MỚI) */
+.payment-summary {
+    /* Đã là card rồi (xem mục 3) */
+}
+.payment-summary h3 {
+    font: var(--font-h4);
+    font-size: 18px;
+    margin-top: 0; /* Xóa margin-top */
+    margin-bottom: var(--spacing-16);
+}
+.payment-methods-list { display: flex; flex-direction: column; gap: var(--spacing-16); }
+.payment-method-box {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-16);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-12);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: var(--color-white); 
+}
+.payment-method-box input[type="radio"] { width: 18px; height: 18px; }
+.payment-method-box img { width: 32px; height: 32px; border-radius: 4px; }
+.payment-method-box label {
+    font: var(--font-body-m);
+    font-weight: 600;
+    flex: 1;
+    margin-bottom: 0; 
+}
+.payment-method-box.active {
+    border-color: var(--color-primary);
+    background-color: var(--color-bg-subtle); 
+}
+.terms-checkbox {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-12);
+    margin-top: var(--spacing-24);
+    font: var(--font-body-s);
+}
+.terms-checkbox label { margin-bottom: 0; }
+.terms-checkbox a { font-weight: 600; text-decoration: underline; }
+.checkout-btn { margin-top: var(--spacing-24); }
+
+/* 8. (MỚI) CSS CHO COUPON MODAL */
+.coupon-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+.coupon-modal {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+.coupon-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-16) var(--spacing-24);
+    border-bottom: 1px solid var(--color-border);
+}
+.coupon-modal-header h3 { font: var(--font-h4); margin: 0; }
+.close-modal-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    font-weight: 300;
+    cursor: pointer;
+    color: var(--color-fg-muted);
+}
+.coupon-modal-body {
+    padding: var(--spacing-24);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-16);
+}
+.coupon-item {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-16);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-16);
+}
+.coupon-info { flex: 1; }
+.coupon-info strong {
+    font-size: 16px;
+    color: var(--color-primary);
+}
+.coupon-info p {
+    font: var(--font-body-s);
+    color: var(--color-fg-muted);
+    margin: 4px 0 0 0;
+}
+.btn-apply-from-modal {
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-border);
+    color: var(--color-primary);
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+}
+
+/* 9. (MỚI) CSS CHO RESPONSIVE */
+@media (max-width: 900px) {
+    .checkout-layout {
+        grid-template-columns: 1fr; /* Xếp 2 cột dọc */
+    }
+    .checkout-summary-stack {
+        position: static; /* Bỏ dính */
+    }
+}
