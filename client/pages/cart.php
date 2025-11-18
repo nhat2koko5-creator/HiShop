@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) {
         alert('Bạn cần đăng nhập để xem giỏ hàng.');
         window.location.href='index.php?page=login&redirect=cart';
     </script>";
-    exit;
+    exit; 
 }
 $user_id = $_SESSION['user_id'];
 
@@ -250,6 +250,7 @@ $is_logged_in = true; // Đã check ở trên
         // (Bỏ logic coupon và checkout)
     });
 </script>
+<link rel="stylesheet" href="../assets/css/style-client.css">
 
 <?php
 require_once 'client/layouts/footer.php';

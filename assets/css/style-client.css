@@ -1839,7 +1839,9 @@ ul {
         position: sticky;
         top: 20px;
     }
-
+.cart-summary {
+    width: 100%;
+}
     .cart-item-price {
         font-size: 18px;
         font-weight: 600;
@@ -1926,23 +1928,52 @@ ul {
         color: #15803d;
     }
 
-    .btn-checkout {
-        width: 100%;
-        padding: 14px;
-        font-size: 18px;
-        font-weight: 700;
-        background: #0f62fe;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-        text-align: center;
-    }
+/* Nút thanh toán: chữ luôn canh giữa, không bị lệch */
+.btn-checkout {
+    box-sizing: border-box;      /* tránh padding ảnh hưởng tính toán width */
+    display: flex;               /* dùng flex để căn giữa theo cả trục */
+    align-items: center;         /* căn giữa theo chiều dọc */
+    justify-content: center;     /* căn giữa theo chiều ngang */
+    width: 100%;                 /* full khung */
+    padding: 14px 18px;          /* padding dọc + ngang hợp lý */
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;              /* đảm bảo chiều cao dòng cố định */
+    white-space: nowrap;         /* không cho xuống dòng */
+    overflow: hidden;            /* tránh tràn chữ */
+    text-overflow: ellipsis;     /* nếu quá dài sẽ hiển thị ... */
+    text-align: center;
 
-    .btn-checkout:hover:not(:disabled) {
-        background: #004ecc;
-    }
+    background: linear-gradient(135deg, #4f46e5, #6366f1);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+}
+/* nếu là thẻ <a> hoặc có icon bên trái, căn khoảng cách icon + chữ */
+.btn-checkout .btn-icon {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+/* khi có icon ở bên phải (nếu dùng) */
+.btn-checkout .btn-icon-right {
+    margin-left: 10px;
+    margin-right: 0;
+}
+
+/* disabled */
+.btn-checkout:disabled {
+    background: #ccc;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
 
 /* === (MỚI) CSS CHO TRANG CHECKOUT (FIX LỖI 2 CỘT + COUPON) === */
 
