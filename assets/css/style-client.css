@@ -403,6 +403,64 @@ ul {
   object-fit: contain;
 }
 
+/* (MỚI) BẮT ĐẦU CSS PHÂN TRANG */
+.pagination-nav {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--spacing-48);
+    margin-bottom: var(--spacing-32);
+}
+
+.pagination {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+}
+
+.pagination li {
+    margin: 0;
+}
+
+.pagination li a {
+    display: block;
+    padding: var(--spacing-12) var(--spacing-16);
+    min-width: 44px;
+    text-align: center;
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    border-left: 1px solid var(--color-border);
+    background: var(--color-white);
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.pagination li:first-child a {
+    border-left: none;
+}
+
+.pagination li a:hover {
+    background-color: var(--color-bg-subtle);
+}
+
+.pagination li a.active {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    cursor: default;
+}
+
+.pagination li a.disabled {
+    color: var(--color-fg-muted);
+    background-color: var(--color-bg-subtle);
+    cursor: not-allowed;
+}
+/* (MỚI) KẾT THÚC CSS PHÂN TRANG */
+
 .sale-tag {
   position: absolute;
   top: var(--spacing-12);
@@ -1076,17 +1134,6 @@ ul {
   font-weight: 700;
   font-size: 22px;
 }
-.price {
-    display: flex;
-    align-items: baseline; /* Căn theo chân chữ */
-    gap: 8px; /* Khoảng cách giữa giá và ghi chú */
-}
-
-.price-note {
-    font-size: 16px; 
-    font-weight: 500;
-    color: var(--color-fg-muted); /* Màu xám */
-}
 
 /* --- OPTIONS (COLOR / SSD / RAM / ANY) --- */
 .option-box {
@@ -1381,7 +1428,6 @@ ul {
   font-size: 16px;
   margin-top: 40px;
 }
-
 
 
 /* === (MỚI) CSS BỔ SUNG CHO FOOTER ICONS === */
@@ -1957,60 +2003,7 @@ ul {
     }
 
 /* === (MỚI) CSS CHO TRANG CHECKOUT (FIX LỖI 2 CỘT + COUPON) === */
-/* CSS cho Modal Thông Báo (MỚI) */
-.alert-modal-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 2000; /* Cao hơn modal cũ */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.alert-modal-box {
-    background: var(--color-white);
-    border-radius: var(--radius-md);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    width: 90%;
-    max-width: 400px;
-}
-.alert-modal-header {
-    padding: var(--spacing-16) var(--spacing-24);
-    border-bottom: 1px solid var(--color-border);
-}
-.alert-modal-title {
-    font: var(--font-h4);
-    margin: 0;
-}
-.alert-modal-body {
-    padding: var(--spacing-24);
-    font: var(--font-body-m);
-    color: var(--color-fg-muted);
-}
-.alert-modal-footer {
-    padding: var(--spacing-16);
-    background-color: var(--color-bg-subtle);
-    text-align: right;
-    border-top: 1px solid var(--color-border);
-    border-radius: 0 0 var(--radius-md) var(--radius-md);
-}
-.btn-alert-close {
-    background-color: var(--color-primary);
-    color: var(--color-white);
-    border: none;
-    padding: var(--spacing-12) var(--spacing-24);
-    border-radius: var(--radius-md);
-    font-weight: 600;
-    cursor: pointer;
-}
-/* Trạng thái Success/Error */
-.alert-modal-box.success .alert-modal-title {
-    color: #15803d; /* Xanh lá */
-}
-.alert-modal-box.error .alert-modal-title {
-    color: #dc2626; /* Đỏ */
-}
+
 /* 1. ĐỊNH NGHĨA LAYOUT 2 CỘT */
 .checkout-layout {
     display: grid;
@@ -2227,7 +2220,17 @@ ul {
     cursor: pointer;
 }
 
-/* CSS CHO VARIANT MODAL */
+/* 9. (MỚI) CSS CHO RESPONSIVE */
+@media (max-width: 900px) {
+    .checkout-layout {
+        grid-template-columns: 1fr; /* Xếp 2 cột dọc */
+    }
+    .checkout-summary-stack {
+        position: static; /* Bỏ dính */
+    }
+}
+
+/* (MỚI) BẮT ĐẦU: CSS CHO VARIANT MODAL (TỪ HOME.PHP) */
 .variant-modal-overlay {
     position: fixed; top: 0; left: 0;
     width: 100%; height: 100%;
@@ -2270,6 +2273,20 @@ ul {
     cursor: not-allowed;
     text-decoration: line-through;
 }
+.stock-info.out { color: #dc2626; font-weight: bold; }
+
+.variant-modal-footer {
+    display: flex; gap: var(--spacing-16);
+    padding: var(--spacing-24);
+    background: var(--color-bg-subtle);
+    border-top: 1px solid var(--color-border);
+}
+.variant-modal-footer .btn { width: 100%; }
+.variant-modal-footer .btn:disabled {
+    background-color: #ccc !important;
+    cursor: not-allowed !important;
+}
+
 /* CSS CHO HÌNH ẢNH TRONG MODAL (MỚI) */
 .modal-product-info {
     display: flex;
@@ -2293,26 +2310,4 @@ ul {
 .modal-product-details {
     flex-grow: 1; /* Cho phép chi tiết giãn ra */
 }
-.stock-info.out { color: #dc2626; font-weight: bold; }
-
-.variant-modal-footer {
-    display: flex; gap: var(--spacing-16);
-    padding: var(--spacing-24);
-    background: var(--color-bg-subtle);
-    border-top: 1px solid var(--color-border);
-}
-.variant-modal-footer .btn { width: 100%; }
-.variant-modal-footer .btn:disabled {
-    background-color: #ccc !important;
-    cursor: not-allowed !important;
-}
-
-/* 9. (MỚI) CSS CHO RESPONSIVE */
-@media (max-width: 900px) {
-    .checkout-layout {
-        grid-template-columns: 1fr; /* Xếp 2 cột dọc */
-    }
-    .checkout-summary-stack {
-        position: static; /* Bỏ dính */
-    }
-}
+/* (MỚI) KẾT THÚC: CSS CHO VARIANT MODAL */
