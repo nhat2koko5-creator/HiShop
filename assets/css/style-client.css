@@ -1076,6 +1076,17 @@ ul {
   font-weight: 700;
   font-size: 22px;
 }
+.price {
+    display: flex;
+    align-items: baseline; /* Căn theo chân chữ */
+    gap: 8px; /* Khoảng cách giữa giá và ghi chú */
+}
+
+.price-note {
+    font-size: 16px; 
+    font-weight: 500;
+    color: var(--color-fg-muted); /* Màu xám */
+}
 
 /* --- OPTIONS (COLOR / SSD / RAM / ANY) --- */
 .option-box {
@@ -1370,6 +1381,7 @@ ul {
   font-size: 16px;
   margin-top: 40px;
 }
+
 
 
 /* === (MỚI) CSS BỔ SUNG CHO FOOTER ICONS === */
@@ -1945,7 +1957,60 @@ ul {
     }
 
 /* === (MỚI) CSS CHO TRANG CHECKOUT (FIX LỖI 2 CỘT + COUPON) === */
-
+/* CSS cho Modal Thông Báo (MỚI) */
+.alert-modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 2000; /* Cao hơn modal cũ */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.alert-modal-box {
+    background: var(--color-white);
+    border-radius: var(--radius-md);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    width: 90%;
+    max-width: 400px;
+}
+.alert-modal-header {
+    padding: var(--spacing-16) var(--spacing-24);
+    border-bottom: 1px solid var(--color-border);
+}
+.alert-modal-title {
+    font: var(--font-h4);
+    margin: 0;
+}
+.alert-modal-body {
+    padding: var(--spacing-24);
+    font: var(--font-body-m);
+    color: var(--color-fg-muted);
+}
+.alert-modal-footer {
+    padding: var(--spacing-16);
+    background-color: var(--color-bg-subtle);
+    text-align: right;
+    border-top: 1px solid var(--color-border);
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+.btn-alert-close {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    padding: var(--spacing-12) var(--spacing-24);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+}
+/* Trạng thái Success/Error */
+.alert-modal-box.success .alert-modal-title {
+    color: #15803d; /* Xanh lá */
+}
+.alert-modal-box.error .alert-modal-title {
+    color: #dc2626; /* Đỏ */
+}
 /* 1. ĐỊNH NGHĨA LAYOUT 2 CỘT */
 .checkout-layout {
     display: grid;

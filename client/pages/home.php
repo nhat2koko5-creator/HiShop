@@ -105,7 +105,11 @@ $featuredProducts = getFeaturedProducts($pdo);
 
                             <div class="btn-group-vertical">
                                 <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">🔍 Xem chi tiết</a>
-                                <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">🛒 Thêm vào giỏ hàng</a>
+                               <a href="javascript:void(0);" 
+                                class="btn-cart btn-add-ajax" 
+                                data-id="<?= $sp['id']; ?>">
+                                🛒 Thêm vào giỏ hàng
+                            </a>
                             </div>
 
                             </div>
@@ -121,4 +125,65 @@ $featuredProducts = getFeaturedProducts($pdo);
         <div class="swiper-button-prev"></div>
         <div class="swiper-button-next"></div>
     </div>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Hàm gửi AJAX (tương tự như ở các trang khác)
+    async function sendCartRequest(action, data) {
+        const formData = new URLSearchParams();
+        formData.append('action', action);
+        for (const key in data) {
+            formData.append(key, data[key]);
+        }
+        
+        try {
+            const response = await fetch('cart-handler.php', { // Gọi thẳng đến cart-handler
+                method: 'POST',
+                body: formData
+            });
+            return await response.json();
+        } catch (err) {
+            return { status: 'error', message: 'Lỗi kết nối.' };
+        }
+    }
+
+    // Hàm xử lý khi nhấn nút
+    async function handleAjaxAddToCart(e) {
+        e.preventDefault(); // Ngăn hành vi mặc định của thẻ <a>
+        
+        const productId = e.currentTarget.dataset.id;
+        if (!productId) return;
+
+        // Gọi API
+        const data = await sendCartRequest('add', { 
+            id: productId, 
+            quantity: 1 
+        });
+
+        if (data.status === 'success') {
+            // Hiển thị thông báo (tạm dùng alert, vì modal-thông-báo không có ở trang này)
+            alert('Đã thêm sản phẩm vào giỏ hàng!');
+            
+            // Cập nhật icon giỏ hàng (nếu hàm này tồn tại)
+            if (typeof updateCartIconCount === 'function' && data.totalItems) {
+                updateCartIconCount(data.totalItems);
+            }
+        } else {
+            // Nếu người dùng chưa đăng nhập, cart-handler.php sẽ trả về lỗi
+            // Chuyển họ đến trang đăng nhập
+            if (data.message.includes('Bạn cần đăng nhập')) {
+                alert('Bạn cần đăng nhập để thêm vào giỏ hàng.');
+                window.location.href = 'index.php?page=login';
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        }
+    }
+
+    // Gán sự kiện cho tất cả các nút có class .btn-add-ajax
+    document.querySelectorAll('.btn-add-ajax').forEach(button => {
+        button.addEventListener('click', handleAjaxAddToCart);
+    });
+});
+</script>
 </section>
