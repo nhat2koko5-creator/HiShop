@@ -19,54 +19,99 @@ function getActiveCategories(PDO $pdo) {
         return []; // Trả về mảng rỗng nếu có lỗi
     }
 }
-
 /**
- * Lấy các sản phẩm nổi bật cho carousel trang chủ.
- * Khớp với bảng: `san_pham`, `san_pham_noi_bat`, `giam_gia`
+ * Lấy các sản phẩm nổi bật CHO TRANG CHỦ
+ * (ĐÃ NÂNG CẤP - TẢI LUÔN CÁC BIẾN THỂ)
  */
 function getFeaturedProducts(PDO $pdo) {
     try {
-        // (SỬA LỖI) Đây là câu SQL ĐÚNG cho hàm này
-        $sql = "
+        // --- BƯỚC 1: Lấy 8 sản phẩm nổi bật (giống như cũ) ---
+        $sql_products = "
             SELECT 
                 sp.id, 
                 sp.ten, 
-                sp.gia AS gia_goc, 
                 sp.hinh_anh,
+                sp.gia AS gia_goc_cu, /* (Tạm giữ giá gốc cũ) */
                 gg.loai_giam_gia,
-                gg.gia_tri AS gia_tri_giam,
+                gg.gia_tri AS gia_tri_giam
                 
-                CASE 
-                    WHEN gg.loai_giam_gia = 'percent' THEN sp.gia * (1 - gg.gia_tri / 100)
-                    WHEN gg.loai_giam_gia = 'amount' THEN sp.gia - gg.gia_tri
-                    ELSE NULL 
-                END AS gia_moi
-
             FROM san_pham AS sp
-            
             JOIN san_pham_noi_bat AS spnb ON sp.id = spnb.san_pham_id
-            
             LEFT JOIN san_pham_giam_gia AS spgg ON sp.id = spgg.san_pham_id
             LEFT JOIN giam_gia AS gg ON spgg.giam_gia_id = gg.id 
                  AND gg.ngay_bat_dau <= NOW() 
                  AND gg.ngay_ket_thuc >= NOW()
             
-            WHERE 
-                sp.trang_thai = 1
-            
+            WHERE sp.trang_thai = 1
             GROUP BY sp.id 
             LIMIT 8; 
         ";
+        $stmt_products = $pdo->query($sql_products);
+        $featuredProducts = $stmt_products->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($featuredProducts)) {
+            return []; // Không có gì thì dừng lại
+        }
+
+        // --- (MỚI) BƯỚC 2: Tối ưu hóa (Chỉ chạy 2 truy vấn) ---
         
-        $stmt = $pdo->query($sql);
-        return $stmt->fetchAll();
+        // Lấy danh sách ID của 8 sản phẩm
+        $product_ids = array_column($featuredProducts, 'id');
+        
+        // Chuẩn bị câu lệnh IN (...)
+        $placeholders = implode(',', array_fill(0, count($product_ids), '?'));
+        
+        // --- (MỚI) BƯỚC 3: Lấy TẤT CẢ biến thể của 8 SP đó trong 1 LẦN ---
+        $sql_variants = "
+            SELECT * FROM bien_the_san_pham 
+            WHERE san_pham_id IN ($placeholders)
+        ";
+        $stmt_variants = $pdo->prepare($sql_variants);
+        $stmt_variants->execute($product_ids);
+        $all_variants = $stmt_variants->fetchAll(PDO::FETCH_ASSOC);
+
+        // --- (MỚI) BƯỚC 4: Map (nhóm) các biến thể về đúng sản phẩm ---
+        $variants_map = [];
+        foreach ($all_variants as $variant) {
+            $variants_map[$variant['san_pham_id']][] = $variant;
+        }
+
+        // --- (MỚI) BƯỚC 5: Gắn biến thể vào mảng sản phẩm chính ---
+        foreach ($featuredProducts as $i => $product) {
+            $product_id = $product['id'];
+            
+            if (isset($variants_map[$product_id])) {
+                // Gắn mảng biến thể vào sản phẩm
+                $featuredProducts[$i]['variants'] = $variants_map[$product_id];
+                
+                // (QUAN TRỌNG) Cập nhật giá "từ" (là giá biến thể rẻ nhất)
+                $prices = array_column($variants_map[$product_id], 'gia');
+                $featuredProducts[$i]['gia_goc'] = min($prices); // Ghi đè giá gốc
+
+                // (Tùy chọn) Tính giảm giá dựa trên giá 'từ'
+                if (isset($product['loai_giam_gia'])) {
+                     if ($product['loai_giam_gia'] == 'percent') {
+                         $featuredProducts[$i]['gia_moi'] = $featuredProducts[$i]['gia_goc'] * (1 - $product['gia_tri_giam'] / 100);
+                     } else {
+                         $featuredProducts[$i]['gia_moi'] = $featuredProducts[$i]['gia_goc'] - $product['gia_tri_giam'];
+                     }
+                }
+
+            } else {
+                // Sản phẩm không có biến thể (hoặc lỗi)
+                $featuredProducts[$i]['variants'] = [];
+                // Sử dụng giá gốc cũ (nếu có)
+                $featuredProducts[$i]['gia_goc'] = $product['gia_goc_cu']; 
+            }
+        }
+        
+        return $featuredProducts;
 
     } catch (PDOException $e) {
         error_log($e->getMessage());
         return [];
     }
 }
-
 /**
  * LẤY THÔNG TIN CHI TIẾT CỦA 1 SẢN PHẨM (cho trang PDP)
  */
