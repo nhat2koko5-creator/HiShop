@@ -1,5 +1,6 @@
 <?php
 // FILE: client/pages/home.php
+// (Code này giả định bạn đã cập nhật hàm getFeaturedProducts() trong functions.php)
 
 // (PHẦN BACK-END)
 // Lấy sản phẩm nổi bật. Biến $pdo và $categories đã có sẵn từ index.php
@@ -77,47 +78,58 @@ $featuredProducts = getFeaturedProducts($pdo);
                     <?php foreach ($featuredProducts as $sp): ?>
                     <div class="swiper-slide">
                         <div class="product-card">
+                            
                             <?php if (isset($sp['gia_moi'])): ?>
-                                <div class="sale-tag">
-                                    <?php if ($sp['loai_giam_gia'] == 'percent'): ?>
-                                        -<?= (int)$sp['gia_tri_giam']; ?>%
-                                    <?php else: ?>
-                                        SALE
-                                    <?php endif; ?>
-                                </div>
+                                <div class="sale-tag">SALE <?= round((1 - $sp['gia_moi'] / $sp['gia_goc']) * 100) ?>%</div>
                             <?php endif; ?>
-
+                            
                             <div class="product-image">
-                                <img src="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>" 
-                            alt="<?= htmlspecialchars($sp['ten']); ?>">
+                                <?php
+                                $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
+                                if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
+                                    $img_path = 'assets/img/no-image.png'; // Ảnh mặc định
+                                }
+                                ?>
+                                <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
                             </div>
 
                             <div class="card-content">
                                 <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
+                                
                                 <div class="card-price">
                                     <?php if (isset($sp['gia_moi'])): ?>
                                         <span class="card-price-old"><?= number_format($sp['gia_goc']); ?>₫</span>
                                         <span class="card-price-new"><?= number_format($sp['gia_moi']); ?>₫</span>
                                     <?php else: ?>
-                                        <span class="card-price-new"><?= number_format($sp['gia_goc']); ?>₫</span>
+                                        <span class="card-price-new"><?= number_format($sp['gia_goc'] ?? 0); ?>₫</span>
+                                    <?php endif; ?>
+                                    
+                                    <?php if (isset($sp['variants']) && count($sp['variants']) > 1): ?>
+                                        <span style="font-size: 14px; color: #6B7280;"></span>
                                     <?php endif; ?>
                                 </div>
 
-                            <div class="btn-group-vertical">
-                                <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">🔍 Xem chi tiết</a>
-                               <a href="javascript:void(0);" 
-                                class="btn-cart btn-add-ajax" 
-                                data-id="<?= $sp['id']; ?>">
-                                🛒 Thêm vào giỏ hàng
-                            </a>
-                            </div>
-
+                                <div class="btn-group-vertical">
+                                    <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">🔍 Xem chi tiết</a>
+                                    
+                                    <?php if (!empty($sp['variants'])): ?>
+                                        <a href="javascript:void(0);" 
+                                           class="btn-cart btn-quick-add" 
+                                           data-product-id="<?= $sp['id']; ?>"
+                                           data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
+                                           data-product-image="<?= htmlspecialchars($sp['hinh_anh']); ?>"
+                                           data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, 'UTF-8'); ?>'
+                                        >
+                                            🛒 Thêm vào giỏ
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <p>Không tìm thấy sản phẩm nổi bật nào.</p>
+                    <p style="text-align: center; width: 100%;">Không tìm thấy sản phẩm nổi bật nào.</p>
                 <?php endif; ?>
             </div>
         </div>
@@ -125,65 +137,363 @@ $featuredProducts = getFeaturedProducts($pdo);
         <div class="swiper-button-prev"></div>
         <div class="swiper-button-next"></div>
     </div>
-    <script>
+
+    <div class="variant-modal-overlay" id="quick-add-modal" style="display: none;">
+        <div class="variant-modal-box">
+            <div class="variant-modal-header">
+                <h3 id="modal-product-name">[Tên sản phẩm]</h3>
+                <button class="close-variant-modal" id="modal-close-btn">&times;</button>
+            </div>
+           <div class="variant-modal-body">
+            <div class="modal-product-info">
+                <div class="modal-product-image">
+                    <img id="modal-product-main-image" src="assets/img/no-image.png" alt="Product Image">
+                </div>
+                <div class="modal-product-details">
+                    <div class="price" style="margin-bottom: 20px;">
+                        Giá: 
+                        <span class="current" id="modal-product-price" style="margin-left: 8px; font-size: 20px; font-weight: 700;">--</span>
+                    </div>
+                    <div class="stock-info" id="modal-stock-status">Vui lòng chọn tùy chọn</div>
+                </div>
+            </div>
+
+            <hr style="margin: 20px 0;">
+
+            <div class="option-group" id="modal-color-group">
+                <h4>Màu sắc</h4>
+                <div class="option-box" id="modal-color-options">
+                    </div>
+            </div>
+            <div class="option-group" id="modal-ssd-group">
+                <h4>SSD</h4>
+                <div class="option-box" id="modal-ssd-options">
+                    </div>
+            </div>
+        </div>
+            <div class="variant-modal-footer">
+                <button class="btn btn-outline" id="modal-cancel-btn">Hủy</button>
+                <button class="btn btn-primary" id="modal-add-btn" disabled>Thêm vào giỏ</button>
+            </div>
+        </div>
+    </div>
+    </section>
+
+
+<style>
+/* CSS CHO VARIANT MODAL */
+.variant-modal-overlay {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+}
+.variant-modal-box {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    width: 90%; max-width: 450px;
+}
+.variant-modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: var(--spacing-16) var(--spacing-24);
+    border-bottom: 1px solid var(--color-border);
+}
+.variant-modal-header h3 { font: var(--font-h4); margin: 0; }
+.close-variant-modal {
+    background: none; border: none;
+    font-size: 28px; cursor: pointer; color: var(--color-fg-muted);
+}
+.variant-modal-body { padding: var(--spacing-24); }
+.variant-modal-body .option-group { margin-bottom: var(--spacing-16); }
+.variant-modal-body .option-group h4 { margin-bottom: var(--spacing-12); }
+.variant-modal-body .option-box { display: flex; flex-wrap: wrap; gap: var(--spacing-12); }
+.variant-modal-body .option {
+    border: 1px solid #ccc; padding: 8px 16px; border-radius: 8px;
+    cursor: pointer; user-select: none; transition: 0.2s;
+}
+.variant-modal-body .option:hover { border-color: #007bff; }
+.variant-modal-body .option.active {
+    background-color: var(--color-primary); color: white; border-color: var(--color-primary);
+}
+/* Style cho tùy chọn bị vô hiệu hóa */
+.variant-modal-body .option.disabled {
+    background-color: #f3f4f6;
+    color: #ccc;
+    border-color: #eee;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+/* CSS CHO HÌNH ẢNH TRONG MODAL (MỚI) */
+.modal-product-info {
+    display: flex;
+    gap: var(--spacing-24); /* Khoảng cách giữa ảnh và chi tiết */
+    align-items: flex-start; /* Căn trên cùng */
+    margin-bottom: var(--spacing-24);
+}
+.modal-product-image {
+    flex-shrink: 0; /* Không co lại */
+    width: 120px; /* Chiều rộng ảnh */
+    height: 120px; /* Chiều cao ảnh */
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+}
+.modal-product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Đảm bảo ảnh đầy đủ khung */
+}
+.modal-product-details {
+    flex-grow: 1; /* Cho phép chi tiết giãn ra */
+}
+.stock-info.out { color: #dc2626; font-weight: bold; }
+
+.variant-modal-footer {
+    display: flex; gap: var(--spacing-16);
+    padding: var(--spacing-24);
+    background: var(--color-bg-subtle);
+    border-top: 1px solid var(--color-border);
+}
+.variant-modal-footer .btn { width: 100%; }
+.variant-modal-footer .btn:disabled {
+    background-color: #ccc !important;
+    cursor: not-allowed !important;
+}
+</style>
+
+<script>
 document.addEventListener('DOMContentLoaded', function() {
     
-    // Hàm gửi AJAX (tương tự như ở các trang khác)
+    // --- Biến DOM (cho modal) ---
+    const modal = document.getElementById('quick-add-modal');
+    const modalProductName = document.getElementById('modal-product-name');
+    const modalPrice = document.getElementById('modal-product-price');
+    const modalStock = document.getElementById('modal-stock-status');
+    const modalColorBox = document.getElementById('modal-color-options');
+    const modalSsdBox = document.getElementById('modal-ssd-options');
+    const modalAddBtn = document.getElementById('modal-add-btn');
+    const modalMainImage = document.getElementById('modal-product-main-image');
+    
+    // --- Biến Trạng Thái (sẽ được reset) ---
+    let currentVariants = []; // Dữ liệu JSON từ data-variants
+    let currentProductId = null;
+    let selectedColor = null;
+    let selectedSSD = null;
+    let currentSelectedVariant = null; // {id, gia, ...}
+
+    // === HÀM 1: MỞ VÀ ĐIỀN DỮ LIỆU VÀO MODAL ===
+    function openQuickAddModal(e) {
+        e.preventDefault();
+        const btn = e.currentTarget;
+
+        // Lấy dữ liệu từ nút
+        currentProductId = btn.dataset.productId;
+        modalProductName.textContent = btn.dataset.productName;
+        const productImage = btn.dataset.productImage;
+        modalMainImage.src = productImage ? `assets/img/products/${productImage}` : 'assets/img/no-image.png';
+        
+        try {
+            currentVariants = JSON.parse(btn.dataset.variants);
+        } catch(e) {
+            alert('Lỗi dữ liệu biến thể. Vui lòng thử lại.');
+            return;
+        }
+
+        // --- (MỚI) Tự động xây dựng các tùy chọn ---
+        const colors = [...new Set(currentVariants.map(v => v.mau_sac))];
+        const ssds = [...new Set(currentVariants.map(v => v.dung_luong_ssd))];
+
+        // Tạo HTML cho Màu
+        modalColorBox.innerHTML = ''; // Xóa sạch
+        colors.forEach(color => {
+            const opt = document.createElement('div');
+            opt.className = 'option';
+            opt.dataset.group = 'color';
+            opt.dataset.value = color;
+            opt.textContent = color;
+            modalColorBox.appendChild(opt);
+        });
+
+        // Tạo HTML cho SSD
+        modalSsdBox.innerHTML = ''; // Xóa sạch
+        ssds.forEach(ssd => {
+            const opt = document.createElement('div');
+            opt.className = 'option';
+            opt.dataset.group = 'ssd';
+            opt.dataset.value = ssd;
+            opt.textContent = ssd;
+            modalSsdBox.appendChild(opt);
+        });
+        
+        // Reset giá và hiển thị modal
+        modalPrice.textContent = '--';
+        modalStock.textContent = 'Vui lòng chọn tùy chọn';
+        modalStock.className = 'stock-info';
+        modal.style.display = 'flex';
+    }
+
+    // === HÀM 2: ĐÓNG VÀ RESET MODAL ===
+    function closeQuickAddModal() {
+        modal.style.display = 'none';
+        // Reset tất cả
+        currentVariants = [];
+        currentProductId = null;
+        selectedColor = null;
+        selectedSSD = null;
+        currentSelectedVariant = null;
+        modalAddBtn.disabled = true;
+    }
+
+    // === HÀM 3: KIỂM TRA LỰA CHỌN (Logic chính) ===
+    function checkModalSelections() {
+        // 1. Reset
+        modalAddBtn.disabled = true;
+        currentSelectedVariant = null;
+
+        // 2. Chỉ tiếp tục nếu đã chọn đủ
+        if (!selectedColor || !selectedSSD) {
+            return;
+        }
+
+        // 3. Tìm biến thể
+        // (MỚI) Dùng hàm find() để tìm trong mảng JSON
+        const variant = currentVariants.find(v => (v.mau_sac === selectedColor && v.dung_luong_ssd === selectedSSD));
+
+        if (variant) {
+            // 4. TÌM THẤY
+            modalPrice.textContent = formatPrice(variant.gia);
+            
+            if (variant.so_luong_ton > 0) {
+                modalStock.textContent = "Còn " + variant.so_luong_ton + " sản phẩm";
+                modalStock.className = 'stock-info';
+                modalAddBtn.disabled = false;
+                currentSelectedVariant = variant; // Lưu lại
+            } else {
+                modalStock.textContent = "Hết hàng";
+                modalStock.className = 'stock-info out';
+            }
+            if (variant.hinh_anh) {
+              modalMainImage.src = `assets/img/products/${variant.hinh_anh}`;
+          } else {
+              // Nếu biến thể không có ảnh riêng, revert về ảnh sản phẩm gốc
+              // (Chúng ta cần lưu lại ảnh sản phẩm gốc khi mở modal)
+              // Để đơn giản, hiện tại sẽ giữ nguyên ảnh mặc định
+              // Để làm đúng, bạn cần truyền cả ảnh gốc vào data- thuộc tính của nút btn-quick-add
+              // Ví dụ: modalMainImage.src = `assets/img/products/${btn.dataset.productImage}`;
+        }
+        } else {
+            // 5. KHÔNG TÌM THẤY (Kết hợp không tồn tại)
+            modalPrice.textContent = '--';
+            modalStock.textContent = "Tùy chọn không có sẵn";
+            modalStock.className = 'stock-info out';
+        }
+    }
+
+    // === HÀM 4 & 5: GỌI AJAX VÀ HIỂN THỊ POPUP ===
     async function sendCartRequest(action, data) {
         const formData = new URLSearchParams();
         formData.append('action', action);
-        for (const key in data) {
-            formData.append(key, data[key]);
-        }
-        
+        for (const key in data) formData.append(key, data[key]);
         try {
-            const response = await fetch('cart-handler.php', { // Gọi thẳng đến cart-handler
-                method: 'POST',
-                body: formData
-            });
+            const response = await fetch('cart-handler.php', { method: 'POST', body: formData });
             return await response.json();
         } catch (err) {
             return { status: 'error', message: 'Lỗi kết nối.' };
         }
     }
 
-    // Hàm xử lý khi nhấn nút
-    async function handleAjaxAddToCart(e) {
-        e.preventDefault(); // Ngăn hành vi mặc định của thẻ <a>
-        
-        const productId = e.currentTarget.dataset.id;
-        if (!productId) return;
-
-        // Gọi API
-        const data = await sendCartRequest('add', { 
-            id: productId, 
-            quantity: 1 
+    function showPopup(msg) {
+        const el = document.createElement('div');
+        el.textContent = msg;
+        Object.assign(el.style, {
+            position:'fixed', bottom:'30px', right:'30px',
+            background:'#0f62fe', color:'#fff', padding:'12px 20px',
+            borderRadius:'12px', boxShadow:'0 4px 10px rgba(0,0,0,0.2)',
+            zIndex:'9999', transition:'opacity 0.5s'
         });
+        document.body.appendChild(el);
+        setTimeout(()=>el.style.opacity='0',2000);
+        setTimeout(()=>el.remove(),2500);
+    }
+    
+    function formatPrice(n) {
+        const number = Number(n); 
+        if (isNaN(number)) return 'Liên hệ';
+        return number.toLocaleString('vi-VN') + '₫';
+    }
 
-        if (data.status === 'success') {
-            // Hiển thị thông báo (tạm dùng alert, vì modal-thông-báo không có ở trang này)
-            alert('Đã thêm sản phẩm vào giỏ hàng!');
-            
-            // Cập nhật icon giỏ hàng (nếu hàm này tồn tại)
-            if (typeof updateCartIconCount === 'function' && data.totalItems) {
+
+    // === GÁN SỰ KIỆN ===
+
+    // 1. Gán sự kiện cho tất cả nút "Thêm vào giỏ"
+    document.querySelectorAll('.btn-quick-add').forEach(button => {
+        button.addEventListener('click', openQuickAddModal);
+    });
+
+    // 2. Gán sự kiện cho các nút đóng modal
+    document.getElementById('modal-close-btn').addEventListener('click', closeQuickAddModal);
+    document.getElementById('modal-cancel-btn').addEventListener('click', closeQuickAddModal);
+    modal.addEventListener('click', e => {
+        if (e.target === modal) closeQuickAddModal();
+    });
+
+    // 3. (MỚI) Dùng "Event Delegation" để xử lý các nút .option được tạo động
+    modal.addEventListener('click', function(e) {
+        // Chỉ xử lý nếu nhấn vào .option
+        if (!e.target.classList.contains('option') || e.target.classList.contains('disabled')) {
+            return;
+        }
+
+        const group = e.target.dataset.group;
+        const value = e.target.dataset.value;
+
+        if (group === 'color') {
+            selectedColor = value;
+            // Xóa active cũ
+            modalColorBox.querySelectorAll('.option').forEach(o => o.classList.remove('active'));
+        } else if (group === 'ssd') {
+            selectedSSD = value;
+            // Xóa active cũ
+            modalSsdBox.querySelectorAll('.option').forEach(o => o.classList.remove('active'));
+        }
+        
+        // Thêm active mới
+        e.target.classList.add('active');
+        
+        // Kiểm tra
+        checkModalSelections();
+    });
+
+    // 4. Gán sự kiện cho nút "Thêm vào giỏ" TRONG MODAL
+    modalAddBtn.addEventListener('click', async function() {
+        if (!currentSelectedVariant) return;
+
+        const bodyData = {
+            action: 'add',
+            id: currentProductId, // ID sản phẩm gốc
+            variant_id: currentSelectedVariant.id, // ID biến thể
+            quantity: 1
+        };
+        
+        const data = await sendCartRequest('add', bodyData);
+        closeQuickAddModal(); // Đóng modal ngay
+
+        if (data.status === "success") {
+            showPopup('🛒 Sản phẩm đã được thêm vào giỏ hàng!');
+            if (typeof updateCartIconCount === "function") {
                 updateCartIconCount(data.totalItems);
             }
         } else {
-            // Nếu người dùng chưa đăng nhập, cart-handler.php sẽ trả về lỗi
-            // Chuyển họ đến trang đăng nhập
+            // Xử lý lỗi (ví dụ: chưa đăng nhập)
             if (data.message.includes('Bạn cần đăng nhập')) {
-                alert('Bạn cần đăng nhập để thêm vào giỏ hàng.');
-                window.location.href = 'index.php?page=login';
+                // (ĐÃ SỬA LỖI CÚ PHÁP TẠI ĐÂY)
+                showPopup("Lỗi: " + data.message);
+                setTimeout(() => { window.location.href = 'index.php?page=login'; }, 1500);
             } else {
-                alert('Lỗi: ' + data.message);
+                showPopup("Lỗi: " + data.message);
             }
         }
-    }
-
-    // Gán sự kiện cho tất cả các nút có class .btn-add-ajax
-    document.querySelectorAll('.btn-add-ajax').forEach(button => {
-        button.addEventListener('click', handleAjaxAddToCart);
     });
 });
 </script>
-</section>

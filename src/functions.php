@@ -62,14 +62,21 @@ function getFeaturedProducts(PDO $pdo) {
         $placeholders = implode(',', array_fill(0, count($product_ids), '?'));
         
         // --- (MỚI) BƯỚC 3: Lấy TẤT CẢ biến thể của 8 SP đó trong 1 LẦN ---
-        $sql_variants = "
-            SELECT * FROM bien_the_san_pham 
+       $sql_variants = "
+            SELECT 
+                id, 
+                san_pham_id, 
+                gia, 
+                so_luong_ton, 
+                mau_sac, 
+                dung_luong_ssd,
+                hinh_anh /* (ĐÃ THÊM: trường hình ảnh của biến thể) */
+            FROM bien_the_san_pham 
             WHERE san_pham_id IN ($placeholders)
         ";
         $stmt_variants = $pdo->prepare($sql_variants);
         $stmt_variants->execute($product_ids);
         $all_variants = $stmt_variants->fetchAll(PDO::FETCH_ASSOC);
-
         // --- (MỚI) BƯỚC 4: Map (nhóm) các biến thể về đúng sản phẩm ---
         $variants_map = [];
         foreach ($all_variants as $variant) {
