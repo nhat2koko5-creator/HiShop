@@ -413,3 +413,146 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+<!-- ============= KHỐI SẢN PHẨM NỔI BẬT _THỨ 2_ ============= -->
+<?php
+// LẤY SẢN PHẨM GIẢM GIÁ TỪ  san_pham_giam_gia  +  giam_gia  +  san_pham
+try {
+    $sql = "
+        SELECT 
+            sp.id,
+            sp.ten,
+            sp.hinh_anh,
+            sp.gia AS gia_goc,
+            gg.loai_giam_gia,
+            gg.gia_tri,
+            (
+                CASE 
+                    WHEN gg.loai_giam_gia = 'percent' 
+                        THEN sp.gia - (sp.gia * gg.gia_tri / 100)
+                    WHEN gg.loai_giam_gia = 'amount' 
+                        THEN sp.gia - gg.gia_tri
+                    ELSE sp.gia
+                END
+            ) AS gia_moi
+        FROM san_pham_giam_gia spgg
+        JOIN san_pham sp ON sp.id = spgg.san_pham_id
+        JOIN giam_gia gg ON gg.id = spgg.giam_gia_id
+        WHERE (gg.ngay_bat_dau IS NULL OR gg.ngay_bat_dau <= NOW())
+          AND (gg.ngay_ket_thuc IS NULL OR gg.ngay_ket_thuc >= NOW())
+        ORDER BY gg.id DESC, sp.id ASC
+        LIMIT 20
+    ";
+    $stmt = $pdo->query($sql);
+    $discountProducts = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+} catch (PDOException $e) {
+    // Nếu có lỗi, không chết giao diện — để trống danh sách và log lỗi nếu cần
+    $discountProducts = [];
+    error_log('Error fetching discount products: ' . $e->getMessage());
+}
+?>
+
+<section class="product-section container">
+    <span class="section-subtitle">GỢI Ý HÔM NAY</span>
+    <h2 class="section-title">Các Sản phẩm giảm giá</h2>
+    
+    <div class="product-carousel-wrapper">
+        <div class="swiper product-carousel-2">
+            <div class="swiper-wrapper">
+                <?php if (!empty($discountProducts)): ?>
+                    <?php foreach ($discountProducts as $sp): ?>
+                    <div class="swiper-slide">
+                        <div class="product-card">
+                            
+<?php
+// TÍNH % GIẢM GIÁ CHUẨN
+$discountPercent = 0;
+if (!empty($sp['loai_giam_gia']) && !empty($sp['gia_tri'])) {
+    if ($sp['loai_giam_gia'] == 'percent') {
+        $discountPercent = (int)$sp['gia_tri'];
+    } else { 
+        // amount → đổi sang %
+        if ($sp['gia_goc'] > 0) {
+            $discountPercent = round(($sp['gia_tri'] / $sp['gia_goc']) * 100);
+        }
+    }
+}
+?>
+
+<?php if ($discountPercent > 0): ?>
+    <div class="sale-tag">-<?= $discountPercent ?>%</div>
+<?php endif; ?>
+<style>
+.sale-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #ff3b30;
+    color: #fff;
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 20px;
+    z-index: 10;
+}
+.product-card {
+    position: relative;
+}
+</style>
+                            
+                            <div class="product-image">
+                                <?php
+                                $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
+                                if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
+                                    $img_path = 'assets/img/no-image.png';
+                                }
+                                ?>
+                                <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
+                            </div>
+
+                            <div class="card-content">
+                                <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
+                                
+                                <div class="card-price">
+                                    <span class="card-price-old"><?= number_format($sp['gia_goc']); ?>₫</span>
+                                    <span class="card-price-new"><?= number_format($sp['gia_moi']); ?>₫</span>
+                                </div>
+
+                                <div class="btn-group-vertical">
+                                    <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">🔍 Xem chi tiết</a>
+                                    <!-- Nếu bạn có chức năng thêm nhanh (variants), giữ nguyên logic cũ -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p style="text-align:center; width:100%;">Không có sản phẩm giảm giá.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="swiper-button-prev swiper-button-prev-2"></div>
+        <div class="swiper-button-next swiper-button-next-2"></div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof Swiper !== 'undefined') {
+        new Swiper('.product-carousel-2', {
+            slidesPerView: 4,
+            spaceBetween: 20,
+            navigation: {
+                nextEl: '.swiper-button-next-2',
+                prevEl: '.swiper-button-prev-2'
+            },
+            breakpoints: {
+                0:   { slidesPerView: 1.2 },
+                576: { slidesPerView: 2 },
+                768: { slidesPerView: 3 },
+                1200:{ slidesPerView: 4 }
+            }
+        });
+    }
+});
+</script>

@@ -467,4 +467,82 @@ function updateUserAddress(PDO $pdo, $user_id, $address_id, $new_address) {
         return false;
     }
 }
+function applyDiscount($product) {
+    if (empty($product['sale_type']) || empty($product['sale_value'])) {
+        $product['discount_percent'] = 0;
+        $product['gia_moi'] = $product['gia_goc'];
+        return $product;
+    }
+
+    $originalPrice = (int)$product['gia_goc'];
+    $saleType = $product['sale_type'];
+    $saleValue = (int)$product['sale_value'];
+
+    if ($saleType === 'percent') {
+        $product['gia_moi'] = max(0, $originalPrice - ($originalPrice * $saleValue / 100));
+        $product['discount_percent'] = $saleValue;
+    } else {
+        $product['gia_moi'] = max(0, $originalPrice - $saleValue);
+        $product['discount_percent'] = round(($saleValue / $originalPrice) * 100);
+    }
+
+    return $product;
+}
+function getProductsWithDiscount($pdo, $category_id = null) {
+    $sql = "
+        SELECT 
+            sp.*,
+            sp.gia AS gia_goc,
+            g.loai_giam_gia AS sale_type,
+            g.gia_tri AS sale_value
+        FROM san_pham sp
+        LEFT JOIN san_pham_giam_gia spgg ON sp.id = spgg.product_id
+        LEFT JOIN giam_gia g ON spgg.sale_id = g.id
+        WHERE 1
+    ";
+
+    if (!empty($category_id)) {
+        $sql .= " AND sp.danh_muc_id = :category_id ";
+    }
+
+    $stmt = $pdo->prepare($sql);
+
+    if (!empty($category_id)) {
+        $stmt->bindParam(':category_id', $category_id, PDO::PARAM_INT);
+    }
+
+    $stmt->execute();
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($products as &$p) {
+        $p = applyDiscount($p);
+    }
+
+    return $products;
+}
+function getProductWithDiscount($pdo, $id) {
+    $sql = "
+        SELECT 
+            sp.*,
+            sp.gia AS gia_goc,
+            g.loai_giam_gia AS sale_type,
+            g.gia_tri AS sale_value
+        FROM san_pham sp
+        LEFT JOIN san_pham_giam_gia spgg ON sp.id = spgg.product_id
+        LEFT JOIN giam_gia g ON spgg.sale_id = g.id
+        WHERE sp.id = :id
+        LIMIT 1
+    ";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+    $stmt->execute();
+
+    $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$product) return null;
+
+    return applyDiscount($product);
+}
+
 ?>

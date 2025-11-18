@@ -604,7 +604,21 @@ ul {
   font-weight: 700;
   
 }
-
+.sale-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #ff3b30;
+    color: #fff;
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 20px;
+    z-index: 10;
+}
+.product-card {
+    position: relative;
+}
 /* === 6. STYLES CÁC TRANG CON (ĐÃ CẬP NHẬT THEO SKIN MỚI) === */
 /* (Style cho PDP, Giỏ hàng, Thanh toán, v.v. được giữ lại và điều chỉnh màu sắc) */
 .page-title {
