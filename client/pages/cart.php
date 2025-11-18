@@ -236,7 +236,7 @@ $is_logged_in = true; // Đã check ở trên
                 showDeletePrompt(e.target.dataset.key);
             });
         });
-        if (modalOverlay) {
+        if (modalOverlay) { 
             btnPromptSecondary.addEventListener('click', () => hideModalPrompt());
             modalOverlay.addEventListener('click', e => {
                 if (e.target === modalOverlay) hideModalPrompt();
