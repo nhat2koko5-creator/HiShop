@@ -432,4 +432,39 @@ function getAvailableCoupons(PDO $pdo) {
     $stmt = $pdo->query($sql);
     return $stmt->fetchAll();
 }
+function addUserAddress(PDO $pdo, $user_id, $dia_chi) {
+    try {
+        $sql = "INSERT INTO dia_chi (nguoi_dung_id, dia_chi_cu_the) VALUES (?, ?)";
+        $stmt = $pdo->prepare($sql);
+        return $stmt->execute([$user_id, $dia_chi]);
+    } catch (PDOException $e) {
+        error_log("Lỗi thêm địa chỉ: " . $e->getMessage());
+        return false;
+    }
+}
+/**
+ * (MỚI) Xóa địa chỉ
+ */
+function deleteUserAddress(PDO $pdo, $user_id, $address_id) {
+    try {
+        $sql = "DELETE FROM dia_chi WHERE id = ? AND nguoi_dung_id = ?";
+        $stmt = $pdo->prepare($sql);
+        return $stmt->execute([$address_id, $user_id]);
+    } catch (PDOException $e) {
+        return false;
+    }
+}
+
+/**
+ * (MỚI) Cập nhật địa chỉ
+ */
+function updateUserAddress(PDO $pdo, $user_id, $address_id, $new_address) {
+    try {
+        $sql = "UPDATE dia_chi SET dia_chi_cu_the = ? WHERE id = ? AND nguoi_dung_id = ?";
+        $stmt = $pdo->prepare($sql);
+        return $stmt->execute([$new_address, $address_id, $user_id]);
+    } catch (PDOException $e) {
+        return false;
+    }
+}
 ?>

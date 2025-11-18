@@ -26,144 +26,61 @@ if (!isset($page_title)) {
     <link rel="stylesheet" href="assets/css/style-client.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
-    <style>
-        /* --- Dropdown (CSS cũ của bạn) --- */
-        .nav-item { position: relative; }
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            min-width: 180px;
-            z-index: 999;
-        }
-        .dropdown-menu a { display: block; padding: 10px 14px; color: #1f2937; text-decoration: none; transition: background 0.2s; }
-        .dropdown-menu a:hover { background: #f3f4f6; }
-        .nav-item.open .dropdown-menu { display: block; animation: dropdownFade 0.2s ease; }
-        @keyframes dropdownFade {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* === CSS cho số lượng trên giỏ hàng === */
-        .cart-icon-wrapper {
-            position: relative;
-            display: inline-block;
-        }
-        #cart-item-count {
-            position: absolute;
-            top: -8px;
-            right: -10px;
-            background-color: #ef4444; /* Màu đỏ */
-            color: white;
-            font-size: 12px;
-            font-weight: bold;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-            padding-bottom: 1px;
-            /* Cập nhật logic hiển thị bằng PHP */
-            display: <?php echo ($total_cart_items > 0) ? 'flex' : 'none'; ?>;
-        }
-
-        /* =======================================
-        === MỚI: CSS CHO POPUP DÙNG CHUNG ===
-        ======================================= */
-        #modal-prompt-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center;
-            z-index: 9998; opacity: 0; transition: opacity 0.2s ease;
-        }
-        #modal-prompt-overlay.show { display: flex; opacity: 1; }
-        #modal-prompt-box {
-            background: #fff; padding: 30px; border-radius: 12px; text-align: center;
-            width: 90%; max-width: 400px; transform: scale(0.9); transition: transform 0.2s ease;
-        }
-        #modal-prompt-overlay.show #modal-prompt-box { transform: scale(1); }
-        #modal-prompt-message { font-size: 18px; color: #333; margin-bottom: 25px; }
-        .prompt-buttons { display: flex; gap: 15px; }
-        .prompt-buttons button {
-            flex: 1; padding: 12px; border: none; border-radius: 8px;
-            font-size: 16px; font-weight: 600; cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        #btn-prompt-secondary { 
-            background: #f1f1f1; 
-            color: #333; 
-        }
-        #btn-prompt-primary { 
-            background: #0f62fe;
-            color: white; 
-        }
-        #btn-prompt-primary.danger {
-            background: #dc2626;
-        }
-        .prompt-buttons .hide {
-            display: none;
-        }
-    </style>
 </head>
 
 <body>
-    <header class="container">
-        <nav class="header-nav">
-            
-            <a href="index.php?page=home" class="logo">HIShop</a>
-            
-            <div class="nav-center-links">
-                <a href="index.php?page=home">Trang Chủ</a>
+    <header class="site-header-sticky"> 
+        <div class="container">
+            <nav class="header-nav">
                 
-                <div class="nav-item has-dropdown" id="categoryDropdown">
-                    <a href="javascript:void(0)" id="toggleCategory">Danh Mục</a>
-                    <div class="dropdown-menu" id="categoryMenu">
-                        <?php if (isset($categories) && !empty($categories)): ?>
-                            <?php foreach ($categories as $category): ?>
-                                <a href="index.php?page=product_list&category_id=<?= $category['id'] ?>">
-                                    <?= htmlspecialchars($category['ten']) ?>
-                                </a>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <a href="#">Không có danh mục</a>
-                        <?php endif; ?>
+                <a href="index.php?page=home" class="logo">HIShop</a>
+                
+                <div class="nav-center-links">
+                    <a href="index.php?page=home">Trang Chủ</a>
+                    
+                    <div class="nav-item has-dropdown" id="categoryDropdown">
+                        <a href="javascript:void(0)" id="toggleCategory">Danh Mục</a>
+                        <div class="dropdown-menu" id="categoryMenu">
+                            <?php if (isset($categories) && !empty($categories)): ?>
+                                <?php foreach ($categories as $category): ?>
+                                    <a href="index.php?page=product_list&category_id=<?= $category['id'] ?>">
+                                        <?= htmlspecialchars($category['ten']) ?>
+                                    </a>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <a href="#">Không có danh mục</a>
+                            <?php endif; ?>
+                        </div>
                     </div>
+
+                    <a href="index.php?page=product_list">Sản Phẩm</a>
+                    <a href="index.php?page=static_about">Về Chúng Tôi</a>
+                    <a href="index.php?page=contact">Liên Hệ</a>
                 </div>
 
-                <a href="index.php?page=product_list">Sản Phẩm</a>
-                <a href="index.php?page=static_about">Về Chúng Tôi</a>
-                <a href="index.php?page=contact">Liên Hệ</a>
-            </div>
-
-            <div class="nav-right-actions">
-                
-                <form action="index.php" method="GET" class="nav-search-form">
-                    <input type="hidden" name="page" value="search_results">
-                    <input type="text" name="query" class="nav-search-input" placeholder="Tìm kiếm sản phẩm...">
-                    <button type="submit" class="icon-btn nav-search-btn">🔍</button>
-                </form>
-                
-                <a href="index.php?page=cart" class="icon-btn cart-icon-wrapper">
-                    🛒 <span id="cart-item-count"><?php echo $total_cart_items; ?></span>
-                </a>
-                
-                <?php if (isset($_SESSION['user_id'])): ?>
-                    <a href="index.php?page=account" class="icon-btn">👤</a>
-                <?php else: ?>
-                    <div class="auth-buttons">
-                        <a href="index.php?page=register" class="btn btn-primary">Đăng Ký</a>
-                        <a href="index.php?page=login" class="btn btn-primary">Đăng Nhập</a>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </nav>
-    </header>
+                <div class="nav-right-actions">
+                    
+                    <form action="index.php" method="GET" class="nav-search-form">
+                        <input type="hidden" name="page" value="search_results">
+                        <input type="text" name="query" class="nav-search-input" placeholder="Tìm kiếm sản phẩm...">
+                        <button type="submit" class="icon-btn nav-search-btn">🔍</button>
+                    </form>
+                    
+                    <a href="index.php?page=cart" class="icon-btn cart-icon-wrapper">
+                        🛒 <span id="cart-item-count"><?php echo $total_cart_items; ?></span>
+                    </a>
+                    
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <a href="index.php?page=account" class="icon-btn">👤</a>
+                    <?php else: ?>
+                        <div class="auth-buttons">
+                            <a href="index.php?page=register" class="btn btn-primary">Đăng Ký</a>
+                            <a href="index.php?page=login" class="btn btn-primary">Đăng Nhập</a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </nav>
+        </div> </header>
 
     <main>
     

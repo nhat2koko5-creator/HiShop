@@ -1,21 +1,21 @@
 <?php
 // FILE: client/pages/account.php
-// (Biến $pdo, $categories đã có sẵn từ index.php)
 
-// 1. (BACK-END) BẢO VỆ TRANG
+// 1. BẢO VỆ TRANG (SỬA LỖI HEADERS SENT)
 if (!isset($_SESSION['user_id'])) {
-    header('Location: index.php?page=login');
+    echo "<script>window.location.href='index.php?page=login';</script>";
     exit;
 }
 $user_id = $_SESSION['user_id'];
 
-// 2. (BACK-END) ROUTER CON
-$section = $_GET['section'] ?? 'profile'; 
+// 2. ROUTER CON
+$section = $_GET['section'] ?? 'dashboard'; 
 
-// 3. (BACK-END) XỬ LÝ FORM CẬP NHẬT PROFILE
+// 3. XỬ LÝ FORM (PROFILE & ADDRESS)
 $update_success = null;
 $update_error = null; 
 
+// A. Xử lý cập nhật thông tin cá nhân
 if ($section == 'profile' && $_SERVER['REQUEST_METHOD'] == 'POST') {
     $ho_ten = trim($_POST['ho_ten'] ?? '');
     $so_dien_thoai = trim($_POST['so_dien_thoai'] ?? '');
@@ -35,195 +35,253 @@ if ($section == 'profile' && $_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// 4. (BACK-END) LẤY DỮ LIỆU 
-$user_profile_data = getUserProfile($pdo, $user_id); // Luôn lấy profile
+// B. Xử lý thêm địa chỉ mới
+// B. Xử lý Địa chỉ (Thêm - Sửa - Xóa)
+if ($section == 'addresses' && $_SERVER['REQUEST_METHOD'] == 'POST') {
+    $action = $_POST['action'] ?? '';
+    
+    // 1. Thêm mới
+    if ($action == 'add_address') {
+        $dia_chi_moi = trim($_POST['dia_chi_moi'] ?? '');
+        if (!empty($dia_chi_moi)) {
+            if (addUserAddress($pdo, $user_id, $dia_chi_moi)) {
+                echo "<script>window.location.href='index.php?page=account&section=addresses';</script>";
+                exit;
+            }
+        }
+    }
+    
+    // 2. Xóa
+    if ($action == 'delete_address') {
+        $address_id = $_POST['address_id'] ?? 0;
+        if (deleteUserAddress($pdo, $user_id, $address_id)) {
+            echo "<script>window.location.href='index.php?page=account&section=addresses';</script>";
+            exit;
+        }
+    }
 
-// 5. (SỬA LỖI) KIỂM TRA DỮ LIỆU NGAY LẬP TỨC
-// Nếu hàm fetch() trả về false (không tìm thấy user), hãy đăng xuất
+    // 3. Sửa (Cập nhật)
+    if ($action == 'edit_address') {
+        $address_id = $_POST['address_id'] ?? 0;
+        $dia_chi_sua = trim($_POST['dia_chi_moi'] ?? '');
+        if (!empty($dia_chi_sua)) {
+            updateUserAddress($pdo, $user_id, $address_id, $dia_chi_sua);
+            echo "<script>window.location.href='index.php?page=account&section=addresses';</script>";
+            exit;
+        }
+    }
+}
+
+// 4. LẤY DỮ LIỆU
+$user_profile_data = getUserProfile($pdo, $user_id); 
 if (!$user_profile_data) {
-    // Có thể session cũ nhưng user đã bị xóa
-    header('Location: index.php?page=logout');
+    // (SỬA LỖI) Dùng JS để chuyển hướng
+    echo "<script>window.location.href='index.php?page=logout';</script>";
     exit;
 }
 
-// Lấy dữ liệu cho các tab khác
-switch ($section) {
-    case 'orders':
-        $data = getUserOrders($pdo, $user_id);
-        break;
-    case 'addresses':
-        $data = getUserAddresses($pdo, $user_id);
-        break;
-    case 'profile':
-    default:
-        $data = $user_profile_data; // Gán $data
-        break;
+// TÍNH TOÁN THỐNG KÊ
+$stats_orders_count = 0;
+$stats_total_spent = 0;
+$all_orders = getUserOrders($pdo, $user_id);
+if (!empty($all_orders)) {
+    $stats_orders_count = count($all_orders);
+    foreach ($all_orders as $order) {
+        if ($order['trang_thai'] !== 'cancelled') {
+            $stats_total_spent += $order['tong_tien'];
+        }
+    }
 }
 
+// Lấy dữ liệu cho section hiện tại
+switch ($section) {
+    case 'orders': $data = $all_orders; break;
+    case 'addresses': $data = getUserAddresses($pdo, $user_id); break;
+    case 'profile':
+    case 'dashboard': 
+    default: $data = $user_profile_data; break;
+}
 ?>
 
-<div class="container">
-    <h1 class="page-title">Tài Khoản (Chào, <?php echo htmlspecialchars($user_profile_data['ho_ten']); ?>)</h1>
+<div class="container" style="margin-top: 20px; margin-bottom: 40px;">
+    
+    <div style="margin-bottom: 20px;">
+        <nav class="breadcrumb" style="font-size: 14px; color: #666; margin-bottom: 10px;">
+            <a href="index.php" style="color: #666; text-decoration: none;">Trang chủ</a>
+            <span style="margin: 0 8px;">&gt;</span>
+            <span style="color: #333; font-weight: 500;">Trang cá nhân</span>
+        </nav>
+        <h1 style="font-size: 28px; font-weight: 700; color: #333; padding: 20px; text-align: center;">Trang Cá Nhân</h1>
+    </div>
 
-    <div class="account-layout">
 
-        <aside class="account-nav">
-            <ul>
+    <div class="cps-account-layout">
+        
+        <aside class="cps-sidebar">
+            <ul class="cps-menu">
                 <li>
-                    <a href="index.php?page=account&section=profile" 
-                       class="<?php echo ($section == 'profile') ? 'active' : ''; ?>">
-                       Thông tin tài khoản
+                    <a href="index.php?page=account&section=dashboard" class="<?php echo ($section == 'dashboard') ? 'active' : ''; ?>">
+                        <span class="icon">🏠</span> Tổng quan
                     </a>
                 </li>
                 <li>
-                    <a href="index.php?page=account&section=orders" 
-                       class="<?php echo ($section == 'orders') ? 'active' : ''; ?>">
-                       Lịch sử đơn hàng
+                    <a href="index.php?page=account&section=orders" class="<?php echo ($section == 'orders') ? 'active' : ''; ?>">
+                        <span class="icon">📦</span> Lịch sử mua hàng
                     </a>
                 </li>
                 <li>
-                    <a href="index.php?page=account&section=addresses" 
-                       class="<?php echo ($section == 'addresses') ? 'active' : ''; ?>">
-                       Sổ địa chỉ
+                    <a href="index.php?page=account&section=addresses" class="<?php echo ($section == 'addresses') ? 'active' : ''; ?>">
+                        <span class="icon">📍</span> Sổ địa chỉ
                     </a>
                 </li>
                 <li>
-                    <a href="index.php?page=logout">Đăng xuất</a>
+                    <a href="index.php?page=account&section=profile" class="<?php echo ($section == 'profile') ? 'active' : ''; ?>">
+                        <span class="icon">⚙️</span> Thông tin tài khoản
+                    </a>
+                </li>
+                <li class="menu-spacer"></li>
+                <li>
+                    <a href="#" class="logout-item" id="btn-logout-trigger">
+                        <span class="icon">🚪</span> Đăng xuất
+                    </a>
                 </li>
             </ul>
         </aside>
 
-        <section class="account-content">
-
+        <section class="cps-content">
             <?php
-            // (ĐÃ SỬA LỖI) DÙNG CÚ PHÁP CHUẨN (DẤU NGOẶC NHỌN)
             switch ($section) {
+                case 'dashboard':
+            ?>
+                <div class="cps-dashboard-grid">
+                    <div class="cps-card full-width">
+                        <div class="cps-card-header">
+                            <h3>Đơn hàng gần đây</h3>
+                            <?php if(!empty($all_orders)) : ?>
+                                <a href="index.php?page=account&section=orders">Xem tất cả &gt;</a>
+                            <?php endif; ?>
+                        </div>
+                        <div class="cps-card-body">
+                            <?php if (empty($all_orders)): ?>
+                                <div class="empty-state">
+                                    <p>Bạn chưa mua đơn hàng nào.</p>
+                                    <a href="index.php?page=product_list" class="btn btn-primary">Mua sắm ngay</a>
+                                </div>
+                            <?php else: 
+                                $latest_order = $all_orders[0];
+                            ?>
+                                <div class="mini-order-item">
+                                    <div class="moi-info">
+                                        <strong>Đơn hàng #<?php echo $latest_order['id']; ?></strong>
+                                        <span><?php echo date('d/m/Y', strtotime($latest_order['ngay_dat'])); ?></span>
+                                        <span class="price"><?php echo number_format($latest_order['tong_tien']); ?>đ</span>
+                                    </div>
+                                    <div class="moi-status">
+                                        <span class="status-tag <?php echo $latest_order['trang_thai'] == 'paid' ? 'success' : 'pending'; ?>">
+                                            <?php echo htmlspecialchars($latest_order['trang_thai']); ?>
+                                        </span>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
 
-                // --- TRƯỜNG HỢP 1: THÔNG TIN TÀI KHOẢN ---
+                    <div class="cps-card">
+                        <div class="cps-card-header">
+                            <h3>Thông tin cá nhân</h3>
+                            <a href="index.php?page=account&section=profile">Sửa &gt;</a>
+                        </div>
+                        <div class="cps-card-body">
+                            <div class="mini-profile-info">
+                                <p><strong>Họ tên:</strong> <?php echo htmlspecialchars($user_profile_data['ho_ten']); ?></p>
+                                <p><strong>SĐT:</strong> <?php echo htmlspecialchars($user_profile_data['so_dien_thoai'] ?? '--'); ?></p>
+                                <p><strong>Email:</strong> <?php echo htmlspecialchars($user_profile_data['email']); ?></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cps-card">
+                        <div class="cps-card-header">
+                            <h3>Sổ địa chỉ</h3>
+                            <a href="index.php?page=account&section=addresses">Quản lý &gt;</a>
+                        </div>
+                        <div class="cps-card-body">
+                             <?php 
+                             $addresses = getUserAddresses($pdo, $user_id);
+                             if (empty($addresses)): ?>
+                                <p style="color: #888; font-size: 14px;">Chưa lưu địa chỉ nào.</p>
+                             <?php else: ?>
+                                <p style="font-size: 14px; line-height: 1.5;">
+                                    <?php echo htmlspecialchars($addresses[0]['dia_chi_cu_the']); ?>
+                                </p>
+                             <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php
+                    break;
+
                 case 'profile':
-            ?>
-                    <div class="account-content-header">
-                        <h2>Thông tin tài khoản</h2>
-                    </div>
-                    <div class="account-content-body">
-                        
-                        <?php if ($update_success): ?>
-                            <div class="error-message" style="background-color: #D1FAE5; color: #065F46; border-color: #6EE7B7;">
-                                <p>✅ <?php echo $update_success; ?></p>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <?php if ($update_error): ?>
-                            <div class="error-message">
-                                <p>❌ <?php echo $update_error; ?></p>
-                            </div>
-                        <?php endif; ?>
+                    if (file_exists('client/account/profile.php')) require_once 'client/account/profile.php'; 
+                    break;
 
-                        <form class="profile-form" method="POST" action="index.php?page=account&section=profile">
-                            <div class="form-group">
-                                <label for="email" class="form-label">Email (Không thể thay đổi)</label>
-                                <input type="email" id="email" class="form-input" value="<?php echo htmlspecialchars($data['email']); ?>" disabled>
-                            </div>
-                            <div class="form-group">
-                                <label for="ho_ten" class="form-label">Họ và tên</label>
-                                <input type="text" id="ho_ten" name="ho_ten" class="form-input" value="<?php echo htmlspecialchars($data['ho_ten']); ?>" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="so_dien_thoai" class="form-label">Số điện thoại</label>
-                                <input type="tel" id="so_dien_thoai" name="so_dien_thoai" class="form-input" value="<?php echo htmlspecialchars($data['so_dien_thoai'] ?? ''); ?>">
-                            </div>
-                            <div class="form-grid-2">
-                                <div class="form-group">
-                                    <label for="ngay_sinh" class="form-label">Ngày sinh</label>
-                                    <input type="date" id="ngay_sinh" name="ngay_sinh" class="form-input" value="<?php echo htmlspecialchars($data['ngay_sinh'] ?? ''); ?>">
-                                </div>
-                                <div class="form-group">
-                                    <label for="gioi_tinh" class="form-label">Giới tính</label>
-                                    <select id="gioi_tinh" name="gioi_tinh" class="form-input">
-                                        <option value="other" <?php echo ($data['gioi_tinh'] == 'other') ? 'selected' : ''; ?>>Khác</option>
-                                        <option value="male" <?php echo ($data['gioi_tinh'] == 'male') ? 'selected' : ''; ?>>Nam</option>
-                                        <option value="female" <?php echo ($data['gioi_tinh'] == 'female') ? 'selected' : ''; ?>>Nữ</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
-                        </form>
-                    </div>
-            <?php 
-                    break; 
-
-                // --- TRƯỜNG HỢP 2: LỊCH SỬ ĐƠN HÀNG ---
                 case 'orders':
-            ?>
-                    <div class="account-content-header">
-                        <h2>Lịch sử đơn hàng</h2>
-                    </div>
-                    <div class="account-content-body">
-                        <div class="order-history-list">
-                            <?php if (empty($data)): ?>
-                                <p>Bạn chưa có đơn hàng nào.</p>
-                            <?php else: ?>
-                                <?php foreach ($data as $order): ?>
-                                    <div class="order-item">
-                                        <div>
-                                            <span>Mã đơn hàng</span>
-                                            #<?php echo htmlspecialchars($order['id']); ?>
-                                        </div>
-                                        <div>
-                                            <span>Ngày đặt</span>
-                                            <?php echo date('d/m/Y', strtotime($order['ngay_dat'])); ?>
-                                        </div>
-                                        <div>
-                                            <span>Tổng tiền</span>
-                                            <?php echo number_format($order['tong_tien']); ?>₫
-                                        </div>
-                                        <div>
-                                            <span>Trạng thái</span>
-                                            <?php if ($order['trang_thai'] == 'paid' || $order['trang_thai'] == 'Đã giao hàng'): ?>
-                                                <div class="order-status delivered">Đã giao hàng</div>
-                                            <?php else: ?>
-                                                <div class="order-status processing"><?php echo htmlspecialchars($order['trang_thai']); ?></div>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-            <?php 
+                    if (file_exists('client/account/order_history.php')) require_once 'client/account/order_history.php'; 
                     break;
 
-                // --- TRƯỜNG HỢP 3: SỔ ĐỊA CHỈ ---
                 case 'addresses':
-            ?>
-                    <div class="account-content-header">
-                        <h2>Sổ địa chỉ</h2>
-                    </div>
-                    <div class="account-content-body">
-                        <a href="#" class="btn btn-primary add-address-btn">(+) Thêm địa chỉ mới</a>
-                        <div class="address-book">
-                            <?php if (empty($data)): ?>
-                                <p>Bạn chưa lưu địa chỉ nào.</p>
-                            <?php else: ?>
-                                <?php foreach ($data as $address): ?>
-                                    <div class="address-card">
-                                        <h3>Địa chỉ</h3>
-                                        <p>
-                                            <?php echo htmlspecialchars($address['dia_chi_cu_the']); ?>
-                                        </p>
-                                        <div class="address-card-actions">
-                                            <a href="#">Chỉnh sửa</a>
-                                            <a href="#">Xóa</a>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-            <?php 
+                    if (file_exists('client/account/address_book.php')) require_once 'client/account/address_book.php'; 
                     break;
 
-            } // <<< KẾT THÚC SWITCH
+                default:
+                    echo "<p>Mục không tồn tại.</p>";
+                    break;
+            } 
             ?>
-            
-        </section> </div> </div> ```
+        </section>
+    </div>
+</div>
+
+<div class="cps-modal-overlay" id="logoutModal">
+    <div class="cps-modal">
+        <div class="cps-modal-header">
+            <h3>Xác nhận đăng xuất</h3>
+            <button class="cps-modal-close" id="closeLogout">&times;</button>
+        </div>
+        <div class="cps-modal-body">
+            <p>Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?</p>
+            <div style="font-size: 40px; margin-top: 10px;">👋</div>
+        </div>
+        <div class="cps-modal-footer">
+            <button class="btn btn-outline" id="cancelLogout">Ở lại</button>
+            <a href="index.php?page=logout" class="btn btn-primary">Đăng xuất</a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const logoutBtn = document.getElementById('btn-logout-trigger');
+    const modal = document.getElementById('logoutModal');
+    const closeBtn = document.getElementById('closeLogout');
+    const cancelBtn = document.getElementById('cancelLogout');
+
+    if (logoutBtn && modal) {
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            modal.classList.add('show');
+        });
+
+        function closeModal() {
+            modal.classList.remove('show');
+        }
+
+        closeBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+        
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeModal();
+        });
+    }
+});
+</script>
