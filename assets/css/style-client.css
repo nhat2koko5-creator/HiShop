@@ -1851,9 +1851,7 @@ ul {
         position: sticky;
         top: 20px;
     }
-.cart-summary {
-    width: 100%;
-}
+
     .cart-item-price {
         font-size: 18px;
         font-weight: 600;
@@ -1940,52 +1938,23 @@ ul {
         color: #15803d;
     }
 
-/* Nút thanh toán: chữ luôn canh giữa, không bị lệch */
-.btn-checkout {
-    box-sizing: border-box;      /* tránh padding ảnh hưởng tính toán width */
-    display: flex;               /* dùng flex để căn giữa theo cả trục */
-    align-items: center;         /* căn giữa theo chiều dọc */
-    justify-content: center;     /* căn giữa theo chiều ngang */
-    width: 100%;                 /* full khung */
-    padding: 14px 18px;          /* padding dọc + ngang hợp lý */
-    margin-top: 20px;
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 1;              /* đảm bảo chiều cao dòng cố định */
-    white-space: nowrap;         /* không cho xuống dòng */
-    overflow: hidden;            /* tránh tràn chữ */
-    text-overflow: ellipsis;     /* nếu quá dài sẽ hiển thị ... */
-    text-align: center;
+    .btn-checkout {
+        width: 100%;
+        padding: 14px;
+        font-size: 18px;
+        font-weight: 700;
+        background: #0f62fe;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        text-align: center;
+    }
 
-    background: linear-gradient(135deg, #4f46e5, #6366f1);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
-}
-/* nếu là thẻ <a> hoặc có icon bên trái, căn khoảng cách icon + chữ */
-.btn-checkout .btn-icon {
-    display: inline-flex;
-    align-items: center;
-    margin-right: 10px;
-    font-size: 18px;
-}
-
-/* khi có icon ở bên phải (nếu dùng) */
-.btn-checkout .btn-icon-right {
-    margin-left: 10px;
-    margin-right: 0;
-}
-
-/* disabled */
-.btn-checkout:disabled {
-    background: #ccc;
-    box-shadow: none;
-    cursor: not-allowed;
-}
-
+    .btn-checkout:hover:not(:disabled) {
+        background: #004ecc;
+    }
 
 /* === (MỚI) CSS CHO TRANG CHECKOUT (FIX LỖI 2 CỘT + COUPON) === */
 /* CSS cho Modal Thông Báo (MỚI) */
@@ -2256,6 +2225,86 @@ ul {
     padding: 8px 16px;
     border-radius: var(--radius-md);
     cursor: pointer;
+}
+
+/* CSS CHO VARIANT MODAL */
+.variant-modal-overlay {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+}
+.variant-modal-box {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    width: 90%; max-width: 450px;
+}
+.variant-modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: var(--spacing-16) var(--spacing-24);
+    border-bottom: 1px solid var(--color-border);
+}
+.variant-modal-header h3 { font: var(--font-h4); margin: 0; }
+.close-variant-modal {
+    background: none; border: none;
+    font-size: 28px; cursor: pointer; color: var(--color-fg-muted);
+}
+.variant-modal-body { padding: var(--spacing-24); }
+.variant-modal-body .option-group { margin-bottom: var(--spacing-16); }
+.variant-modal-body .option-group h4 { margin-bottom: var(--spacing-12); }
+.variant-modal-body .option-box { display: flex; flex-wrap: wrap; gap: var(--spacing-12); }
+.variant-modal-body .option {
+    border: 1px solid #ccc; padding: 8px 16px; border-radius: 8px;
+    cursor: pointer; user-select: none; transition: 0.2s;
+}
+.variant-modal-body .option:hover { border-color: #007bff; }
+.variant-modal-body .option.active {
+    background-color: var(--color-primary); color: white; border-color: var(--color-primary);
+}
+/* Style cho tùy chọn bị vô hiệu hóa */
+.variant-modal-body .option.disabled {
+    background-color: #f3f4f6;
+    color: #ccc;
+    border-color: #eee;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+/* CSS CHO HÌNH ẢNH TRONG MODAL (MỚI) */
+.modal-product-info {
+    display: flex;
+    gap: var(--spacing-24); /* Khoảng cách giữa ảnh và chi tiết */
+    align-items: flex-start; /* Căn trên cùng */
+    margin-bottom: var(--spacing-24);
+}
+.modal-product-image {
+    flex-shrink: 0; /* Không co lại */
+    width: 120px; /* Chiều rộng ảnh */
+    height: 120px; /* Chiều cao ảnh */
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+}
+.modal-product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Đảm bảo ảnh đầy đủ khung */
+}
+.modal-product-details {
+    flex-grow: 1; /* Cho phép chi tiết giãn ra */
+}
+.stock-info.out { color: #dc2626; font-weight: bold; }
+
+.variant-modal-footer {
+    display: flex; gap: var(--spacing-16);
+    padding: var(--spacing-24);
+    background: var(--color-bg-subtle);
+    border-top: 1px solid var(--color-border);
+}
+.variant-modal-footer .btn { width: 100%; }
+.variant-modal-footer .btn:disabled {
+    background-color: #ccc !important;
+    cursor: not-allowed !important;
 }
 
 /* 9. (MỚI) CSS CHO RESPONSIVE */
