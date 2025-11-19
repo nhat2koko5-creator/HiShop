@@ -2,7 +2,10 @@
 // FILE: client/pages/static_about.php (ĐÃ NÂNG CẤP)
 require_once 'client/layouts/header.php'; 
 ?>
-
+<div class="breadcrumb" style="margin: 15px 0; font-size: 14px;">
+    <a href="index.php">Trang chủ</a> <span>›</span>
+    <span>Về chúng tôi</span>
+</div>
 <div class="static-page-header">
     <h1>Về Chúng Tôi</h1>
 </div>

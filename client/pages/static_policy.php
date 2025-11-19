@@ -1,7 +1,10 @@
 <?php 
 require_once 'client/layouts/header.php'; 
 ?>
-
+<div class="breadcrumb" style="margin: 15px 0; font-size: 14px;">
+    <a href="index.php">Trang chủ</a> <span>›</span>
+    <span>Chính sách bảo hành</span>
+</div>
 <div class="static-page-header">
     <h1>Chính Sách Bảo Hành</h1>
 </div>

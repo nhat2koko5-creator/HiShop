@@ -854,7 +854,13 @@ ul {
   margin-bottom: var(--spacing-s48);
   border-bottom: 1px solid var(--color-border);
 }
-
+.static-page-header {
+    background: #fff !important;
+    color: #111;
+    padding: 25px 0;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+}
 .static-page-header h1 {
   font: var(--font-h2);
 }

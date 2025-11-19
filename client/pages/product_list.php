@@ -157,10 +157,6 @@ function format_price($p) {
 }
 
 ?>
-<style>
-
-
-    </style>
 <div class="container">
     <nav class="breadcrumb">
         <a href="index.php">Trang chủ</a> <span class="divider">›</span>
@@ -200,10 +196,9 @@ function format_price($p) {
                 }
             ?>
                 <div class="card">
-                  <div class="discount-badge">
-    -<?= $discount_percent > 0 ? $discount_percent : 0 ?>%
-</div>
-
+                    <?php if ($discount_percent > 0): ?>
+                        <div class="discount-badge">-<?= $discount_percent ?>%</div>
+                    <?php endif; ?>
 
                     <div class="image-wrapper">
                         <img src="<?= htmlspecialchars($img_path) ?>" alt="<?= htmlspecialchars($p['ten']) ?>">
