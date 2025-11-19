@@ -1980,6 +1980,10 @@ ul {
   gap: 20px;
 }
 
+.product-item {
+    position: relative;
+}
+
 /* --- CARD SẢN PHẨM --- */
 .card {
   background: #fff;
@@ -2039,7 +2043,26 @@ ul {
     font-weight: 700;
     color: #ef4444;
 }
+.price {
+    margin-top: 10px;
+    text-align: center;      /* CĂN GIỮA */
+    display: flex;
+    flex-direction: column;
+    align-items: center;     /* CĂN GIỮA NỘI DUNG */
+    gap: 3px;
+}
 
+.price .old {
+    color: #8d8d8d;
+    text-decoration: line-through;
+    font-size: 14px;
+}
+
+.price .new {
+    color: #e60023;          /* MÀU ĐỎ ĐẬM */
+    font-size: 18px;
+    font-weight: 700;
+}
 /* --- NHÓM NÚT (Xếp dọc) --- */
 .card .btn-group {
   display: flex;
@@ -2090,6 +2113,20 @@ ul {
   color: #6b7280;
   font-size: 16px;
   margin-top: 40px;
+}
+   .discount-badge {
+    position: absolute;
+    background: #e63946;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    opacity: 1 !important;
+    display: block !important;
 }
 
 

@@ -158,25 +158,9 @@ function format_price($p) {
 
 ?>
 <style>
-/* basic styles: keep them minimal, you can move to CSS */
-.product-grid { display:flex; flex-wrap:wrap; gap:18px; }
-.card { width: calc(25% - 18px); box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-radius:8px; overflow:hidden; background:#fff; position:relative; padding-bottom:12px; }
-@media (max-width:1200px){ .card{ width: calc(33.333% - 18px);} }
-@media (max-width:768px){ .card{ width: calc(50% - 12px);} }
-@media (max-width:576px){ .card{ width:100%; } }
-.image-wrapper{ position:relative; padding:14px; text-align:center; background:#f9fafb; }
-.image-wrapper img{ max-width:100%; max-height:160px; object-fit:contain; }
-.discount-badge{ position:absolute; top:12px; left:12px; background:#ff3b30; color:#fff; padding:6px 10px; border-radius:20px; font-weight:700; z-index:20; }
-.name{ padding:10px 14px 6px; font-weight:600; min-height:48px; }
-.price{ padding:0 14px 10px; }
-.price .old{ text-decoration:line-through; color:#6b7280; margin-right:8px; }
-.price .new{ font-weight:700; font-size:16px; color:#111827; }
-.btn-group{ display:flex; gap:8px; padding:0 14px; }
-.btn{ display:inline-block; padding:8px 12px; border-radius:8px; text-decoration:none; background:#f3f4f6; color:#111; }
-.btn-detail{ background:#eef2ff; }
-.btn-buy{ background:#0f62fe; color:#fff; }
-</style>
 
+
+    </style>
 <div class="container">
     <nav class="breadcrumb">
         <a href="index.php">Trang chủ</a> <span class="divider">›</span>
@@ -216,9 +200,10 @@ function format_price($p) {
                 }
             ?>
                 <div class="card">
-                    <?php if ($discount_percent > 0): ?>
-                        <div class="discount-badge">-<?= $discount_percent ?>%</div>
-                    <?php endif; ?>
+                  <div class="discount-badge">
+    -<?= $discount_percent > 0 ? $discount_percent : 0 ?>%
+</div>
+
 
                     <div class="image-wrapper">
                         <img src="<?= htmlspecialchars($img_path) ?>" alt="<?= htmlspecialchars($p['ten']) ?>">
