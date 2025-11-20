@@ -619,6 +619,25 @@ ul {
 .product-card {
     position: relative;
 }
+.product-sale-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+
+    background: #ff3b30;      /* Màu đỏ đẹp */
+    color: #fff;
+
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 600;
+
+    border-radius: 50px;      /* Bo tròn dạng bong bóng */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+
+    z-index: 1000;
+
+    pointer-events: none;     /* Không bị click */
+}
 /* === 6. STYLES CÁC TRANG CON (ĐÃ CẬP NHẬT THEO SKIN MỚI) === */
 /* (Style cho PDP, Giỏ hàng, Thanh toán, v.v. được giữ lại và điều chỉnh màu sắc) */
 .page-title {

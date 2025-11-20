@@ -417,3 +417,71 @@ if (variant.hinh_anh && variant.hinh_anh !== "") {
     });
 });
 </script>
+<section class="product-section container">
+    <span class="section-subtitle">SẢN PHẨM GIẢM GIÁ</span>
+    <h2 class="section-title">Ưu đãi hot trong tuần</h2>
+
+    <div class="product-carousel-wrapper">
+        <div class="swiper product-carousel">
+            <div class="swiper-wrapper">
+<?php if (!empty($discountProducts)): ?>
+    <?php foreach ($discountProducts as $sp): ?>
+    <div class="swiper-slide">
+        <div class="product-card">
+
+<?php 
+// an toàn: nếu không có key thì lấy giá trị mặc định
+$percent = isset($sp['giam_phan_tram']) ? (int)$sp['giam_phan_tram'] : 0;
+$newPrice = isset($sp['gia_da_giam']) ? $sp['gia_da_giam'] : null;
+$origPrice = isset($sp['gia']) ? $sp['gia'] : null;
+?>
+
+<!-- SALE TAG (BONG BÓNG GIẢM GIÁ) -->
+<?php if ($percent > 0): ?>
+    <div class="product-sale-tag">-<?= htmlspecialchars($percent); ?>%</div>
+<?php endif; ?>
+
+<div class="product-image">
+    <?php
+    $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
+    if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
+        $img_path = 'assets/img/no-image.png';
+    }
+    ?>
+    <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
+</div>
+
+<div class="card-content">
+    <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
+
+    <div class="card-price">
+        <?php if ($newPrice !== null): ?>
+            <span class="card-price-old"><?= number_format($origPrice); ?>₫</span>
+            <span class="card-price-new"><?= number_format($newPrice); ?>₫</span>
+        <?php else: ?>
+            <span class="card-price-new"><?= number_format($origPrice); ?>₫</span>
+        <?php endif; ?>
+    </div>
+
+    <div class="btn-group-vertical">
+        <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">🔍 Xem chi tiết</a>
+        <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">🛒 Thêm vào giỏ</a>
+    </div>
+</div>
+
+        </div>
+    </div>
+    <?php endforeach; ?>
+<?php else: ?>
+    <p style="text-align:center;width:100%;">Không có sản phẩm giảm giá.</p>
+<?php endif; ?>
+
+
+            </div>
+        </div>
+
+        <div class="swiper-button-prev"></div>
+        <div class="swiper-button-next"></div>
+    </div>
+</section>
+ơ
