@@ -17,111 +17,63 @@ function getActiveCategories(PDO $pdo) {
     $stmt = $pdo->query("SELECT id, ten FROM danh_muc WHERE trang_thai = 1 ORDER BY ten ASC");
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-
-
-/* ==========================================
-    HÀM DÙNG CHUNG ĐỂ TÍNH GIÁ GIẢM
-========================================== */
-function apply_discount($sp) {
-
-    $gia_goc = (float)$sp["gia_goc"];
-    $gia_moi = $gia_goc;
-    $percent = 0;
-
-    if (!empty($sp["loai_giam_gia"]) && !empty($sp["gia_tri"])) {
-
-        if ($sp["loai_giam_gia"] == "percent") {
-            $percent = (float)$sp["gia_tri"];
-            $gia_moi = $gia_goc - ($gia_goc * $percent / 100);
-        } else {
-            $gia_moi = $gia_goc - (float)$sp["gia_tri"];
-            $percent = ($gia_goc > 0) ? round($sp["gia_tri"] / $gia_goc * 100) : 0;
-        }
-    }
-
-    return [
-        "gia_goc" => (int)$gia_goc,
-        "gia_moi" => (int)$gia_moi,
-        "discount_percent" => (int)$percent
-    ];
-}
-
-
-/* =====================================================
-    LẤY SẢN PHẨM NỔI BẬT (ĐÃ FIX GIÁ GIẢM)
-=====================================================*/
-function getFeaturedProducts(PDO $pdo) {
-
+/* =============================
+   LẤY SẢN PHẨM NỔI BẬT
+   ============================= */
+function getFeaturedProducts($pdo) {
     $sql = "
-        SELECT 
-            sp.id,
-            sp.ten,
-            sp.hinh_anh,
-            sp.gia AS gia_goc,
-
-            gg.loai_giam_gia,
-            gg.gia_tri
-
-        FROM san_pham_noi_bat nb
-        INNER JOIN san_pham sp ON sp.id = nb.san_pham_id
-
-        LEFT JOIN san_pham_giam_gia spgg ON sp.id = spgg.san_pham_id
-        LEFT JOIN giam_gia gg ON gg.id = spgg.giam_gia_id
-            AND gg.ngay_bat_dau <= NOW()
-            AND gg.ngay_ket_thuc >= NOW()
-
-        WHERE sp.trang_thai = 1
-        ORDER BY sp.id DESC
+        SELECT sp.*
+        FROM san_pham sp
+        INNER JOIN san_pham_noi_bat nb ON sp.id = nb.san_pham_id
+        ORDER BY nb.noi_bat_id DESC
         LIMIT 8
     ";
 
-    $stmt = $pdo->query($sql);
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($rows as &$sp) {
-        $sp = array_merge($sp, apply_discount($sp));
-    }
-
-    return $rows;
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-
-/* =====================================================
-    LẤY SẢN PHẨM GIẢM GIÁ (CHUẨN & KHÔNG LỖI)
-=====================================================*/
-function getDiscountProducts(PDO $pdo){
-
+/* =============================
+   LẤY SẢN PHẨM GIẢM GIÁ
+   ============================= */
+function getDiscountProducts($pdo) {
     $sql = "
-        SELECT 
-            sp.id,
-            sp.ten,
-            sp.hinh_anh,
-            sp.gia AS gia_goc,
-
-            gg.loai_giam_gia,
-            gg.gia_tri
-
-        FROM san_pham_giam_gia spgg
-        INNER JOIN san_pham sp ON sp.id = spgg.san_pham_id
-
+        SELECT sp.*, gg.loai_giam_gia, gg.gia_tri,
+               gg.ngay_bat_dau, gg.ngay_ket_thuc
+        FROM san_pham sp
+        INNER JOIN san_pham_giam_gia spgg ON sp.id = spgg.san_pham_id
         INNER JOIN giam_gia gg ON gg.id = spgg.giam_gia_id
-            AND gg.ngay_bat_dau <= NOW()
-            AND gg.ngay_ket_thuc >= NOW()
-
-        WHERE sp.trang_thai = 1
-        ORDER BY sp.id DESC
+        WHERE NOW() BETWEEN gg.ngay_bat_dau AND gg.ngay_ket_thuc
+        ORDER BY gg.id DESC
         LIMIT 8
     ";
 
-    $stmt = $pdo->query($sql);
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($rows as &$sp) {
-        $sp = array_merge($sp, apply_discount($sp));
-    }
-
-    return $rows;
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
+/* =============================
+   TÍNH GIÁ SAU KHI GIẢM
+   ============================= */
+function calcDiscountPrice($gia, $loai, $gia_tri) {
+    if ($loai === 'percent') {
+        return $gia - ($gia * ($gia_tri / 100));
+    }
+    if ($loai === 'amount') {
+        return max(0, $gia - $gia_tri);
+    }
+    return $gia;
+}
+function getProductVariants(PDO $pdo, $productId) {
+    $sql = "SELECT * FROM bien_the_san_pham WHERE san_pham_id = ?";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$productId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+
 
 
 /* ================================================
@@ -137,7 +89,6 @@ function getNewProducts(PDO $pdo){
     LẤY CHI TIẾT SẢN PHẨM (ĐÃ BỔ SUNG GIÁ GIẢM)
 =====================================================*/
 function getProductDetails(PDO $pdo, $id) {
-
     $sql = "
         SELECT 
             sp.*,
@@ -154,7 +105,6 @@ function getProductDetails(PDO $pdo, $id) {
         WHERE sp.id = ?
         LIMIT 1
     ";
-
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$id]);
     $sp = $stmt->fetch(PDO::FETCH_ASSOC);
