@@ -37,22 +37,6 @@ function getFeaturedProducts($pdo) {
 /* =============================
    LẤY SẢN PHẨM GIẢM GIÁ
    ============================= */
-function getDiscountProducts($pdo) {
-    $sql = "
-        SELECT sp.*, gg.loai_giam_gia, gg.gia_tri,
-               gg.ngay_bat_dau, gg.ngay_ket_thuc
-        FROM san_pham sp
-        INNER JOIN san_pham_giam_gia spgg ON sp.id = spgg.san_pham_id
-        INNER JOIN giam_gia gg ON gg.id = spgg.giam_gia_id
-        WHERE NOW() BETWEEN gg.ngay_bat_dau AND gg.ngay_ket_thuc
-        ORDER BY gg.id DESC
-        LIMIT 8
-    ";
-
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
 
 /* =============================
    TÍNH GIÁ SAU KHI GIẢM
@@ -72,9 +56,46 @@ function getProductVariants(PDO $pdo, $productId) {
     $stmt->execute([$productId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+function getDiscountProducts($pdo) {
+    $sql = "
+SELECT 
+    sp.id,
+    sp.ten,
+    sp.hinh_anh,
+    sp.gia,
 
+    gg.loai_giam_gia,
+    gg.gia_tri,
 
+    gg.ngay_bat_dau,
+    gg.ngay_ket_thuc,
 
+    CASE 
+        WHEN gg.loai_giam_gia = 'percent' THEN gg.gia_tri
+        WHEN gg.loai_giam_gia = 'amount' THEN ROUND(gg.gia_tri / sp.gia * 100)
+        ELSE 0
+    END AS giam_phan_tram,
+
+    CASE 
+        WHEN gg.loai_giam_gia = 'percent' THEN sp.gia - (sp.gia * gg.gia_tri / 100)
+        WHEN gg.loai_giam_gia = 'amount' THEN sp.gia - gg.gia_tri
+        ELSE sp.gia
+    END AS gia_da_giam
+
+FROM san_pham sp
+JOIN san_pham_giam_gia spgg ON spgg.san_pham_id = sp.id
+JOIN giam_gia gg ON gg.id = spgg.giam_gia_id
+
+WHERE 
+    gg.ngay_bat_dau <= NOW()
+    AND gg.ngay_ket_thuc >= NOW();
+
+    ";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 /* ================================================
     LẤY SẢN PHẨM MỚI NHẤT
