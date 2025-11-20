@@ -58,43 +58,62 @@ function getProductVariants(PDO $pdo, $productId) {
 }
 function getDiscountProducts($pdo) {
     $sql = "
-SELECT 
-    sp.id,
-    sp.ten,
-    sp.hinh_anh,
-    sp.gia,
+        SELECT 
+            sp.id,
+            sp.ten,
+            sp.hinh_anh,
+            sp.gia,
 
-    gg.loai_giam_gia,
-    gg.gia_tri,
+            gg.loai_giam_gia,
+            gg.gia_tri,
 
-    gg.ngay_bat_dau,
-    gg.ngay_ket_thuc,
+            gg.ngay_bat_dau,
+            gg.ngay_ket_thuc,
 
-    CASE 
-        WHEN gg.loai_giam_gia = 'percent' THEN gg.gia_tri
-        WHEN gg.loai_giam_gia = 'amount' THEN ROUND(gg.gia_tri / sp.gia * 100)
-        ELSE 0
-    END AS giam_phan_tram,
+            CASE 
+                WHEN gg.loai_giam_gia = 'percent' THEN gg.gia_tri
+                WHEN gg.loai_giam_gia = 'amount' THEN ROUND(gg.gia_tri / sp.gia * 100)
+                ELSE 0
+            END AS giam_phan_tram,
 
-    CASE 
-        WHEN gg.loai_giam_gia = 'percent' THEN sp.gia - (sp.gia * gg.gia_tri / 100)
-        WHEN gg.loai_giam_gia = 'amount' THEN sp.gia - gg.gia_tri
-        ELSE sp.gia
-    END AS gia_da_giam
+            CASE 
+                WHEN gg.loai_giam_gia = 'percent' THEN sp.gia - (sp.gia * gg.gia_tri / 100)
+                WHEN gg.loai_giam_gia = 'amount' THEN sp.gia - gg.gia_tri
+                ELSE sp.gia
+            END AS gia_da_giam
 
-FROM san_pham sp
-JOIN san_pham_giam_gia spgg ON spgg.san_pham_id = sp.id
-JOIN giam_gia gg ON gg.id = spgg.giam_gia_id
+        FROM san_pham sp
+        JOIN san_pham_giam_gia spgg ON spgg.san_pham_id = sp.id
+        JOIN giam_gia gg ON gg.id = spgg.giam_gia_id
 
-WHERE 
-    gg.ngay_bat_dau <= NOW()
-    AND gg.ngay_ket_thuc >= NOW();
-
+        WHERE 
+            gg.ngay_bat_dau <= NOW()
+            AND gg.ngay_ket_thuc >= NOW();
     ";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // 🔥 LẤY BIẾN THỂ CHUẨN THEO BẢNG bien_the_san_pham
+    foreach ($products as &$p) {
+        $variantStmt = $pdo->prepare("
+            SELECT 
+                id,
+                mau_sac,
+                dung_luong_ssd,
+                gia,
+                so_luong_ton,
+                hinh_anh
+            FROM bien_the_san_pham
+            WHERE san_pham_id = ?
+        ");
+        $variantStmt->execute([$p['id']]);
+        $p['variants'] = $variantStmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    return $products;
 }
 
 /* ================================================

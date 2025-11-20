@@ -1,16 +1,18 @@
 <?php
-// FILE: client/pages/home.php
-// (Code này giả định bạn đã cập nhật hàm getFeaturedProducts() trong functions.php)
-
-// (PHẦN BACK-END)
-// Lấy sản phẩm nổi bật. Biến $pdo và $categories đã có sẵn từ index.php
 $featuredProducts = getFeaturedProducts($pdo);
 $discountProducts = getDiscountProducts($pdo);
+
+// Load biến thể cho sản phẩm nổi bật
 foreach ($featuredProducts as &$sp) {
     $sp['variants'] = getProductVariants($pdo, $sp['id']);
 }
 
+// Load biến thể cho sản phẩm giảm giá (BẠN BỎ QUÊN ĐOẠN NÀY)
+foreach ($discountProducts as &$sp) {
+    $sp['variants'] = getProductVariants($pdo, $sp['id']);
+}
 ?>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 
 <section class="hero">
     <div class="container">
@@ -50,99 +52,94 @@ foreach ($featuredProducts as &$sp) {
         </div>
     </div>
 </section>
-
-<section class="category-section">
-    <div class="container">
-        <span class="section-subtitle">DANH MỤC SẢN PHẨM</span>
-        <h2 class="section-title">Khám phá theo danh mục</h2>
-        <div class="category-pills">
-            <?php if (!empty($categories)): ?>
-                <?php foreach ($categories as $index => $category): ?>
-                    <?php
-                        $colors = ['purple', 'cyan', 'pink'];
-                        $colorClass = $colors[$index % count($colors)];
-                    ?>
-                    <a href="index.php?page=product_list&category_id=<?= $category['id']; ?>" 
-                       class="btn pill-btn <?= $colorClass; ?>">
-                        <?= htmlspecialchars($category['ten']); ?>
-                    </a>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </div>
-    </div>
-</section>
-
+<style>
+</style>
 <section class="product-section container">
     <span class="section-subtitle">SẢN PHẨM NỔI BẬT</span>
     <h2 class="section-title">Laptop được yêu thích nhất</h2>
-    
+
     <div class="product-carousel-wrapper">
+
+        <!-- SWIPER CONTAINER -->
         <div class="swiper product-carousel">
             <div class="swiper-wrapper">
+
                 <?php if (!empty($featuredProducts)): ?>
                     <?php foreach ($featuredProducts as $sp): ?>
-                    <div class="swiper-slide">
-<div class="product-card">
 
-    <!-- Bỏ SALE tag -->
+                        <div class="swiper-slide">
+                            <div class="product-card">
 
-    <div class="product-image">
-        <?php
-        $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
-        if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
-            $img_path = 'assets/img/no-image.png';
-        }
-        ?>
-        <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
-    </div>
+                                <!-- Hình ảnh sản phẩm -->
+                                <div class="product-image">
+                                    <?php
+                                    $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
+                                    if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
+                                        $img_path = 'assets/img/no-image.png';
+                                    }
+                                    ?>
+                                    <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
+                                </div>
 
-    <div class="card-content">
-        <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
+                                <div class="card-content">
+                                    <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
 
-        <!-- Chỉ hiển thị 1 giá -->
-<div class="card-price">
-    <span class="card-price-new">
-        <?= number_format($sp['gia']); ?>₫
-    </span>
-</div>
+                                    <!-- Giá sản phẩm -->
+                                    <div class="card-price">
+                                        <span class="card-price-new">
+                                            <?= number_format($sp['gia']); ?>₫
+                                        </span>
+                                    </div>
 
+                                    <!-- Nút -->
+                                    <div class="btn-group-vertical">
+                                        <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">
+                                            🔍 Xem chi tiết
+                                        </a>
 
-        <div class="btn-group-vertical">
-            <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">🔍 Xem chi tiết</a>
+                                        <?php if (!empty($sp['variants']) && count($sp['variants']) > 0): ?>
 
-            <?php if (!empty($sp['variants']) && count($sp['variants']) > 0): ?>
-                <!-- Nếu có biến thể → bật modal Quick Add -->
-<a href="javascript:void(0);"
-   class="btn-cart btn-quick-add"
-   data-product-id="<?= $sp['id']; ?>"
-   data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
-   data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
-   data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'
->
-    🛒 Thêm vào giỏ
-</a>
+                                            <!-- Có biến thể → Quick Add -->
+                                            <a href="javascript:void(0);"
+                                               class="btn-cart btn-quick-add"
+                                               data-product-id="<?= $sp['id']; ?>"
+                                               data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
+                                               data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
+                                               data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'>
+                                                🛒 Thêm vào giỏ
+                                            </a>
 
-            <?php else: ?>
-                <!-- Nếu không có biến thể → thêm thẳng vào giỏ -->
-                <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">
-                    🛒 Thêm vào giỏ
-                </a>
-            <?php endif; ?>
-        </div>
-    </div>
-</div>
+                                        <?php else: ?>
 
-                    </div>
+                                            <!-- Không có biến thể → Add trực tiếp -->
+                                            <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">
+                                                🛒 Thêm vào giỏ
+                                            </a>
+
+                                        <?php endif; ?>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
                     <?php endforeach; ?>
+
                 <?php else: ?>
-                    <p style="text-align: center; width: 100%;">Không tìm thấy sản phẩm nổi bật nào.</p>
+
+                    <p style="text-align:center; width:100%;">Không tìm thấy sản phẩm nổi bật nào.</p>
+
                 <?php endif; ?>
+
             </div>
         </div>
 
+        <!-- MŨI TÊN SWIPER (ĐÚNG VỊ TRÍ) -->
         <div class="swiper-button-prev"></div>
         <div class="swiper-button-next"></div>
+
     </div>
+</section>
 
     <div class="variant-modal-overlay" id="quick-add-modal" style="display: none;">
         <div class="variant-modal-box">
@@ -184,6 +181,95 @@ foreach ($featuredProducts as &$sp) {
         </div>
     </div>
     </section>
+
+<section class="product-section container">
+    <span class="section-subtitle">SẢN PHẨM GIẢM GIÁ</span>
+    <h2 class="section-title">Ưu đãi hot trong tuần</h2>
+
+    <div class="product-carousel-wrapper">
+        <div class="swiper product-carousel">
+            <div class="swiper-wrapper">
+<?php if (!empty($discountProducts)): ?>
+    <?php foreach ($discountProducts as $sp): ?>
+    <div class="swiper-slide">
+        <div class="product-card">
+
+<?php 
+// an toàn: nếu không có key thì lấy giá trị mặc định
+$percent = isset($sp['giam_phan_tram']) ? (int)$sp['giam_phan_tram'] : 0;
+$newPrice = isset($sp['gia_da_giam']) ? $sp['gia_da_giam'] : null;
+$origPrice = isset($sp['gia']) ? $sp['gia'] : null;
+?>
+
+<!-- SALE TAG (BONG BÓNG GIẢM GIÁ) -->
+<?php if ($percent > 0): ?>
+    <div class="product-sale-tag">-<?= htmlspecialchars($percent); ?>%</div>
+<?php endif; ?>
+
+<div class="product-image">
+    <?php
+    $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
+    if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
+        $img_path = 'assets/img/no-image.png';
+    }
+    ?>
+    <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
+</div>
+
+<div class="card-content">
+    <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
+
+    <div class="card-price">
+        <?php if ($newPrice !== null): ?>
+            <span class="card-price-old"><?= number_format($origPrice); ?>₫</span>
+            <span class="card-price-new"><?= number_format($newPrice); ?>₫</span>
+        <?php else: ?>
+            <span class="card-price-new"><?= number_format($origPrice); ?>₫</span>
+        <?php endif; ?>
+    </div>
+
+<div class="btn-group-vertical">
+    <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">
+        🔍 Xem chi tiết
+    </a>
+
+    <?php if (!empty($sp['variants']) && count($sp['variants']) > 0): ?>
+        <!-- Giảm giá nhưng có biến thể → Quick Add -->
+        <a href="javascript:void(0);"
+           class="btn-cart btn-quick-add"
+           data-product-id="<?= $sp['id']; ?>"
+           data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
+           data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
+           data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'
+        >
+            🛒 Thêm vào giỏ
+        </a>
+
+    <?php else: ?>
+        <!-- Không có biến thể → add thẳng -->
+        <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">
+            🛒 Thêm vào giỏ
+        </a>
+    <?php endif; ?>
+</div>
+
+</div>
+
+        </div>
+    </div>
+    <?php endforeach; ?>
+<?php else: ?>
+    <p style="text-align:center;width:100%;">Không có sản phẩm giảm giá.</p>
+<?php endif; ?>
+
+
+            </div>
+        </div>
+
+        <div class="swiper-button-prev"></div>
+        <div class="swiper-button-next"></div>
+    </div>
+</section>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     
@@ -417,71 +503,4 @@ if (variant.hinh_anh && variant.hinh_anh !== "") {
     });
 });
 </script>
-<section class="product-section container">
-    <span class="section-subtitle">SẢN PHẨM GIẢM GIÁ</span>
-    <h2 class="section-title">Ưu đãi hot trong tuần</h2>
-
-    <div class="product-carousel-wrapper">
-        <div class="swiper product-carousel">
-            <div class="swiper-wrapper">
-<?php if (!empty($discountProducts)): ?>
-    <?php foreach ($discountProducts as $sp): ?>
-    <div class="swiper-slide">
-        <div class="product-card">
-
-<?php 
-// an toàn: nếu không có key thì lấy giá trị mặc định
-$percent = isset($sp['giam_phan_tram']) ? (int)$sp['giam_phan_tram'] : 0;
-$newPrice = isset($sp['gia_da_giam']) ? $sp['gia_da_giam'] : null;
-$origPrice = isset($sp['gia']) ? $sp['gia'] : null;
-?>
-
-<!-- SALE TAG (BONG BÓNG GIẢM GIÁ) -->
-<?php if ($percent > 0): ?>
-    <div class="product-sale-tag">-<?= htmlspecialchars($percent); ?>%</div>
-<?php endif; ?>
-
-<div class="product-image">
-    <?php
-    $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
-    if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
-        $img_path = 'assets/img/no-image.png';
-    }
-    ?>
-    <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
-</div>
-
-<div class="card-content">
-    <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
-
-    <div class="card-price">
-        <?php if ($newPrice !== null): ?>
-            <span class="card-price-old"><?= number_format($origPrice); ?>₫</span>
-            <span class="card-price-new"><?= number_format($newPrice); ?>₫</span>
-        <?php else: ?>
-            <span class="card-price-new"><?= number_format($origPrice); ?>₫</span>
-        <?php endif; ?>
-    </div>
-
-    <div class="btn-group-vertical">
-        <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">🔍 Xem chi tiết</a>
-        <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">🛒 Thêm vào giỏ</a>
-    </div>
-</div>
-
-        </div>
-    </div>
-    <?php endforeach; ?>
-<?php else: ?>
-    <p style="text-align:center;width:100%;">Không có sản phẩm giảm giá.</p>
-<?php endif; ?>
-
-
-            </div>
-        </div>
-
-        <div class="swiper-button-prev"></div>
-        <div class="swiper-button-next"></div>
-    </div>
-</section>
-ơ
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>

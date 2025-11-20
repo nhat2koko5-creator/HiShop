@@ -457,6 +457,34 @@ ul {
 }
 
 /* Mục "Sản phẩm yêu thích" (Thẻ SP mới) */
+/* Hiện mũi tên Swiper – ép buộc */
+.swiper-button-prev,
+.swiper-button-next {
+    color: #000 !important;
+    width: 40px !important;
+    height: 40px !important;
+    background: #ffffffcc !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 50 !important;
+}
+
+/* Nút icon */
+.swiper-button-prev::after,
+.swiper-button-next::after {
+    font-size: 20px !important;
+    color: #000 !important;
+    opacity: 1 !important;
+}
+
+/* Đảm bảo container không che mũi tên */
+.product-carousel-wrapper {
+    position: relative !important;
+    overflow: visible !important;
+}
+
 .product-section {
   padding: var(--spacing-64) 0;
 }
@@ -638,6 +666,7 @@ ul {
 
     pointer-events: none;     /* Không bị click */
 }
+
 /* === 6. STYLES CÁC TRANG CON (ĐÃ CẬP NHẬT THEO SKIN MỚI) === */
 /* (Style cho PDP, Giỏ hàng, Thanh toán, v.v. được giữ lại và điều chỉnh màu sắc) */
 .page-title {
