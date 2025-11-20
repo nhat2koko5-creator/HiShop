@@ -82,35 +82,66 @@ try {
             break;
 
         // --- CÁC CHỨC NĂNG GIỎ HÀNG KHÁC (GIỮ NGUYÊN ĐỂ KHÔNG LỖI CART) ---
-       case 'add':
-            if (isset($_POST['variant_id']) && !empty($_POST['variant_id'])) {
-                $id_to_add = (int)$_POST['variant_id'];
-            } else {
-                $id_to_add = (int)$_POST['id'];
-            }
+case 'add':
+    // Lấy dữ liệu đầu vào (có thể gửi variant_id hoặc id)
+    $variant_id = isset($_POST['variant_id']) && !empty($_POST['variant_id']) ? (int)$_POST['variant_id'] : null;
+    $product_id_in = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+    $qty = max(1, (int)($_POST['quantity'] ?? 1));
 
-            // Kiểm tra dữ liệu đầu vào
-            if ($id_to_add <= 0 || $quantity <= 0) { 
-                $response['message'] = 'Dữ liệu sản phẩm không hợp lệ.'; 
-                break; 
-            }
-
-            // Câu lệnh SQL Insert/Update
-            $sql = "INSERT INTO gio_hang (nguoi_dung_id, san_pham_id, so_luong) 
-                    VALUES (?, ?, ?) 
-                    ON DUPLICATE KEY UPDATE so_luong = so_luong + VALUES(so_luong)";
-            
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$user_id, $id_to_add, $quantity]);
-             
-            // Đếm lại tổng số lượng để cập nhật icon giỏ hàng
-            $stmt_count = $pdo->prepare("SELECT SUM(so_luong) FROM gio_hang WHERE nguoi_dung_id = ?");
-            $stmt_count->execute([$user_id]);
-            
-            $response['status'] = 'success';
-            $response['message'] = 'Đã thêm vào giỏ hàng thành công!';
-            $response['totalItems'] = (int)$stmt_count->fetchColumn();
+    // Kiểm tra dữ liệu
+    if ($variant_id) {
+        // Lấy thông tin biến thể (để biết san_pham_id và giá/stock nếu cần)
+        $stmtV = $pdo->prepare("SELECT id, san_pham_id, gia, so_luong_ton FROM bien_the_san_pham WHERE id = ? LIMIT 1");
+        $stmtV->execute([$variant_id]);
+        $variantRow = $stmtV->fetch(PDO::FETCH_ASSOC);
+        if (!$variantRow) {
+            $response['message'] = 'Biến thể không tồn tại.';
             break;
+        }
+        $parent_product_id = (int)$variantRow['san_pham_id'];
+        $variant_price = isset($variantRow['gia']) ? (float)$variantRow['gia'] : null;
+    } else {
+        $parent_product_id = $product_id_in;
+        $variant_price = null;
+    }
+
+    if ($parent_product_id <= 0) {
+        $response['message'] = 'Sản phẩm không hợp lệ.';
+        break;
+    }
+
+    // Tính toán: nếu có coupon hoặc giam_gia bạn có thể tính giá ở đây hoặc để DB cập nhật khi checkout.
+    // -- Kiểm tra xem bảng gio_hang có cột bien_the_id hay không (runtime)
+    $cols = [];
+    $stmtCols = $pdo->prepare("SHOW COLUMNS FROM gio_hang LIKE 'bien_the_id'");
+    $stmtCols->execute();
+    $hasBienTheColumn = (bool)$stmtCols->fetch();
+
+    // Nếu bảng có cột bien_the_id: lưu cả san_pham_id và bien_the_id
+    if ($hasBienTheColumn) {
+        // Dùng ON DUPLICATE KEY bằng UNIQUE (nguoi_dung_id, san_pham_id, bien_the_id) giả định bạn đã tạo unique key này.
+        $sql = "INSERT INTO gio_hang (nguoi_dung_id, san_pham_id, bien_the_id, so_luong) VALUES (?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE so_luong = so_luong + VALUES(so_luong)";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$user_id, $parent_product_id, $variant_id, $qty]);
+    } else {
+        // FALLBACK: chỉ lưu san_pham_id ( ánh xạ variant -> parent )
+        $sql = "INSERT INTO gio_hang (nguoi_dung_id, san_pham_id, so_luong) VALUES (?, ?, ?)
+                ON DUPLICATE KEY UPDATE so_luong = so_luong + VALUES(so_luong)";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$user_id, $parent_product_id, $qty]);
+    }
+
+    // Cập nhật tổng số item
+    $stmt_count = $pdo->prepare("SELECT SUM(so_luong) FROM gio_hang WHERE nguoi_dung_id = ?");
+    $stmt_count->execute([$user_id]);
+    $totalItems = (int)$stmt_count->fetchColumn();
+
+    $response['status'] = 'success';
+    $response['message'] = 'Đã thêm vào giỏ hàng thành công!';
+    $response['totalItems'] = $totalItems;
+    break;
+
 
         case 'update':
             $product_id = (int)$cart_key;
