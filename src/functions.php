@@ -348,26 +348,45 @@ function getRecentOrders(PDO $pdo, $limit = 5) {
  * (MỚI) Lấy tất cả sản phẩm và tổng tiền trong giỏ hàng của người dùng
  * Dựa trên bảng: `gio_hang`, `san_pham`
  */
+
 function getCartItemsAndTotal(PDO $pdo, $user_id) {
     $sql = "
         SELECT 
-            sp.id AS san_pham_id,
-            sp.ten,
-            sp.hinh_anh,
-            sp.gia,
-            gh.so_luong
+            gh.san_pham_id,
+            gh.so_luong,
+            
+            -- Tên: Ưu tiên lấy từ SP cha (nếu là biến thể), ngược lại lấy trực tiếp
+            COALESCE(sp_parent.ten, sp_direct.ten) as ten,
+            
+            -- Ảnh: Ưu tiên ảnh biến thể (nếu có), không thì lấy ảnh cha, cuối cùng là ảnh trực tiếp
+            COALESCE(bv.hinh_anh, sp_parent.hinh_anh, sp_direct.hinh_anh) as hinh_anh,
+            
+            -- Giá: Ưu tiên giá biến thể, không thì lấy giá thường
+            COALESCE(bv.gia, sp_direct.gia) as gia,
+            
+            -- Thuộc tính (có thể null nếu là SP thường)
+            bv.mau_sac,
+            bv.dung_luong_ssd
+            
         FROM gio_hang AS gh
-        JOIN san_pham AS sp ON gh.san_pham_id = sp.id
+        -- Thử kết nối coi nó là Biến thể (Variant)
+        LEFT JOIN bien_the_san_pham AS bv ON gh.san_pham_id = bv.id
+        LEFT JOIN san_pham AS sp_parent ON bv.san_pham_id = sp_parent.id
+        
+        -- Thử kết nối coi nó là Sản phẩm thường (Direct Product)
+        LEFT JOIN san_pham AS sp_direct ON gh.san_pham_id = sp_direct.id
+        
         WHERE gh.nguoi_dung_id = ?
+        -- Đảm bảo ít nhất tìm thấy sản phẩm ở 1 trong 2 bảng
+        AND (sp_parent.id IS NOT NULL OR sp_direct.id IS NOT NULL)
     ";
     
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$user_id]);
-    $items = $stmt->fetchAll();
+    $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     $total_amount = 0;
     foreach ($items as $item) {
-        // (Bạn có thể thêm logic kiểm tra giảm giá ở đây)
         $total_amount += $item['gia'] * $item['so_luong'];
     }
     
@@ -376,6 +395,9 @@ function getCartItemsAndTotal(PDO $pdo, $user_id) {
         'total' => $total_amount
     ];
 }
+
+
+
 function getAvailableCoupons(PDO $pdo) {
     // Chỉ lấy mã còn hạn và chưa bắt đầu
     $sql = "SELECT * FROM ma_khuyen_mai 

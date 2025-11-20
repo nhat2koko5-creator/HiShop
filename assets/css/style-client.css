@@ -2549,212 +2549,331 @@ ul {
             order: 1;
         }
     }
-    /* (CSS Cũ CỦA BẠN - GIỮ NGUYÊN) */
-    .cart-page {
-        max-width: 1200px;
-        margin: 40px auto;
-        padding: 0 20px;
-    }
+/* ============================================================
+   MỚI: CART PAGE REDESIGN (Theo phong cách hiện đại)
+   ============================================================ */
 
-    .cart-summary {
-        flex-basis: 320px;
-        background-color: #f9f9f9;
-        padding: 24px;
-        border-radius: 8px;
-        height: fit-content;
-    }
+/* 1. Layout chính: 2 cột (Trái: List, Phải: Summary) */
+.cart-page {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
 
-    .cart-item {
-        display: flex;
-        gap: 15px;
-        padding-bottom: 20px;
-        margin-bottom: 20px;
-        border-bottom: 1px solid #eee;
-        align-items: center;
-    }
+.cart-page h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    color: var(--color-fg-base);
+}
 
-    .cart-item-img {
-        width: 100px;
-        height: 100px;
-        object-fit: cover;
-        border-radius: 4px;
-    }
+.cart-container {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start; /* Để cột phải dính được */
+}
 
-    .cart-item-info {
-        flex: 1;
-    }
+/* 2. Cột Trái: Danh sách sản phẩm */
+.cart-items {
+    flex: 1; /* Chiếm phần lớn diện tích */
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
 
-    .cart-item-name {
-        font-size: 18px;
-        font-weight: 600;
-    }
+/* Header của list (nếu có checkbox chọn tất cả - mô phỏng style) */
+.cart-list-header {
+    background: #fff;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--color-fg-base);
+}
 
-    .cart-item-desc {
-        font-size: 14px;
-        color: #666;
-        margin: 4px 0;
-    }
+/* Thẻ Sản Phẩm (Cart Item) */
+.cart-item {
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: box-shadow 0.2s;
+    position: relative;
+}
 
-    .cart-item-remove {
-        font-size: 14px;
-        color: #d90000;
-        text-decoration: none;
-        cursor: pointer;
-    }
+.cart-item:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
 
-    .quantity-control {
-        display: flex;
-        align-items: center;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-    }
+.cart-item-img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain; /* Đổi thành contain để không bị cắt ảnh */
+    border-radius: 4px;
+    border: 1px solid #f3f4f6;
+    padding: 4px;
+}
 
-    .quantity-control button {
-        background: #f5f5f5;
-        border: none;
-        padding: 0 10px;
-        cursor: pointer;
-        font-size: 18px;
-        height: 34px;
-    }
+.cart-item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
 
-    .quantity-control input {
-        width: 40px;
-        text-align: center;
-        border: none;
-        height: 32px;
-        padding: 0;
-    }
+.cart-item-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-fg-base);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
 
-    .quantity-control input[type=number] {
-        -moz-appearance: textfield;
-    }
+/* Giá tiền trong item */
+.cart-item-price-single {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-fg-base);
+}
 
-    .btn-checkout:disabled {
-        background-color: #ccc;
-        cursor: not-allowed;
-    }
+/* Bộ điều khiển số lượng (+ -) */
+.quantity-control {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    height: 32px;
+    width: fit-content;
+}
 
+.quantity-control button {
+    width: 32px;
+    height: 100%;
+    background: #fff;
+    border: none;
+    font-size: 16px;
+    color: var(--color-fg-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quantity-control button:hover {
+    background: #f9fafb;
+    color: var(--color-primary);
+}
+
+.quantity-control input {
+    width: 40px;
+    height: 100%;
+    border: none;
+    border-left: 1px solid var(--color-border);
+    border-right: 1px solid var(--color-border);
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-fg-base);
+    outline: none;
+}
+
+/* Giá tổng tiền item (Màu xanh/đỏ nổi bật) */
+.cart-item-price-total {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-primary); /* Hoặc màu đỏ: var(--color-red) */
+    min-width: 120px;
+    text-align: right;
+}
+
+/* Nút xóa (Trash icon style) */
+.cart-item-remove {
+    color: var(--color-fg-muted);
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.2s;
+    margin-top: auto; /* Đẩy xuống dưới cùng nếu flex cột */
+}
+
+.cart-item-remove:hover {
+    color: var(--color-red);
+    text-decoration: underline;
+}
+
+
+/* 3. Cột Phải: Tóm tắt đơn hàng (Sticky) */
+.cart-summary {
+    width: 360px; /* Cố định chiều rộng */
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 20px;
+    position: sticky;
+    top: 100px; /* Dính khi cuộn trang */
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: var(--shadow);
+}
+
+.cart-summary h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-fg-base);
+    margin: 0;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--color-fg-muted);
+}
+
+.summary-row span:last-child {
+    font-weight: 600;
+    color: var(--color-fg-base);
+}
+
+.summary-row.total {
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--color-border);
+    align-items: center;
+}
+
+.summary-row.total span:first-child {
+    font-size: 16px;
+    color: var(--color-fg-base);
+}
+
+.summary-row.total span:last-child {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-primary); /* Hoặc màu đỏ */
+}
+/* === CSS MỚI CHO CHECKBOX & BIẾN THỂ GIỎ HÀNG === */
+
+/* 1. Style cho Checkbox thật */
+.cart-checkbox {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--color-primary); /* Màu xanh chủ đạo của web */
+    margin-right: 12px;
+}
+
+/* 2. Thông tin biến thể (Màu, SSD) */
+.cart-item-variant {
+    font-size: 13px;
+    color: var(--color-fg-muted);
+    margin-top: 4px;
+    background-color: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    width: fit-content;
+}
+
+/* 3. Checkbox "Chọn tất cả" ở Header */
+.cart-list-header label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    width: 100%;
+}
+
+.cart-list-header span {
+    margin-left: 8px;
+}
+/* Nút Thanh Toán (To, Rõ ràng) */
+.btn-checkout {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background-color: var(--color-primary); /* Màu chủ đạo */
+    color: #fff;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 8px;
+    text-transform: uppercase;
+}
+
+.btn-checkout:hover {
+    opacity: 0.9;
+    background-color: #4338ca; /* Màu tối hơn chút */
+}
+
+/* Link tiếp tục mua sắm */
+.btn-continue {
+    display: block;
+    text-align: center;
+    font-size: 14px;
+    color: var(--color-primary);
+    font-weight: 600;
+    margin-top: 12px;
+    padding: 10px;
+    border: 1px solid var(--color-primary);
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-continue:hover {
+    background: #f0f7ff;
+}
+
+/* Thông tin Free Ship (Style giống ảnh) */
+.free-ship-note {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    color: #0284c7;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Responsive Mobile */
+@media (max-width: 900px) {
     .cart-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 30px;
+        flex-direction: column;
     }
-
-    .cart-items {
-        flex: 1;
-        min-width: 450px;
-    }
-
     .cart-summary {
         width: 100%;
-        position: sticky;
-        top: 20px;
+        position: static; /* Bỏ dính trên mobile */
     }
-
-    .cart-item-price {
-        font-size: 18px;
-        font-weight: 600;
-        min-width: 120px;
-        text-align: right;
+    .cart-item {
+        flex-wrap: wrap;
     }
-
-    .cart-summary h2 {
-        margin-top: 0;
-        margin-bottom: 20px;
-    }
-
-    .summary-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 12px;
-        font-size: 16px;
-    }
-
-    .summary-row span:last-child {
-        font-weight: 600;
-        color: #333;
-    }
-
-    .summary-row.total {
-        font-size: 20px;
-        font-weight: 700;
-        border-top: 1px solid #ddd;
-        padding-top: 15px;
-        margin-top: 15px;
-    }
-
-    .summary-row.total span:last-child {
-        color: #d90000;
-    }
-
-    .coupon-form {
-        display: flex;
-        margin: 20px 0;
-    }
-
-    .coupon-form input[type="text"] {
-        flex: 1;
-        border: 1px solid #ccc;
-        padding: 10px 12px;
-        border-radius: 4px 0 0 4px;
-        outline: none;
-        font-size: 15px;
-        min-width: 100px;
-    }
-
-    .coupon-form button {
-        border: none;
-        background: #0f62fe;
-        color: white;
-        padding: 0 15px;
-        cursor: pointer;
-        border-radius: 0 4px 4px 0;
-        font-weight: 600;
-        font-size: 15px;
-        transition: background-color 0.2s;
-    }
-
-    .coupon-form button:hover {
-        background: #004ecc;
-    }
-
-    #coupon-message {
-        font-size: 14px;
-        margin-top: -10px;
-        margin-bottom: 15px;
-        text-align: left;
-    }
-
-    #coupon-message.success {
-        color: #15803d;
-    }
-
-    #coupon-message.error {
-        color: #dc2626;
-    }
-
-    #discount-row {
-        color: #15803d;
-    }
-
-    .btn-checkout {
+    .cart-item-price-total {
         width: 100%;
-        padding: 14px;
-        font-size: 18px;
-        font-weight: 700;
-        background: #0f62fe;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-        text-align: center;
+        text-align: left;
+        margin-top: 8px;
     }
-
-    .btn-checkout:hover:not(:disabled) {
-        background: #004ecc;
-    }
+}
 
 /* === (MỚI) CSS CHO TRANG CHECKOUT (FIX LỖI 2 CỘT + COUPON) === */
 
@@ -2904,85 +3023,31 @@ ul {
 .checkout-btn { margin-top: var(--spacing-24); }
 
 /* 8. (MỚI) CSS CHO COUPON MODAL */
-.coupon-modal-overlay {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-}
-.coupon-modal {
-    background: var(--color-white);
-    border-radius: var(--radius-lg);
-    width: 90%;
-    max-width: 500px;
-    max-height: 80vh;
-    display: flex;
-    flex-direction: column;
-}
-.coupon-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-16) var(--spacing-24);
-    border-bottom: 1px solid var(--color-border);
-}
-.coupon-modal-header h3 { font: var(--font-h4); margin: 0; }
-.close-modal-btn {
-    background: none;
-    border: none;
-    font-size: 28px;
-    font-weight: 300;
-    cursor: pointer;
-    color: var(--color-fg-muted);
-}
-.coupon-modal-body {
-    padding: var(--spacing-24);
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-16);
-}
-.coupon-item {
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-16);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-16);
-}
-.coupon-info { flex: 1; }
-.coupon-info strong {
-    font-size: 16px;
-    color: var(--color-primary);
-}
-.coupon-info p {
-    font: var(--font-body-s);
-    color: var(--color-fg-muted);
-    margin: 4px 0 0 0;
-}
-.btn-apply-from-modal {
-    background: var(--color-bg-subtle);
-    border: 1px solid var(--color-border);
-    color: var(--color-primary);
-    font-weight: 600;
-    padding: 8px 16px;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-}
-
-/* 9. (MỚI) CSS CHO RESPONSIVE */
-@media (max-width: 900px) {
-    .checkout-layout {
-        grid-template-columns: 1fr; /* Xếp 2 cột dọc */
+    /* Overlay chung */
+    .coupon-modal-overlay, .alert-modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); z-index: 9999;
+        display: none; align-items: center; justify-content: center;
     }
-    .checkout-summary-stack {
-        position: static; /* Bỏ dính */
+    /* Box chung */
+    .coupon-modal, .alert-modal-box {
+        background: #fff; width: 90%; max-width: 420px;
+        border-radius: 12px; padding: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        animation: fadeIn 0.2s ease-out;
     }
-}
+    /* Header Modal */
+    .coupon-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+    .close-modal-btn { background: none; border: none; font-size: 24px; cursor: pointer; }
+    /* Coupon Item */
+    .coupon-item { display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+    .btn-apply-from-modal { background: #f0f9ff; color: #007bff; border: 1px solid #007bff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    .btn-apply-from-modal:hover { background: #007bff; color: #fff; }
+    /* Alert Colors */
+    .alert-modal-box.success h3 { color: #10b981; }
+    .alert-modal-box.error h3 { color: #ef4444; }
+    .text-success { color: #10b981 !important; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* (MỚI) BẮT ĐẦU: CSS CHO VARIANT MODAL (TỪ HOME.PHP) */
 .variant-modal-overlay {
