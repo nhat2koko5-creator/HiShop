@@ -5,6 +5,8 @@
 // (PHẦN BACK-END)
 // Lấy sản phẩm nổi bật. Biến $pdo và $categories đã có sẵn từ index.php
 $featuredProducts = getFeaturedProducts($pdo);
+$discountProducts = getDiscountProducts($pdo);
+
 ?>
 
 <section class="hero">
@@ -77,55 +79,54 @@ $featuredProducts = getFeaturedProducts($pdo);
                 <?php if (!empty($featuredProducts)): ?>
                     <?php foreach ($featuredProducts as $sp): ?>
                     <div class="swiper-slide">
-                        <div class="product-card">
-                            
-                            <?php if (isset($sp['gia_moi'])): ?>
-                                <div class="sale-tag">SALE <?= round((1 - $sp['gia_moi'] / $sp['gia_goc']) * 100) ?>%</div>
-                            <?php endif; ?>
-                            
-                            <div class="product-image">
-                                <?php
-                                $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
-                                if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
-                                    $img_path = 'assets/img/no-image.png'; // Ảnh mặc định
-                                }
-                                ?>
-                                <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
-                            </div>
+<div class="product-card">
 
-                            <div class="card-content">
-                                <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
-                                
-                                <div class="card-price">
-                                    <?php if (isset($sp['gia_moi'])): ?>
-                                        <span class="card-price-old"><?= number_format($sp['gia_goc']); ?>₫</span>
-                                        <span class="card-price-new"><?= number_format($sp['gia_moi']); ?>₫</span>
-                                    <?php else: ?>
-                                        <span class="card-price-new"><?= number_format($sp['gia_goc'] ?? 0); ?>₫</span>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (isset($sp['variants']) && count($sp['variants']) > 1): ?>
-                                        <span style="font-size: 14px; color: #6B7280;"></span>
-                                    <?php endif; ?>
-                                </div>
+    <!-- Bỏ SALE tag -->
 
-                                <div class="btn-group-vertical">
-                                    <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">🔍 Xem chi tiết</a>
-                                    
-                                    <?php if (!empty($sp['variants'])): ?>
-                                        <a href="javascript:void(0);" 
-                                           class="btn-cart btn-quick-add" 
-                                           data-product-id="<?= $sp['id']; ?>"
-                                           data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
-                                           data-product-image="<?= htmlspecialchars($sp['hinh_anh']); ?>"
-                                           data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, 'UTF-8'); ?>'
-                                        >
-                                            🛒 Thêm vào giỏ
-                                        </a>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
+    <div class="product-image">
+        <?php
+        $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
+        if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
+            $img_path = 'assets/img/no-image.png';
+        }
+        ?>
+        <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
+    </div>
+
+    <div class="card-content">
+        <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
+
+        <!-- Chỉ hiển thị 1 giá -->
+        <div class="card-price">
+            <span class="card-price-new">
+                <?= number_format($sp['gia_goc'] ?? 0); ?>₫
+            </span>
+        </div>
+
+        <div class="btn-group-vertical">
+            <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">🔍 Xem chi tiết</a>
+
+            <?php if (!empty($sp['variants']) && count($sp['variants']) > 0): ?>
+                <!-- Nếu có biến thể → bật modal Quick Add -->
+                <a href="javascript:void(0);"
+                   class="btn-cart btn-quick-add"
+                   data-product-id="<?= $sp['id']; ?>"
+                   data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
+                   data-product-image="<?= htmlspecialchars($sp['hinh_anh']); ?>"
+                   data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'
+                >
+                    🛒 Thêm vào giỏ
+                </a>
+            <?php else: ?>
+                <!-- Nếu không có biến thể → thêm thẳng vào giỏ -->
+                <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">
+                    🛒 Thêm vào giỏ
+                </a>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
                     </div>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -415,37 +416,75 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <!-- ============= KHỐI SẢN PHẨM NỔI BẬT _THỨ 2_ ============= -->
 <?php
-// LẤY SẢN PHẨM GIẢM GIÁ TỪ  san_pham_giam_gia  +  giam_gia  +  san_pham
 try {
-    $sql = "
-        SELECT 
-            sp.id,
-            sp.ten,
-            sp.hinh_anh,
-            sp.gia AS gia_goc,
-            gg.loai_giam_gia,
-            gg.gia_tri,
-            (
-                CASE 
-                    WHEN gg.loai_giam_gia = 'percent' 
-                        THEN sp.gia - (sp.gia * gg.gia_tri / 100)
-                    WHEN gg.loai_giam_gia = 'amount' 
-                        THEN sp.gia - gg.gia_tri
-                    ELSE sp.gia
-                END
-            ) AS gia_moi
-        FROM san_pham_giam_gia spgg
-        JOIN san_pham sp ON sp.id = spgg.san_pham_id
-        JOIN giam_gia gg ON gg.id = spgg.giam_gia_id
-        WHERE (gg.ngay_bat_dau IS NULL OR gg.ngay_bat_dau <= NOW())
-          AND (gg.ngay_ket_thuc IS NULL OR gg.ngay_ket_thuc >= NOW())
-        ORDER BY gg.id DESC, sp.id ASC
-        LIMIT 20
-    ";
-    $stmt = $pdo->query($sql);
-    $discountProducts = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+
+$sql = "
+SELECT 
+    sp.id,
+    sp.ten,
+    sp.hinh_anh,
+    sp.gia AS gia_goc,
+    gg.loai_giam_gia,
+    gg.gia_tri,
+
+    -- giá mới
+    (
+        CASE 
+            WHEN gg.loai_giam_gia = 'percent' 
+                THEN sp.gia - (sp.gia * gg.gia_tri / 100)
+            WHEN gg.loai_giam_gia = 'amount' 
+                THEN sp.gia - gg.gia_tri
+            ELSE sp.gia
+        END
+    ) AS gia_moi,
+
+    -- tránh lỗi JSON NULL row
+    COALESCE(
+        JSON_ARRAYAGG(
+            CASE 
+                WHEN bv.id IS NOT NULL THEN
+                    JSON_OBJECT(
+                        'id', bv.id,
+                        'ten', bv.ten,
+                        'gia', bv.gia,
+                        'so_luong', bv.so_luong
+                    )
+                ELSE NULL
+            END
+        ),
+    JSON_ARRAY()) AS variants
+
+FROM san_pham_giam_gia spgg
+JOIN san_pham sp ON sp.id = spgg.san_pham_id
+JOIN giam_gia gg ON gg.id = spgg.giam_gia_id
+LEFT JOIN bien_the bv ON bv.san_pham_id = sp.id
+
+WHERE 
+    (gg.ngay_bat_dau IS NULL OR DATE(gg.ngay_bat_dau) <= CURDATE())
+    AND (gg.ngay_ket_thuc IS NULL OR DATE(gg.ngay_ket_thuc) >= CURDATE())
+
+GROUP BY 
+    sp.id, sp.ten, sp.hinh_anh, sp.gia, gg.loai_giam_gia, gg.gia_tri
+
+ORDER BY gg.id DESC, sp.id ASC
+LIMIT 20;
+";
+
+$stmt = $pdo->query($sql);
+$discountProducts = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+
+foreach ($discountProducts as &$p) {
+
+    // decode JSON
+    $variants = json_decode($p['variants'], true);
+
+    // loại NULL ra khỏi array
+    $p['variants'] = array_filter($variants, function($v) {
+        return is_array($v) && !empty($v['id']);
+    });
+}
+
 } catch (PDOException $e) {
-    // Nếu có lỗi, không chết giao diện — để trống danh sách và log lỗi nếu cần
     $discountProducts = [];
     error_log('Error fetching discount products: ' . $e->getMessage());
 }
@@ -458,60 +497,44 @@ try {
     <div class="product-carousel-wrapper">
         <div class="swiper product-carousel-2">
             <div class="swiper-wrapper">
+
                 <?php if (!empty($discountProducts)): ?>
                     <?php foreach ($discountProducts as $sp): ?>
+
+                    <?php
+                    // Tính % giảm giá
+                    $discountPercent = 0;
+                    if (!empty($sp['loai_giam_gia']) && !empty($sp['gia_tri'])) {
+                        if ($sp['loai_giam_gia'] == 'percent') {
+                            $discountPercent = (int)$sp['gia_tri'];
+                        } else {
+                            if ($sp['gia_goc'] > 0) {
+                                $discountPercent = round(($sp['gia_tri'] / $sp['gia_goc']) * 100);
+                            }
+                        }
+                    }
+
+                    // Xử lý ảnh
+                    $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
+                    if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
+                        $img_path = 'assets/img/no-image.png';
+                    }
+                    ?>
+
                     <div class="swiper-slide">
                         <div class="product-card">
-                            
-<?php
-// TÍNH % GIẢM GIÁ CHUẨN
-$discountPercent = 0;
-if (!empty($sp['loai_giam_gia']) && !empty($sp['gia_tri'])) {
-    if ($sp['loai_giam_gia'] == 'percent') {
-        $discountPercent = (int)$sp['gia_tri'];
-    } else { 
-        // amount → đổi sang %
-        if ($sp['gia_goc'] > 0) {
-            $discountPercent = round(($sp['gia_tri'] / $sp['gia_goc']) * 100);
-        }
-    }
-}
-?>
 
-<?php if ($discountPercent > 0): ?>
-    <div class="sale-tag">-<?= $discountPercent ?>%</div>
-<?php endif; ?>
-<style>
-.sale-tag {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: #ff3b30;
-    color: #fff;
-    padding: 6px 12px;
-    font-size: 14px;
-    font-weight: 700;
-    border-radius: 20px;
-    z-index: 10;
-}
-.product-card {
-    position: relative;
-}
-</style>
-                            
+                            <?php if ($discountPercent > 0): ?>
+                            <div class="sale-tag">-<?= $discountPercent ?>%</div>
+                            <?php endif; ?>
+
                             <div class="product-image">
-                                <?php
-                                $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
-                                if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
-                                    $img_path = 'assets/img/no-image.png';
-                                }
-                                ?>
                                 <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
                             </div>
 
                             <div class="card-content">
                                 <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
-                                
+
                                 <div class="card-price">
                                     <span class="card-price-old"><?= number_format($sp['gia_goc']); ?>₫</span>
                                     <span class="card-price-new"><?= number_format($sp['gia_moi']); ?>₫</span>
@@ -519,15 +542,39 @@ if (!empty($sp['loai_giam_gia']) && !empty($sp['gia_tri'])) {
 
                                 <div class="btn-group-vertical">
                                     <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">🔍 Xem chi tiết</a>
-                                    <!-- Nếu bạn có chức năng thêm nhanh (variants), giữ nguyên logic cũ -->
+
+                                    <!-- NÚT THÊM VÀO GIỎ HOẠT ĐỘNG -->
+<?php if (!empty($sp['variants']) && count($sp['variants']) > 0): ?>
+    <!-- Có biến thể → bật modal giống khối 1 -->
+    <a href="javascript:void(0);"
+       class="btn-cart btn-quick-add"
+       data-product-id="<?= $sp['id']; ?>"
+       data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
+       data-product-image="<?= htmlspecialchars($sp['hinh_anh']); ?>"
+       data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'
+    >
+        🛒 Thêm vào giỏ
+    </a>
+<?php else: ?>
+    <!-- Không có biến thể → thêm thẳng vào giỏ giống khối 1 -->
+    <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">
+        🛒 Thêm vào giỏ
+    </a>
+<?php endif; ?>
+
+
+
                                 </div>
                             </div>
+
                         </div>
                     </div>
+
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <p style="text-align:center; width:100%;">Không có sản phẩm giảm giá.</p>
+                    <p style="text-align:center;width:100%;">Không có sản phẩm giảm giá.</p>
                 <?php endif; ?>
+
             </div>
         </div>
 
@@ -536,7 +583,24 @@ if (!empty($sp['loai_giam_gia']) && !empty($sp['gia_tri'])) {
     </div>
 </section>
 
+<!-- Nút thêm vào giỏ dạng AJAX giống khối 1 -->
 <script>
+function addToCartQuick(productId) {
+    fetch("index.php?page=add_to_cart_ajax", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "product_id=" + productId
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert("Đã thêm vào giỏ!");
+        } else {
+            alert("Không thể thêm vào giỏ.");
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof Swiper !== 'undefined') {
         new Swiper('.product-carousel-2', {
@@ -555,4 +619,42 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+</script>
+<script>
+function addToCartDiscount(productId) {
+    const formData = new URLSearchParams();
+    formData.append('action', 'add');
+    formData.append('id', productId);
+    formData.append('quantity', 1);
+
+    fetch("cart-handler.php", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            alert("🛒 Đã thêm vào giỏ!");
+            if (typeof updateCartIconCount === "function") {
+                updateCartIconCount(data.totalItems);
+            }
+        } else {
+            alert("Lỗi: " + data.message);
+        }
+    })
+    .catch(() => alert("Không thể kết nối tới máy chủ."));
+}
+document.querySelectorAll('.btn-quick-add').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const variants = JSON.parse(this.dataset.variants);
+        const productId = this.dataset.productId;
+        const productName = this.dataset.productName;
+        const productImage = this.dataset.productImage;
+
+        // hiển thị modal
+        openVariantModal(productId, productName, productImage, variants);
+    });
+});
+
 </script>
