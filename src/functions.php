@@ -355,88 +355,78 @@ function getRecentOrders(PDO $pdo, $limit = 5) {
  * (MỚI) Lấy tất cả sản phẩm và tổng tiền trong giỏ hàng của người dùng
  * Dựa trên bảng: `gio_hang`, `san_pham`
  */
-function getCartItemsAndTotal(PDO $pdo, $user_id){
+function getCartItemsAndTotal(PDO $pdo, $user_id) {
+
     $sql = "
         SELECT 
-    gh.san_pham_id,
-    gh.so_luong,
+            gh.id,
+            gh.so_luong,
 
-    -- Tên: nếu là biến thể thì lấy tên sản phẩm cha
-    COALESCE(sp_parent.ten, sp_direct.ten) AS ten,
+            sp.ten AS ten_san_pham,
+            sp.hinh_anh AS hinh_cha,
 
-    -- Ảnh: ưu tiên ảnh biến thể
-    COALESCE(bv.hinh_anh, sp_parent.hinh_anh, sp_direct.hinh_anh) AS hinh_anh,
+            bt.id AS bien_the_id,
+            bt.mau_sac,
+            bt.dung_luong_ssd,
+            bt.hinh_anh AS hinh_bien_the,
+            bt.gia AS gia_bien_the,
 
-    -- GIÁ GỐC: nếu biến thể có giá thì lấy giá biến thể
-    COALESCE(bv.gia, sp_direct.gia) AS gia_goc,
+            gg.loai_giam_gia,
+            gg.gia_tri
 
-    -- Thông tin biến thể nếu có
-    bv.id AS bien_the_id,
-    bv.mau_sac,
-    bv.dung_luong_ssd,
+        FROM gio_hang gh
 
-    -- Giảm giá
-    g.loai_giam_gia,
-    g.gia_tri,
-    g.ngay_bat_dau,
-    g.ngay_ket_thuc
+        JOIN san_pham sp 
+            ON gh.san_pham_id = sp.id
 
-FROM gio_hang gh
+        LEFT JOIN bien_the_san_pham bt 
+            ON gh.bien_the_id = bt.id
 
--- Nếu san_pham_id = id của biến thể
-LEFT JOIN bien_the_san_pham bv 
-    ON gh.san_pham_id = bv.id
+        LEFT JOIN san_pham_giam_gia spg 
+            ON spg.san_pham_id = sp.id
 
--- Nếu có biến thể thì lấy sản phẩm cha của biến thể
-LEFT JOIN san_pham sp_parent 
-    ON bv.san_pham_id = sp_parent.id
+        LEFT JOIN giam_gia gg 
+            ON gg.id = spg.giam_gia_id
+            AND (gg.ngay_bat_dau IS NULL OR gg.ngay_bat_dau <= NOW())
+            AND (gg.ngay_ket_thuc IS NULL OR gg.ngay_ket_thuc >= NOW())
 
--- Nếu san_pham_id là sản phẩm thường
-LEFT JOIN san_pham sp_direct 
-    ON gh.san_pham_id = sp_direct.id
-
--- Giảm giá chỉ áp dụng cho sản phẩm cha
-LEFT JOIN san_pham_giam_gia spg 
-    ON spg.san_pham_id = sp_parent.id
-
-LEFT JOIN giam_gia g 
-    ON g.id = spg.giam_gia_id
-    AND (g.ngay_bat_dau IS NULL OR g.ngay_bat_dau <= NOW())
-    AND (g.ngay_ket_thuc IS NULL OR g.ngay_ket_thuc >= NOW())
-
-WHERE gh.nguoi_dung_id = ?
+        WHERE gh.nguoi_dung_id = ?
     ";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$user_id]);
     $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $total_amount = 0;
+    $total = 0;
 
     foreach ($items as &$item) {
-        $gia = (float)$item['gia_goc'];
 
-        if ($item['loai_giam_gia']) {
-            if ($item['loai_giam_gia'] === 'percent') {
-                $gia -= $gia * ((float)$item['gia_tri'] / 100);
-            } else {
-                $gia -= (float)$item['gia_tri'];
-            }
-            if ($gia < 0) $gia = 0;
+        // 1. chọn đúng ảnh
+        $item["hinh_anh"] = $item["hinh_bien_the"] ?: $item["hinh_cha"];
+
+        // 2. giá gốc = giá biến thể
+        $gia = (float) $item["gia_bien_the"];
+
+        // 3. áp dụng giảm giá
+        if ($item["loai_giam_gia"] === "percent") {
+            $gia = $gia - ($gia * ($item["gia_tri"] / 100));
+        } elseif ($item["loai_giam_gia"] === "amount") {
+            $gia = $gia - $item["gia_tri"];
         }
 
-        $item['gia'] = $gia;
-        $total_amount += $gia * (int)$item['so_luong'];
+        if ($gia < 0) $gia = 0;
+
+        $item["gia"] = $gia;
+
+        // 4. tính tổng tiền giỏ hàng
+        $total += $gia * $item["so_luong"];
     }
 
     return [
-        'items' => $items,
-        'total' => $total_amount
+        "items" => $items,
+        "total" => $total
     ];
 }
-
-
-
 
 
 function getAvailableCoupons(PDO $pdo) {

@@ -50,23 +50,29 @@ $default_img = 'assets/img/no-image.png';
                 </div>
 
                 <?php foreach ($cart as $item): 
-                    $key = $item['san_pham_id']; // ID biến thể
-                    $item_total = $item['gia'] * $item['so_luong'];
-                    $img_path = (!empty($item['hinh_anh']) && file_exists($img_folder . '/' . $item['hinh_anh'])) ? $img_folder . '/' . $item['hinh_anh'] : $default_img; 
+                    // key là id của dòng trong bảng gio_hang (không phải san_pham_id hay bien_the_id)
+                    $key = $item['id'];
+                    // Giá đơn vị (đã được getCartItemsAndTotal tính sẵn nếu function đó làm việc đúng)
+                    $unit_price = isset($item['gia']) ? (float)$item['gia'] : (float)($item['gia_bien_the'] ?? $item['gia_goc'] ?? 0);
+                    $item_total = $unit_price * (int)$item['so_luong'];
+
+                    // Ảnh: getCartItemsAndTotal đã chuẩn hóa trường hinh_anh (ưu tiên biến thể)
+                    $img_name = $item['hinh_anh'] ?? $item['hinh_bien_the'] ?? $item['hinh_cha'] ?? '';
+                    $img_path = (!empty($img_name) && file_exists($img_folder . '/' . $img_name)) ? $img_folder . '/' . $img_name : $default_img; 
                 ?>
                 <div class="cart-item" id="item-<?php echo $key; ?>">
                     
                     <input type="checkbox" 
                            class="cart-checkbox item-checkbox" 
                            data-key="<?php echo $key; ?>" 
-                           data-price="<?php echo $item['gia']; ?>" 
+                           data-price="<?php echo $unit_price; ?>" 
                            data-qty="<?php echo $item['so_luong']; ?>"
                            checked>
 
-                    <img src="<?php echo htmlspecialchars($img_path); ?>" alt="<?php echo htmlspecialchars($item['ten']); ?>" class="cart-item-img">
+                    <img src="<?php echo htmlspecialchars($img_path); ?>" alt="<?php echo htmlspecialchars($item['ten_san_pham'] ?? 'Sản phẩm'); ?>" class="cart-item-img">
                     
                    <div class="cart-item-info">
-                    <span class="cart-item-name"><?php echo htmlspecialchars($item['ten']); ?></span>
+                    <span class="cart-item-name"><?php echo htmlspecialchars($item['ten_san_pham'] ?? 'Sản phẩm'); ?></span>
                     
                     <?php if (!empty($item['mau_sac']) || !empty($item['dung_luong_ssd'])): ?>
                         <div class="cart-item-variant">
@@ -79,7 +85,7 @@ $default_img = 'assets/img/no-image.png';
                     <?php endif; ?>
                     
                     <span class="cart-item-price-single">
-                        <?php echo price_format($item['gia']); ?>
+                        <?php echo price_format($unit_price); ?>
                     </span>
 
                     <a class="cart-item-remove" data-key="<?php echo $key; ?>">
@@ -95,6 +101,7 @@ $default_img = 'assets/img/no-image.png';
                     <span class="cart-item-price-total" id="item-total-text-<?php echo $key; ?>">
                         <?php echo price_format($item_total); ?>
                     </span>
+                    <!-- Giá trị thô (nguyên số, VND, không định dạng) để JS parse dễ dàng -->
                     <input type="hidden" id="item-total-val-<?php echo $key; ?>" value="<?php echo $item_total; ?>">
                 </div>
                 <?php endforeach; ?>
@@ -187,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (cb.checked) {
                 const key = cb.dataset.key;
                 // Lấy giá trị từ input ẩn (đã được update khi đổi số lượng)
-                const itemTotal = parseFloat(document.getElementById('item-total-val-' + key).value);
+                const itemTotal = parseFloat(document.getElementById('item-total-val-' + key).value) || 0;
                 total += itemTotal;
                 count++;
                 selectedIds.push(key);
@@ -305,8 +312,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const data = await sendCartRequest('delete', { key: key });
         if (data.status === 'success') {
             document.getElementById('item-' + key).remove();
-            // Xóa checkbox khỏi list itemCheckboxes (cần reload trang hoặc filter lại DOM nếu muốn kỹ hơn)
-            // Đơn giản nhất là reload lại trang nếu cần, hoặc gọi updateSummary()
+            // Đơn giản reload để cập nhật lại danh sách & tổng
             location.reload(); 
         } else {
             showModalAlert(data.message || 'Lỗi khi xóa.');
