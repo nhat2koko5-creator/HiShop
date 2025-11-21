@@ -1,5 +1,5 @@
 <?php 
-// FILE: client/pages/checkout.php (ĐÃ FIX LỖI PHP, COUPON VÀ PHÍ VẬN CHUYỂN)
+// FILE: client/pages/checkout.php (ĐÃ FIX LỖI PHP, COUPON VÀ PHÍ VẬN CHUYỂN, PHÍ VẬN CHUYỂN MIỄN PHÍ)
 
 // 1. KIỂM TRA LUỒNG "MUA NGAY"
 $is_buy_now = isset($_GET['action']) 
@@ -55,7 +55,10 @@ if ($is_buy_now) {
     unset($_SESSION['buy_now_item']); 
 
     // Hàm này đã được sửa ở functions.php để lấy kèm mau_sac, dung_luong_ssd
-    $cartData = getCartItemsAndTotal($pdo, $_SESSION['user_id']);
+    // **LƯU Ý QUAN TRỌNG:** Đối với luồng giỏ hàng bình thường, nếu bạn sử dụng luồng chọn sản phẩm như ở cart.php trước đó,
+    // bạn cần tùy chỉnh lại hàm này để lấy sản phẩm dựa trên tham số `selected_ids` từ URL, 
+    // nếu không, nó sẽ lấy toàn bộ giỏ hàng (như code gốc).
+    $cartData = getCartItemsAndTotal($pdo, $_SESSION['user_id']); 
     $cart_items = $cartData['items'];
     $subtotal = $cartData['total'];
 
@@ -90,22 +93,13 @@ if (isset($_SESSION['promo']) && is_array($_SESSION['promo'])) {
 }
 
 // ----------------------------------------------------
-// LOGIC TÍNH PHÍ VẬN CHUYỂN (5k/1km)
+// LOGIC TÍNH PHÍ VẬN CHUYỂN (ĐÃ ĐỔI THÀNH MIỄN PHÍ VẬN CHUYỂN)
 // ----------------------------------------------------
 
-// [GIẢ ĐỊNH] Dữ liệu này cần được tính toán động dựa trên địa chỉ khách hàng.
-$shipping_distance_km = 10; 
-$cost_per_km = 5000; // 5.000 VNĐ/km
-$max_free_ship_distance = 5; // Giả sử: Miễn phí cho 5km đầu
+$shipping_distance_km = 0; // Giả định khoảng cách bằng 0 để hiển thị 0km (hoặc bạn có thể giữ 10)
+$shipping = 0; // **Đã thay đổi: Phí vận chuyển bằng 0**
+$shipping_display = 'Miễn phí'; // Hiển thị trên giao diện
 
-if ($shipping_distance_km <= $max_free_ship_distance) {
-    $shipping = 0;
-    $shipping_display = 'Miễn phí';
-} else {
-    $distance_to_charge = $shipping_distance_km - $max_free_ship_distance;
-    $shipping = $distance_to_charge * $cost_per_km;
-    $shipping_display = number_format($shipping) . '₫';
-}
 // ----------------------------------------------------
 
 $total = $subtotal + $shipping - $discount;
@@ -202,7 +196,7 @@ $total = $subtotal + $shipping - $discount;
                     </div>
                     
                     <div class="summary-row" id="shipping-row">
-                        <span>Vận chuyển (<?= $shipping_distance_km ?>km)</span>
+                        <span>Vận chuyển </span>
                         <span><?= $shipping_display ?></span> 
                     </div>
                     
