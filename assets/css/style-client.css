@@ -1299,6 +1299,11 @@ ul {
   font-weight: 700;
   font-size: 22px;
 }
+.price-product{
+    color: #ef4444;
+    font-weight: 700;
+    font-size: 24px; 
+}
 
 /* --- OPTIONS (COLOR / SSD / RAM / ANY) --- */
 .option-box {

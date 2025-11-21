@@ -126,7 +126,7 @@ if (!file_exists($img_path)) $img_path = $default_img;
     <div class="info">
       <h1><?= htmlspecialchars($product['ten']) ?></h1>
       
-     <div class="price">
+     <div class="price-product">
         <div class="current" id="product-price">
             <?= ($base_price > 0) ? price_format($base_price) : 'Liên hệ' ?>
         </div>
