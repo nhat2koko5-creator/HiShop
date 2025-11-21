@@ -3129,4 +3129,110 @@ ul {
 .modal-product-details {
     flex-grow: 1; /* Cho phép chi tiết giãn ra */
 }
-/* (MỚI) KẾT THÚC: CSS CHO VARIANT MODAL */
+/* =======================================================
+   CSS Tùy chỉnh cho Trang Mã Khuyến Mãi (Sắp xếp lại)
+   ======================================================= */
+
+/* --- 1. LAYOUT & STRUCTURE --- */
+.coupon-section {
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.coupon-title {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2em;
+    color: #333;
+}
+
+.coupon-grid {
+    /* Đảm bảo responsive */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
+}
+
+/* --- 2. COMPONENTS (Thẻ Coupon) --- */
+.coupon-card {
+    border: 2px solid #ddd;
+    border-left: 8px solid #ff6347; /* Màu nhấn chính: Cam tươi */
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease;
+    background-color: #fff;
+}
+
+/* Header */
+.coupon-header {
+    background-color: #ff6347;
+    color: white;
+    padding: 15px 20px;
+}
+
+.coupon-code {
+    font-size: 1.6em;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+/* Body */
+.coupon-body {
+    padding: 20px;
+}
+
+.coupon-value {
+    font-size: 1.3em;
+    color: #ff6347;
+    font-weight: bold;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed #eee;
+    padding-bottom: 10px;
+}
+
+.coupon-detail {
+    margin-bottom: 8px;
+    color: #555;
+    font-size: 0.95em;
+}
+
+/* Copy Area */
+.copy-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.copy-btn {
+    background-color: #4CAF50; /* Xanh lá */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+/* Footer */
+.coupon-footer {
+    background-color: #f7f7f7;
+    padding: 10px 20px;
+    font-size: 0.85em;
+    color: #777;
+    border-top: 1px solid #eee;
+}
+
+/* --- 3. STATES & MODIFIERS (Hover/Active/Disabled) --- */
+.coupon-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.copy-btn:hover {
+    background-color: #45a049;
+}
