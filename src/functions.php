@@ -37,25 +37,6 @@ function getFeaturedProducts($pdo) {
 /* =============================
    LẤY SẢN PHẨM GIẢM GIÁ
    ============================= */
-
-/* =============================
-   TÍNH GIÁ SAU KHI GIẢM
-   ============================= */
-function calcDiscountPrice($gia, $loai, $gia_tri) {
-    if ($loai === 'percent') {
-        return $gia - ($gia * ($gia_tri / 100));
-    }
-    if ($loai === 'amount') {
-        return max(0, $gia - $gia_tri);
-    }
-    return $gia;
-}
-function getProductVariants(PDO $pdo, $productId) {
-    $sql = "SELECT * FROM bien_the_san_pham WHERE san_pham_id = ?";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$productId]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
 function getDiscountProducts($pdo) {
     $sql = "
         SELECT 
@@ -87,8 +68,8 @@ function getDiscountProducts($pdo) {
         JOIN giam_gia gg ON gg.id = spgg.giam_gia_id
 
         WHERE 
-            gg.ngay_bat_dau <= NOW()
-            AND gg.ngay_ket_thuc >= NOW();
+            (gg.ngay_bat_dau IS NULL OR gg.ngay_bat_dau <= NOW())
+            AND (gg.ngay_ket_thuc IS NULL OR gg.ngay_ket_thuc >= NOW());
     ";
 
     $stmt = $pdo->prepare($sql);
@@ -96,25 +77,33 @@ function getDiscountProducts($pdo) {
 
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // 🔥 LẤY BIẾN THỂ CHUẨN THEO BẢNG bien_the_san_pham
+    // Lấy biến thể
     foreach ($products as &$p) {
-        $variantStmt = $pdo->prepare("
-            SELECT 
-                id,
-                mau_sac,
-                dung_luong_ssd,
-                gia,
-                so_luong_ton,
-                hinh_anh
-            FROM bien_the_san_pham
-            WHERE san_pham_id = ?
-        ");
-        $variantStmt->execute([$p['id']]);
-        $p['variants'] = $variantStmt->fetchAll(PDO::FETCH_ASSOC);
+        $p['variants'] = getProductVariants($pdo, $p['id']);
     }
 
     return $products;
 }
+
+/* =============================
+   TÍNH GIÁ SAU KHI GIẢM
+   ============================= */
+function calcDiscountPrice($gia, $loai, $gia_tri) {
+    if ($loai === 'percent') {
+        return $gia - ($gia * ($gia_tri / 100));
+    }
+    if ($loai === 'amount') {
+        return max(0, $gia - $gia_tri);
+    }
+    return $gia;
+}
+function getProductVariants(PDO $pdo, $productId) {
+    $sql = "SELECT * FROM bien_the_san_pham WHERE san_pham_id = ?";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$productId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
 
 /* ================================================
     LẤY SẢN PHẨM MỚI NHẤT

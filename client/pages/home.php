@@ -8,9 +8,7 @@ foreach ($featuredProducts as &$sp) {
 }
 
 // Load biến thể cho sản phẩm giảm giá (BẠN BỎ QUÊN ĐOẠN NÀY)
-foreach ($discountProducts as &$sp) {
-    $sp['variants'] = getProductVariants($pdo, $sp['id']);
-}
+
 ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 
@@ -52,8 +50,7 @@ foreach ($discountProducts as &$sp) {
         </div>
     </div>
 </section>
-<style>
-</style>
+
 <section class="product-section container">
     <span class="section-subtitle">SẢN PHẨM NỔI BẬT</span>
     <h2 class="section-title">Laptop được yêu thích nhất</h2>
