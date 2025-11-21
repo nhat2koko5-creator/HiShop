@@ -1,5 +1,5 @@
 <?php
-// FILE: cart-handler.php
+// FILE: cart-handler.php (ĐÃ BỔ SUNG LOGIC COUPON)
 ob_start();
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -7,10 +7,35 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once __DIR__ . '/src/config.php';
+// [QUAN TRỌNG] Đảm bảo file functions.php chứa hàm getCouponByCode được include tại đây!
+// require_once __DIR__ . '/src/functions.php'; 
 
 header('Content-Type: application/json; charset=utf-8');
 
 $response = ['status' => 'error', 'message' => 'Lỗi không xác định.'];
+
+// GIẢ ĐỊNH HÀM getCouponByCode ĐÃ ĐƯỢC LOAD
+if (!function_exists('getCouponByCode')) {
+    // Nếu bạn chưa include functions.php, hãy thêm logic này vào functions.php
+    function getCouponByCode(PDO $pdo, $code) {
+        try {
+            $sql = "SELECT ten, loai_khuyen_mai, gia_tri, dieu_kien FROM ma_khuyen_mai 
+                    WHERE ten = ? 
+                    AND (ngay_bat_dau IS NULL OR ngay_bat_dau <= NOW())
+                    AND (ngay_ket_thuc IS NULL OR ngay_ket_thuc >= NOW())
+                    LIMIT 1";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([strtoupper(trim($code))]); 
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+
+        } catch (PDOException $e) {
+            error_log("Lỗi truy vấn coupon: " . $e->getMessage());
+            return null;
+        }
+    }
+}
+
 
 if (!isset($_SESSION['user_id'])) {
     $response['message'] = 'Bạn cần đăng nhập trước.';
@@ -94,7 +119,7 @@ switch ($action) {
     ----------------------- */
     case 'add':
         $variant_id = isset($_POST['variant_id']) && $_POST['variant_id'] !== "" 
-                        ? (int)$_POST['variant_id'] : null;
+                         ? (int)$_POST['variant_id'] : null;
 
         if ($product_id <= 0) {
             $response['message'] = 'Sản phẩm không hợp lệ.';
@@ -193,9 +218,53 @@ switch ($action) {
         $response['cart_count'] = getCartCount($pdo, $user_id);
         break;
 
+    
+    /* -----------------------
+        APPLY COUPON (ĐÃ THÊM)
+    ----------------------- */
+    case 'apply_coupon':
+        $coupon_code_input = $_POST['code'] ?? '';
+        
+        if (empty($coupon_code_input)) {
+            $response['message'] = 'Vui lòng nhập mã giảm giá.';
+            unset($_SESSION['promo']); 
+            break;
+        }
+
+        $coupon = getCouponByCode($pdo, $coupon_code_input);
+
+        if (!$coupon) {
+            $response['message'] = 'Mã **' . htmlspecialchars($coupon_code_input) . '** không hợp lệ, hết hạn hoặc không tồn tại.';
+            unset($_SESSION['promo']);
+            break;
+        }
+        
+        // **LƯU Ý: Thêm logic kiểm tra điều kiện `dieu_kien` ở đây nếu cần**
+
+        // LƯU VÀO SESSION
+        $_SESSION['promo'] = [
+            'code' => $coupon['ten'],
+            'type' => $coupon['loai_khuyen_mai'],
+            'value' => (float)$coupon['gia_tri']
+        ];
+        
+        $response['status'] = 'success';
+        $response['message'] = 'Áp dụng mã **' . htmlspecialchars($coupon['ten']) . '** thành công!';
+        break;
+    
+    
+    /* -----------------------
+        REMOVE COUPON (ĐÃ THÊM)
+    ----------------------- */
+    case 'remove_coupon':
+        unset($_SESSION['promo']);
+        $response['status'] = 'success';
+        $response['message'] = 'Mã giảm giá đã được gỡ bỏ.';
+        break;
 
 
     default:
+        // Lỗi này gây ra vấn đề "Hành động không hợp lệ" trước đó
         $response['message'] = 'Hành động không hợp lệ.';
 }
 
@@ -212,4 +281,3 @@ function sendResponse($data)
     echo json_encode($data);
     exit;
 }
-?>

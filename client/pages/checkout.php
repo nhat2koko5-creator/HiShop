@@ -1,12 +1,13 @@
 <?php 
-// FILE: client/pages/checkout.php (ĐÃ FIX HIỂN THỊ BIẾN THỂ)
+// FILE: client/pages/checkout.php (ĐÃ FIX LỖI PHP, COUPON VÀ PHÍ VẬN CHUYỂN)
 
 // 1. KIỂM TRA LUỒNG "MUA NGAY"
 $is_buy_now = isset($_GET['action']) 
-              && $_GET['action'] == 'buy_now' 
-              && isset($_GET['variant_id'])
-              && isset($_SESSION['user_id']);
+             && $_GET['action'] == 'buy_now' 
+             && isset($_GET['variant_id'])
+             && isset($_SESSION['user_id']);
 
+// ... (Giữ nguyên logic MUA NGAY/GIỎ HÀNG BÌNH THƯỜNG Dòng 1-70)
 if ($is_buy_now) {
     // --- LUỒNG MUA NGAY ---
     $variant_id = (int)$_GET['variant_id'];
@@ -39,8 +40,8 @@ if ($is_buy_now) {
             'san_pham_id' => $item['parent_id'], 
             'variant_id'  => $item['bien_the_id'], 
             'ten'         => $item['ten'],
-            'mau_sac'     => $item['mau_sac'],          // Lưu riêng
-            'dung_luong_ssd' => $item['dung_luong_ssd'], // Lưu riêng
+            'mau_sac'     => $item['mau_sac'],     
+            'dung_luong_ssd' => $item['dung_luong_ssd'], 
             'hinh_anh'    => $item['hinh_anh'],
             'gia'         => $item['gia'],
             'so_luong'    => 1
@@ -58,15 +59,12 @@ if ($is_buy_now) {
     $cart_items = $cartData['items'];
     $subtotal = $cartData['total'];
 
-    // (Tùy chọn) Nếu bạn muốn lọc chỉ thanh toán các món được chọn từ trang Cart
-    // Bạn có thể thêm logic lọc $cart_items dựa trên $_GET['selected_ids'] ở đây.
-    // Hiện tại ta cứ hiển thị hết như mặc định.
-
     if (empty($cart_items)) {
         echo "<script>alert('Giỏ hàng trống.'); window.location.href='index.php?page=cart';</script>";
         exit; 
     }
 }
+
 
 // 3. LẤY THÔNG TIN USER & TÍNH TOÁN MÃ GIẢM GIÁ
 $user_profile = getUserProfile($pdo, $_SESSION['user_id']);
@@ -84,14 +82,32 @@ if (isset($_SESSION['promo']) && is_array($_SESSION['promo'])) {
     $promo_status_class = 'text-success'; 
 
     if ($coupon['type'] == 'percent') {
-         $discount = ($subtotal * $coupon['value']) / 100;
+           $discount = ($subtotal * $coupon['value']) / 100;
     } else {
-         $discount = $coupon['value'];
+           $discount = $coupon['value'];
     }
     if ($discount > $subtotal) $discount = $subtotal;
 }
 
-$shipping = 0; // Mặc định miễn phí
+// ----------------------------------------------------
+// LOGIC TÍNH PHÍ VẬN CHUYỂN (5k/1km)
+// ----------------------------------------------------
+
+// [GIẢ ĐỊNH] Dữ liệu này cần được tính toán động dựa trên địa chỉ khách hàng.
+$shipping_distance_km = 10; 
+$cost_per_km = 5000; // 5.000 VNĐ/km
+$max_free_ship_distance = 5; // Giả sử: Miễn phí cho 5km đầu
+
+if ($shipping_distance_km <= $max_free_ship_distance) {
+    $shipping = 0;
+    $shipping_display = 'Miễn phí';
+} else {
+    $distance_to_charge = $shipping_distance_km - $max_free_ship_distance;
+    $shipping = $distance_to_charge * $cost_per_km;
+    $shipping_display = number_format($shipping) . '₫';
+}
+// ----------------------------------------------------
+
 $total = $subtotal + $shipping - $discount;
 ?>
 
@@ -99,6 +115,8 @@ $total = $subtotal + $shipping - $discount;
     <h1 class="page-title">Thanh toán</h1>
 
     <form method="POST" action="index.php?page=process_vnpay" id="checkout-form">
+        <input type="hidden" name="shipping_distance" value="<?= $shipping_distance_km ?>">
+        <input type="hidden" name="shipping_cost" value="<?= $shipping ?>">
         <input type="hidden" name="order_type" value="<?= $is_buy_now ? 'buy_now' : 'cart' ?>">
         
         <div class="checkout-layout">
@@ -132,14 +150,15 @@ $total = $subtotal + $shipping - $discount;
                     <h2>Tóm tắt đơn hàng</h2>
                     <div class="summary-item-list">
                         <?php foreach ($cart_items as $item): 
-                             $img_path = (!empty($item['hinh_anh'])) ? "assets/img/products/" . $item['hinh_anh'] : "assets/img/no-image.png";
+                            $img_path = (!empty($item['hinh_anh'])) ? "assets/img/products/" . $item['hinh_anh'] : "assets/img/no-image.png";
                         ?>
                         <div class="summary-item">
                             <div class="summary-item-image">
                                 <img src="<?= htmlspecialchars($img_path) ?>" alt="">
                             </div>
                             <div class="summary-item-details">
-                                <p style="margin-bottom: 4px;"><?= htmlspecialchars($item['ten']) ?></p>
+                                
+                                <p style="margin-bottom: 4px;"><?= htmlspecialchars($item['ten'] ?? $item['ten_san_pham'] ?? 'Sản phẩm không xác định') ?></p>
                                 
                                 <?php if (!empty($item['mau_sac']) || !empty($item['dung_luong_ssd'])): ?>
                                     <small style="color: #666; display: block; font-weight: 500; margin-bottom: 4px;">
@@ -165,8 +184,13 @@ $total = $subtotal + $shipping - $discount;
                         <a href="#" id="open-coupon-modal" style="font-size:14px; color:var(--color-primary);">✨ Chọn mã giảm giá</a>
                     </div>
                     <div class="coupon-form">
-                        <input type="text" id="coupon-input" placeholder="Nhập mã" value="<?= htmlspecialchars($promo_code); ?>">
-                        <button type="button" id="btn-apply-coupon">Áp dụng</button>
+                        <input type="text" id="coupon-input" placeholder="Nhập mã" value="<?= htmlspecialchars($promo_code); ?>" <?= !empty($promo_code) ? 'readonly' : '' ?>>
+                        
+                        <?php if (!empty($promo_code)): ?>
+                            <button type="button" id="btn-remove-coupon" class="btn-remove">Gỡ bỏ</button>
+                        <?php else: ?>
+                            <button type="button" id="btn-apply-coupon">Áp dụng</button>
+                        <?php endif; ?>
                     </div>
                     <div id="coupon-status-msg" style="font-size: 13px; font-weight: 600; margin-bottom: 10px;" class="<?= $promo_status_class ?>">
                         <?= $promo_message ?>
@@ -176,9 +200,10 @@ $total = $subtotal + $shipping - $discount;
                         <span>Tạm tính</span>
                         <span><?= number_format($subtotal) ?>₫</span>
                     </div>
-                    <div class="summary-row">
-                        <span>Vận chuyển</span>
-                        <span>Miễn phí</span>
+                    
+                    <div class="summary-row" id="shipping-row">
+                        <span>Vận chuyển (<?= $shipping_distance_km ?>km)</span>
+                        <span><?= $shipping_display ?></span> 
                     </div>
                     
                     <?php if ($discount > 0): ?>
@@ -245,7 +270,6 @@ $total = $subtotal + $shipping - $discount;
         </div>
     </div>
 </div>
-
 <div class="alert-modal-overlay" id="alert-modal-overlay">
     <div class="alert-modal-box" id="alert-modal-box">
         <div class="alert-modal-header">
@@ -259,6 +283,7 @@ $total = $subtotal + $shipping - $discount;
         </div>
     </div>
 </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Khai báo Element
@@ -271,23 +296,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const alertMsg = document.getElementById('alert-modal-message');
     const btnAlertClose = document.getElementById('btn-alert-close');
     const couponInput = document.getElementById('coupon-input');
-    const btnApplyManual = document.getElementById('btn-apply-coupon');
+    // Các nút áp dụng/gỡ bỏ mới
+    const btnApplyManual = document.getElementById('btn-apply-coupon'); 
+    const btnRemoveManual = document.getElementById('btn-remove-coupon'); 
     let needReload = false;
 
+    // Hàm hiển thị Popup
     function showPopup(title, message, isSuccess) {
         alertTitle.textContent = title;
         alertMsg.textContent = message;
-        if (isSuccess) {
-            alertBox.classList.remove('error');
-            alertBox.classList.add('success');
-        } else {
-            alertBox.classList.remove('success');
-            alertBox.classList.add('error');
-        }
+        
+        // Cần đảm bảo bạn có CSS cho .success và .error
+        alertBox.className = 'alert-modal-box ' + (isSuccess ? 'success' : 'error');
+        
         alertOverlay.style.display = 'flex';
         needReload = true; 
     }
 
+    // Xử lý đóng Popup
     if (btnAlertClose) {
         btnAlertClose.addEventListener('click', function() {
             alertOverlay.style.display = 'none';
@@ -298,44 +324,93 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    async function applyCoupon(code) {
+    // Hàm gọi AJAX xử lý mã giảm giá
+    async function handleCouponAction(code, actionType) {
         couponOverlay.style.display = 'none';
-        if (!code) { alert("Vui lòng nhập mã."); return; }
+        
+        if (actionType === 'apply_coupon' && !code) { 
+            showPopup('Thất bại', 'Vui lòng nhập mã.', false); 
+            return; 
+        }
+
         const formData = new URLSearchParams();
-        formData.append('action', 'apply_coupon');
-        formData.append('code', code);
+        formData.append('action', actionType);
+        if (code) {
+            formData.append('code', code);
+        }
 
         try {
+            // Hiển thị trạng thái tải trên nút
+            if (actionType === 'apply_coupon' && btnApplyManual) {
+                btnApplyManual.textContent = 'Đang xử lý...';
+                btnApplyManual.disabled = true;
+            } else if (actionType === 'remove_coupon' && btnRemoveManual) {
+                 btnRemoveManual.textContent = 'Đang xử lý...';
+                 btnRemoveManual.disabled = true;
+            }
+
             const response = await fetch('cart-handler.php', { method: 'POST', body: formData });
             const textResponse = await response.text();
-            try {
-                const data = JSON.parse(textResponse);
-                if (data.status === 'success') {
-                    showPopup('Thành công!', data.message, true);
-                } else {
-                    showPopup('Thất bại', data.message, false);
-                }
-            } catch (e) { showPopup('Lỗi hệ thống', 'Server trả về dữ liệu lỗi.', false); }
-        } catch (err) { showPopup('Lỗi kết nối', 'Không thể kết nối đến server.', false); }
+            
+            // Xử lý phản hồi JSON
+            const data = JSON.parse(textResponse);
+            
+            if (data.status === 'success') {
+                showPopup('Thành công!', data.message + ' Trang sẽ tải lại.', true);
+            } else {
+                showPopup('Thất bại', data.message, false);
+            }
+        } catch (err) { 
+            showPopup('Lỗi hệ thống', 'Không thể kết nối đến server hoặc dữ liệu phản hồi lỗi.', false); 
+            console.error("Lỗi AJAX/JSON:", err);
+        } finally {
+            // Đặt lại nút
+            if (btnApplyManual) {
+                btnApplyManual.textContent = 'Áp dụng';
+                btnApplyManual.disabled = false;
+            }
+            if (btnRemoveManual) {
+                btnRemoveManual.textContent = 'Gỡ bỏ';
+                btnRemoveManual.disabled = false;
+            }
+        }
     }
 
+    // Event listeners
     if (btnOpenCoupon) {
         btnOpenCoupon.addEventListener('click', (e) => { e.preventDefault(); couponOverlay.style.display = 'flex'; });
     }
     if (btnCloseCoupon) {
         btnCloseCoupon.addEventListener('click', () => { couponOverlay.style.display = 'none'; });
     }
+    
+    // 1. Áp dụng thủ công (Nút 'Áp dụng')
     if (btnApplyManual) {
-        btnApplyManual.addEventListener('click', (e) => { e.preventDefault(); applyCoupon(couponInput.value); });
+        btnApplyManual.addEventListener('click', (e) => { 
+            e.preventDefault(); 
+            handleCouponAction(couponInput.value, 'apply_coupon'); 
+        });
     }
+    
+    // 2. Gỡ bỏ thủ công (Nút 'Gỡ bỏ' mới)
+    if (btnRemoveManual) {
+        btnRemoveManual.addEventListener('click', (e) => { 
+            e.preventDefault(); 
+            handleCouponAction(null, 'remove_coupon'); 
+        });
+    }
+
+    // 3. Chọn từ Modal
     document.querySelectorAll('.btn-apply-from-modal').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             const code = this.getAttribute('data-code');
             if (couponInput) couponInput.value = code;
-            applyCoupon(code);
+            handleCouponAction(code, 'apply_coupon');
         });
     });
+    
+    // Đóng Modal khi click ra ngoài
     window.addEventListener('click', (e) => {
         if (e.target === couponOverlay) couponOverlay.style.display = 'none';
     });

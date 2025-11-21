@@ -548,5 +548,25 @@ function getProductWithDiscount(PDO $pdo, $id) {
 
     return applyDiscount($product);
 }
+ /* Lấy chi tiết mã khuyến mãi theo tên (code) và kiểm tra hạn sử dụng.
+ */
+function getCouponByCode(PDO $pdo, $code) {
+    try {
+        $sql = "SELECT ten, loai_khuyen_mai, gia_tri, dieu_kien FROM ma_khuyen_mai 
+                WHERE ten = ? 
+                AND (ngay_bat_dau IS NULL OR ngay_bat_dau <= NOW())
+                AND (ngay_ket_thuc IS NULL OR ngay_ket_thuc >= NOW())
+                LIMIT 1";
 
+        $stmt = $pdo->prepare($sql);
+        // Chuyển mã sang chữ hoa để nhất quán (VD: WELCOME100K)
+        $stmt->execute([strtoupper(trim($code))]); 
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+
+    } catch (PDOException $e) {
+        // Ghi log lỗi CSDL để phục vụ debug
+        error_log("Lỗi truy vấn coupon: " . $e->getMessage());
+        return null;
+    }
+}
 ?>

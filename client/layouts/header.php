@@ -1,16 +1,13 @@
 <?php
+// FILE: client/layouts/header.php (ĐÃ FIX CẬP NHẬT CART COUNT)
 // BẮT BUỘC: Đặt session_start() ở đây
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// === MỚI: Logic đếm tổng số lượng sản phẩm ===
-$total_cart_items = 0;
-if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
-    foreach ($_SESSION['cart'] as $item) {
-        $total_cart_items += (int)$item['quantity'];
-    }
-}
+// === MỚI: Logic đếm tổng số lượng sản phẩm từ DB/Handler ===
+// Lấy số lượng giỏ hàng được cập nhật bởi cart-handler.php
+$total_cart_items = $_SESSION['global_cart_count'] ?? 0; 
 
 if (!isset($page_title)) {
     $page_title = 'HIShop - Giải Pháp Công Nghệ';
@@ -138,7 +135,6 @@ if (!isset($page_title)) {
                     // Nếu là popup login -> chuyển trang login
                     window.location.href = 'index.php?page=login&redirect=cart';
                 }
-                // Bạn có thể thêm các state khác (như 'delete') nếu cần
                 
                 // Mặc định, nút chính cũng đóng popup
                 hideModalPrompt();
@@ -155,8 +151,9 @@ if (!isset($page_title)) {
         function updateCartIconCount(count) {
             const countElement = document.getElementById('cart-item-count');
             if (countElement) {
-                if (count > 0) {
-                    countElement.textContent = count;
+                const finalCount = parseInt(count) || 0;
+                if (finalCount > 0) {
+                    countElement.textContent = finalCount;
                     countElement.style.display = 'flex';
                 } else {
                     countElement.textContent = '0';
