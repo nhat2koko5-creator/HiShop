@@ -81,7 +81,25 @@ function getDiscountProducts($pdo) {
     foreach ($products as &$p) {
         $p['variants'] = getProductVariants($pdo, $p['id']);
     }
+    foreach ($products as &$p) {
 
+    $variants = getProductVariants($pdo, $p['id']);
+
+    foreach ($variants as &$v) {
+
+        if ($p['loai_giam_gia'] == 'percent') {
+            $v['gia_giam'] = $v['gia'] - ($v['gia'] * $p['gia_tri'] / 100);
+        } 
+        elseif ($p['loai_giam_gia'] == 'amount') {
+            $v['gia_giam'] = $v['gia'] - $p['gia_tri'];
+        } 
+        else {
+            $v['gia_giam'] = $v['gia'];
+        }
+    }
+
+    $p['variants'] = $variants;
+}
     return $products;
 }
 

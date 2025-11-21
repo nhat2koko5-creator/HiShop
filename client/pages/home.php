@@ -6,9 +6,6 @@ $discountProducts = getDiscountProducts($pdo);
 foreach ($featuredProducts as &$sp) {
     $sp['variants'] = getProductVariants($pdo, $sp['id']);
 }
-
-// Load biến thể cho sản phẩm giảm giá (BẠN BỎ QUÊN ĐOẠN NÀY)
-
 ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 
@@ -368,7 +365,18 @@ modalMainImage.src = productImage || 'assets/img/no-image.png';
 
         if (variant) {
             // 4. TÌM THẤY
-            modalPrice.textContent = formatPrice(variant.gia);
+            if (variant.gia_giam && variant.gia_giam < variant.gia) {
+    modalPrice.innerHTML =
+        `<span class="old-price" style="text-decoration:line-through;color:#999;margin-right:6px;">
+            ${formatPrice(variant.gia)}
+        </span>
+        <span class="new-price" style="color:#e60000;font-weight:bold;">
+            ${formatPrice(variant.gia_giam)}
+        </span>`;
+} else {
+    modalPrice.innerHTML = `<span class="new-price">${formatPrice(variant.gia)}</span>`;
+}
+
             
             if (variant.so_luong_ton > 0) {
                 modalStock.textContent = "Còn " + variant.so_luong_ton + " sản phẩm";
