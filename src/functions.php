@@ -355,53 +355,87 @@ function getRecentOrders(PDO $pdo, $limit = 5) {
  * (MỚI) Lấy tất cả sản phẩm và tổng tiền trong giỏ hàng của người dùng
  * Dựa trên bảng: `gio_hang`, `san_pham`
  */
-
-function getCartItemsAndTotal(PDO $pdo, $user_id) {
+function getCartItemsAndTotal(PDO $pdo, $user_id){
     $sql = "
         SELECT 
-            gh.san_pham_id,
-            gh.so_luong,
-            
-            -- Tên: Ưu tiên lấy từ SP cha (nếu là biến thể), ngược lại lấy trực tiếp
-            COALESCE(sp_parent.ten, sp_direct.ten) as ten,
-            
-            -- Ảnh: Ưu tiên ảnh biến thể (nếu có), không thì lấy ảnh cha, cuối cùng là ảnh trực tiếp
-            COALESCE(bv.hinh_anh, sp_parent.hinh_anh, sp_direct.hinh_anh) as hinh_anh,
-            
-            -- Giá: Ưu tiên giá biến thể, không thì lấy giá thường
-            COALESCE(bv.gia, sp_direct.gia) as gia,
-            
-            -- Thuộc tính (có thể null nếu là SP thường)
-            bv.mau_sac,
-            bv.dung_luong_ssd
-            
-        FROM gio_hang AS gh
-        -- Thử kết nối coi nó là Biến thể (Variant)
-        LEFT JOIN bien_the_san_pham AS bv ON gh.san_pham_id = bv.id
-        LEFT JOIN san_pham AS sp_parent ON bv.san_pham_id = sp_parent.id
-        
-        -- Thử kết nối coi nó là Sản phẩm thường (Direct Product)
-        LEFT JOIN san_pham AS sp_direct ON gh.san_pham_id = sp_direct.id
-        
-        WHERE gh.nguoi_dung_id = ?
-        -- Đảm bảo ít nhất tìm thấy sản phẩm ở 1 trong 2 bảng
-        AND (sp_parent.id IS NOT NULL OR sp_direct.id IS NOT NULL)
+    gh.san_pham_id,
+    gh.so_luong,
+
+    -- Tên: nếu là biến thể thì lấy tên sản phẩm cha
+    COALESCE(sp_parent.ten, sp_direct.ten) AS ten,
+
+    -- Ảnh: ưu tiên ảnh biến thể
+    COALESCE(bv.hinh_anh, sp_parent.hinh_anh, sp_direct.hinh_anh) AS hinh_anh,
+
+    -- GIÁ GỐC: nếu biến thể có giá thì lấy giá biến thể
+    COALESCE(bv.gia, sp_direct.gia) AS gia_goc,
+
+    -- Thông tin biến thể nếu có
+    bv.id AS bien_the_id,
+    bv.mau_sac,
+    bv.dung_luong_ssd,
+
+    -- Giảm giá
+    g.loai_giam_gia,
+    g.gia_tri,
+    g.ngay_bat_dau,
+    g.ngay_ket_thuc
+
+FROM gio_hang gh
+
+-- Nếu san_pham_id = id của biến thể
+LEFT JOIN bien_the_san_pham bv 
+    ON gh.san_pham_id = bv.id
+
+-- Nếu có biến thể thì lấy sản phẩm cha của biến thể
+LEFT JOIN san_pham sp_parent 
+    ON bv.san_pham_id = sp_parent.id
+
+-- Nếu san_pham_id là sản phẩm thường
+LEFT JOIN san_pham sp_direct 
+    ON gh.san_pham_id = sp_direct.id
+
+-- Giảm giá chỉ áp dụng cho sản phẩm cha
+LEFT JOIN san_pham_giam_gia spg 
+    ON spg.san_pham_id = sp_parent.id
+
+LEFT JOIN giam_gia g 
+    ON g.id = spg.giam_gia_id
+    AND (g.ngay_bat_dau IS NULL OR g.ngay_bat_dau <= NOW())
+    AND (g.ngay_ket_thuc IS NULL OR g.ngay_ket_thuc >= NOW())
+
+WHERE gh.nguoi_dung_id = ?
     ";
-    
+
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$user_id]);
     $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     $total_amount = 0;
-    foreach ($items as $item) {
-        $total_amount += $item['gia'] * $item['so_luong'];
+
+    foreach ($items as &$item) {
+        $gia = (float)$item['gia_goc'];
+
+        if ($item['loai_giam_gia']) {
+            if ($item['loai_giam_gia'] === 'percent') {
+                $gia -= $gia * ((float)$item['gia_tri'] / 100);
+            } else {
+                $gia -= (float)$item['gia_tri'];
+            }
+            if ($gia < 0) $gia = 0;
+        }
+
+        $item['gia'] = $gia;
+        $total_amount += $gia * (int)$item['so_luong'];
     }
-    
+
     return [
         'items' => $items,
         'total' => $total_amount
     ];
 }
+
+
 
 
 
