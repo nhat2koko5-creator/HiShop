@@ -53,23 +53,19 @@ foreach ($featuredProducts as &$sp) {
         <h2 class="section-title">Khám phá theo danh mục</h2>
 
         <div class="category-pills">
-            <a href="index.php?page=products&category=doanh-nhan" class="pill-btn blue">
+            <a href="index.php?page=product_list&category_id=5" class="pill-btn blue">
                 Laptop Doanh Nhân
             </a>
-
-            <a href="index.php?page=products&category=do-hoa" class="pill-btn purple">
+            <a href="index.php?page=product_list&category_id=2" class="pill-btn purple">
                 Laptop Đồ Họa
             </a>
-
-            <a href="index.php?page=products&category=gaming" class="pill-btn pink">
+            <a href="index.php?page=product_list&category_id=1" class="pill-btn pink">
                 Laptop Gaming
             </a>
-
-            <a href="index.php?page=products&category=hoc-sinh" class="pill-btn cyan">
+            <a href="index.php?page=product_list&category_id=4" class="pill-btn cyan">
                 Laptop Học Sinh, Sinh Viên
             </a>
-
-            <a href="index.php?page=products&category=van-phong" class="pill-btn blue">
+            <a href="index.php?page=product_list&category_id=3" class="pill-btn blue">
                 Laptop Văn Phòng
             </a>
         </div>
