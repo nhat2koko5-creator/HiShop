@@ -143,7 +143,7 @@ function format_price($p) {
 
 ?>
 <div class="container">
-    <div class="static-page-header">
+    <div class="static-page-header" style="font-size: 14px;">
     <nav class="breadcrumb">
         <a href="index.php">Trang chủ</a> <span class="divider">›</span>
         <?php if ($category_id > 0): ?>
