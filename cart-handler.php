@@ -248,8 +248,8 @@ switch ($action) {
             'value' => (float)$coupon['gia_tri']
         ];
         
-        $response['status'] = 'success';
-        $response['message'] = 'Áp dụng mã **' . htmlspecialchars($coupon['ten']) . '** thành công!';
+        $response['status'] = 'success'; 
+        $response['message'] = 'Áp dụng mã ' . htmlspecialchars($coupon['ten']) . ' thành công!';
         break;
     
     

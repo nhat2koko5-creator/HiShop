@@ -28,4 +28,9 @@ define('MAIL_HOST', 'smtp.gmail.com');
 define('MAIL_USERNAME', 'nhat2koko5@gmail.com'); // <<< THAY BẰNG EMAIL CỦA BẠN
 define('MAIL_PASSWORD', 'ueib vhxq ohat aevj'); // <<< THAY BẰNG MẬT KHẨU 16 CHỮ CÁI
 define('MAIL_FROM_NAME', 'HIShop');
+
+define('VNP_TMN_CODE', 'NJJ0R8FS'); 
+define('VNP_HASH_SECRET', 'BYKJBHPPZKQMKBIBGGXIYKWYFAYSJXCW'); // Key ĐÚNG từ ảnh
+define('VNP_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html');
+define('VNP_RETURN_URL', 'http://localhost/HISHOP/index.php?page=vnpay_return');
 ?>

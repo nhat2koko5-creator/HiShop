@@ -1,14 +1,15 @@
 <?php
-// FILE: vnpay_ipn.php (ĐÃ SỬA THEO TÀI LIỆU)
+// FILE: vnpay_ipn.php
 require_once __DIR__ . '/src/config.php';
 
-// (FIX 1) LẤY KEY THẬT
-$vnp_HashSecret = "8WOZ0DZ5QFV8800P2ZQYFYCU8D51EBL6"; 
+// LẤY KEY TỪ CONFIG (Key đúng ELA...)
+$vnp_HashSecret = VNP_HASH_SECRET; 
+
 $inputData = array();
 $returnData = array();
-$data = $_REQUEST;
 
-foreach ($data as $key => $value) {
+// Lấy dữ liệu từ VNPAY
+foreach ($_GET as $key => $value) {
     if (substr($key, 0, 4) == "vnp_") {
         $inputData[$key] = $value;
     }
@@ -19,7 +20,6 @@ unset($inputData['vnp_SecureHash']);
 ksort($inputData);
 $i = 0;
 $hashData = "";
-
 foreach ($inputData as $key => $value) {
     if ($i == 1) {
         $hashData = $hashData . '&' . urlencode($key) . "=" . urlencode($value);
@@ -29,48 +29,50 @@ foreach ($inputData as $key => $value) {
     }
 }
 
+// Tạo mã hash chuẩn để so sánh
 $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
-$vnp_Amount = $inputData['vnp_Amount']/100; // Số tiền
-$real_order_id = explode("_", $inputData['vnp_TxnRef'])[0];
+
+$vnp_Amount = $inputData['vnp_Amount'] / 100; 
+$order_id = $inputData['vnp_TxnRef'];
 
 try {
-    //Check Orderid    
-    if ($secureHash == $vnp_SecureHash) {
-        // Lấy thông tin đơn hàng từ CSDL
-        $stmt_check = $pdo->prepare("SELECT trang_thai, tong_tien FROM don_hang WHERE id = ?");
-        $stmt_check->execute([$real_order_id]);
-        $order = $stmt_check->fetch(PDO::FETCH_ASSOC);
+    // Kiểm tra chữ ký
+    if ($secureHash === $vnp_SecureHash) {
+        
+        // Lấy đơn hàng
+        $stmt = $pdo->prepare("SELECT id, tong_tien, trang_thai FROM don_hang WHERE id = ?");
+        $stmt->execute([$order_id]);
+        $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($order) {
             // Kiểm tra số tiền
-            if($order["tong_tien"] == $vnp_Amount) {
-                // Kiểm tra trạng thái
+            if ((int)$order["tong_tien"] == (int)$vnp_Amount) {
+                
                 if ($order["trang_thai"] == 'pending') {
                     if ($inputData['vnp_ResponseCode'] == '00' && $inputData['vnp_TransactionStatus'] == '00') {
-                        // Thanh toán THÀNH CÔNG
-                        $sql_update_order = "UPDATE don_hang SET trang_thai = 'paid' WHERE id = ?";
-                        $pdo->prepare($sql_update_order)->execute([$real_order_id]);
+                        // Cập nhật thành công
+                        $stmt_update = $pdo->prepare("UPDATE don_hang SET trang_thai = 'paid' WHERE id = ?");
+                        $stmt_update->execute([$order_id]);
+                        
+                        // Lưu log thanh toán
+                        $stmt_log = $pdo->prepare("INSERT INTO thanh_toan (don_hang_id, so_tien, phuong_thuc, trang_thai, ngay_thanh_toan, ma_giao_dich) VALUES (?, ?, 'VNPAY', 'success', NOW(), ?)");
+                        $stmt_log->execute([$order_id, $vnp_Amount, $inputData['vnp_TransactionNo']]);
 
-                        $sql_insert_payment = "INSERT INTO thanh_toan (don_hang_id, so_tien, phuong_thuc, trang_thai, ngay_thanh_toan, ma_giao_dich)
-                                               VALUES (?, ?, 'VNPAY', 'success', NOW(), ?)";
-                        $pdo->prepare($sql_insert_payment)->execute([
-                            $real_order_id, 
-                            $vnp_Amount,
-                            $inputData['vnp_TransactionNo']
-                        ]);
+                        $returnData['RspCode'] = '00';
+                        $returnData['Message'] = 'Confirm Success';
                     } else {
-                        // Thanh toán THẤT BẠI
-                        $sql_update_order = "UPDATE don_hang SET trang_thai = 'failed' WHERE id = ?";
-                        $pdo->prepare($sql_update_order)->execute([$real_order_id]);
+                        // Thanh toán lỗi
+                        $stmt_update = $pdo->prepare("UPDATE don_hang SET trang_thai = 'failed' WHERE id = ?");
+                        $stmt_update->execute([$order_id]);
+                        
+                        $returnData['RspCode'] = '00'; 
+                        $returnData['Message'] = 'Confirm Success (Payment Failed)';
                     }
-                    $returnData['RspCode'] = '00';
-                    $returnData['Message'] = 'Confirm Success';
                 } else {
                     $returnData['RspCode'] = '02';
                     $returnData['Message'] = 'Order already confirmed';
                 }
-            }
-            else {
+            } else {
                 $returnData['RspCode'] = '04';
                 $returnData['Message'] = 'Invalid amount';
             }
@@ -83,9 +85,8 @@ try {
         $returnData['Message'] = 'Invalid signature';
     }
 } catch (Exception $e) {
-    error_log("Lỗi VNPAY IPN: " . $e->getMessage());
     $returnData['RspCode'] = '99';
-    $returnData['Message'] = 'Unknown error';
+    $returnData['Message'] = 'Unknow error';
 }
 
 echo json_encode($returnData);
