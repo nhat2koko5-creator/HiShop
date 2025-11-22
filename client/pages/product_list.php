@@ -143,6 +143,7 @@ function format_price($p) {
 
 ?>
 <div class="container">
+    <div class="static-page-header">
     <nav class="breadcrumb">
         <a href="index.php">Trang chủ</a> <span class="divider">›</span>
         <?php if ($category_id > 0): ?>
@@ -152,9 +153,10 @@ function format_price($p) {
         <?php else: ?>
             <span class="current">Danh sách sản phẩm</span>
         <?php endif; ?>
-    </nav>
-
+    </nav>    
     <h1 class="page-title"><?= htmlspecialchars($category_name) ?></h1>
+        </div>
+
 
     <?php if (!empty($products)): ?>
         <div class="product-grid">

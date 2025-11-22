@@ -107,12 +107,13 @@ if (!file_exists($img_path)) $img_path = $default_img;
 ?>
 
 <div class="container">
+  <div class="static-page-header">
   <div class="breadcrumb">
     <a href="index.php?page=home">Trang chủ</a> ›
     <a href="index.php?page=product_list&cat=<?= htmlspecialchars($product['danh_muc_id'] ?? '') ?>"><?= htmlspecialchars($category) ?></a> ›
     <span class="current"><?= htmlspecialchars($product['ten']) ?></span>
   </div>
-
+</div>
   <div class="grid">
     <div class="image-panel">
       <div class="image-container">

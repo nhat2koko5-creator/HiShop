@@ -79,7 +79,7 @@ foreach ($featuredProducts as &$sp) {
     <div class="product-carousel-wrapper">
 
         <!-- SWIPER CONTAINER -->
-        <div class="swiper product-carousel">
+        <div class="swiper product-carousel featured-carousel">
             <div class="swiper-wrapper">
 
                 <?php if (!empty($featuredProducts)): ?>
@@ -158,6 +158,17 @@ foreach ($featuredProducts as &$sp) {
 
     </div>
 </section>
+<script>
+var swiperFeatured = new Swiper(".featured-carousel", {
+    slidesPerView: 4,
+    spaceBetween: 20,
+    loop: true,
+    navigation: {
+        nextEl: ".featured-prev",
+        prevEl: ".featured-next",
+    },
+});
+</script>
 
     <div class="variant-modal-overlay" id="quick-add-modal" style="display: none;">
         <div class="variant-modal-box">
@@ -206,7 +217,7 @@ foreach ($featuredProducts as &$sp) {
     <h2 class="section-title">Ưu đãi hot trong tuần</h2>
 
     <div class="product-carousel-wrapper">
-        <div class="swiper product-carousel">
+        <div class="swiper product-carousel discount-carousel">
             <div class="swiper-wrapper">
 <?php if (!empty($discountProducts)): ?>
     <?php foreach ($discountProducts as $sp): ?>
@@ -290,6 +301,17 @@ $origPrice = isset($sp['gia']) ? $sp['gia'] : null;
 
     </div>
 </section>
+<script>
+var swiperDiscount = new Swiper(".discount-carousel", {
+    slidesPerView: 4,
+    spaceBetween: 20,
+    loop: true,
+    navigation: {
+        nextEl: ".discount-next",
+        prevEl: ".discount-prev"
+    },
+});
+</script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     
