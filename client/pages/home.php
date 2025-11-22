@@ -47,6 +47,34 @@ foreach ($featuredProducts as &$sp) {
         </div>
     </div>
 </section>
+<section class="category-section">
+    <div class="container">
+        <span class="section-subtitle">DANH MỤC SẢN PHẨM</span>
+        <h2 class="section-title">Khám phá theo danh mục</h2>
+
+        <div class="category-pills">
+            <a href="index.php?page=products&category=doanh-nhan" class="pill-btn blue">
+                Laptop Doanh Nhân
+            </a>
+
+            <a href="index.php?page=products&category=do-hoa" class="pill-btn purple">
+                Laptop Đồ Họa
+            </a>
+
+            <a href="index.php?page=products&category=gaming" class="pill-btn pink">
+                Laptop Gaming
+            </a>
+
+            <a href="index.php?page=products&category=hoc-sinh" class="pill-btn cyan">
+                Laptop Học Sinh, Sinh Viên
+            </a>
+
+            <a href="index.php?page=products&category=van-phong" class="pill-btn blue">
+                Laptop Văn Phòng
+            </a>
+        </div>
+    </div>
+</section>
 
 <section class="product-section container">
     <span class="section-subtitle">SẢN PHẨM NỔI BẬT</span>
@@ -129,8 +157,8 @@ foreach ($featuredProducts as &$sp) {
         </div>
 
         <!-- MŨI TÊN SWIPER (ĐÚNG VỊ TRÍ) -->
-        <div class="swiper-button-prev"></div>
-        <div class="swiper-button-next"></div>
+<div class="swiper-button-prev featured-prev"></div>
+<div class="swiper-button-next featured-next"></div>
 
     </div>
 </section>
@@ -176,7 +204,8 @@ foreach ($featuredProducts as &$sp) {
     </div>
     </section>
 
-<section class="product-section container">
+<section class="product-section container" id="discount-products">
+
     <span class="section-subtitle">SẢN PHẨM GIẢM GIÁ</span>
     <h2 class="section-title">Ưu đãi hot trong tuần</h2>
 
@@ -260,11 +289,35 @@ $origPrice = isset($sp['gia']) ? $sp['gia'] : null;
             </div>
         </div>
 
-        <div class="swiper-button-prev"></div>
-        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev discount-prev"></div>
+        <div class="swiper-button-next discount-next"></div>
+
     </div>
 </section>
 <script>
+// Swiper cho SẢN PHẨM NỔI BẬT
+new Swiper('.product-section:has(.section-subtitle:contains("SẢN PHẨM NỔI BẬT")) .product-carousel', {
+    slidesPerView: 4,
+    spaceBetween: 20,
+    navigation: {
+        nextEl: '.featured-next',
+        prevEl: '.featured-prev',
+    },
+    loop: true
+});
+
+new Swiper('#discount-products .product-carousel', {
+    slidesPerView: 4,
+    spaceBetween: 20,
+    navigation: {
+        nextEl: '.discount-next',
+        prevEl: '.discount-prev',
+    },
+    loop: true,
+});
+
+
+
 document.addEventListener('DOMContentLoaded', function() {
     
     // --- Biến DOM (cho modal) ---
