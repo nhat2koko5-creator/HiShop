@@ -291,29 +291,6 @@ $origPrice = isset($sp['gia']) ? $sp['gia'] : null;
     </div>
 </section>
 <script>
-// Swiper cho SẢN PHẨM NỔI BẬT
-new Swiper('.product-section:has(.section-subtitle:contains("SẢN PHẨM NỔI BẬT")) .product-carousel', {
-    slidesPerView: 4,
-    spaceBetween: 20,
-    navigation: {
-        nextEl: '.featured-next',
-        prevEl: '.featured-prev',
-    },
-    loop: true
-});
-
-new Swiper('#discount-products .product-carousel', {
-    slidesPerView: 4,
-    spaceBetween: 20,
-    navigation: {
-        nextEl: '.discount-next',
-        prevEl: '.discount-prev',
-    },
-    loop: true,
-});
-
-
-
 document.addEventListener('DOMContentLoaded', function() {
     
     // --- Biến DOM (cho modal) ---
