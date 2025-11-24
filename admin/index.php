@@ -22,22 +22,49 @@ $page = $_GET['page'] ?? 'dashboard';
 
 // 4. Xác định tiêu đề và file nội dung (cho switch)
 switch ($page) {
+
     case 'products_list':
         $page_title = 'Quản lý Sản Phẩm';
         $page_file = 'pages/products_list.php';
         break;
+
     case 'orders_list':
         $page_title = 'Quản lý Đơn Hàng';
         $page_file = 'pages/orders_list.php';
         break;
-    // (Thêm các case khác của bạn ở đây...)
-    
+
+    case 'categories_list':
+        $page_title = 'Quản lý Danh Mục';
+        $page_file = 'pages/categories_list.php';
+        break;
+
+    case 'promos_list':
+        $page_title = 'Quản lý Khuyến Mãi';
+        $page_file = 'pages/promos_list.php';
+        break;
+
+    case 'users_list':
+        $page_title = 'Quản lý Người Dùng';
+        $page_file = 'pages/users_list.php';
+        break;
+
+    case 'warehouse_list':
+        $page_title = 'Quản lý Kho Hàng';
+        $page_file = 'pages/warehouse_list.php';
+        break;
+
+    case 'settings':
+        $page_title = 'Cài đặt';
+        $page_file = 'pages/settings.php';
+        break;
+
     case 'dashboard':
     default:
         $page_title = 'Dashboard';
         $page_file = 'pages/dashboard.php';
         break;
 }
+
 
 ?>
 
