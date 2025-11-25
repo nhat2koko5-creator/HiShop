@@ -8,7 +8,17 @@ foreach ($featuredProducts as &$sp) {
 }
 ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+<style>
+    .product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* mỗi dòng 4 sản phẩm */
+    gap: 20px;
+    margin-top: 20px;
+}
 
+/* Nếu muốn 5 sản phẩm có thể chỉnh lại thành repeat(5,1fr) */
+
+</style>
 <section class="hero">
     <div class="container">
         <div class="hero-content">
@@ -71,93 +81,69 @@ foreach ($featuredProducts as &$sp) {
         </div>
     </div>
 </section>
-
 <section class="product-section container">
     <span class="section-subtitle">SẢN PHẨM NỔI BẬT</span>
     <h2 class="section-title">Laptop được yêu thích nhất</h2>
 
-    <div class="product-carousel-wrapper">
+    <div class="product-grid">
 
-        <!-- SWIPER CONTAINER -->
-        <div class="swiper product-carousel featured-carousel">
-            <div class="swiper-wrapper">
+        <?php if (!empty($featuredProducts)): ?>
+            <?php foreach ($featuredProducts as $sp): ?>
 
-                <?php if (!empty($featuredProducts)): ?>
-                    <?php foreach ($featuredProducts as $sp): ?>
+                <div class="product-card">
 
-                        <div class="swiper-slide">
-                            <div class="product-card">
+                    <!-- Hình ảnh sản phẩm -->
+                    <div class="product-image">
+                        <?php
+                        $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
+                        if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
+                            $img_path = 'assets/img/no-image.png';
+                        }
+                        ?>
+                        <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
+                    </div>
 
-                                <!-- Hình ảnh sản phẩm -->
-                                <div class="product-image">
-                                    <?php
-                                    $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
-                                    if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
-                                        $img_path = 'assets/img/no-image.png';
-                                    }
-                                    ?>
-                                    <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
-                                </div>
+                    <div class="card-content">
+                        <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
 
-                                <div class="card-content">
-                                    <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
-
-                                    <!-- Giá sản phẩm -->
-                                    <div class="card-price">
-                                        <span class="card-price-new">
-                                            <?= number_format($sp['gia']); ?>₫
-                                        </span>
-                                    </div>
-
-                                    <!-- Nút -->
-                                    <div class="btn-group-vertical">
-                                        <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">
-                                            🔍 Xem chi tiết
-                                        </a>
-
-                                        <?php if (!empty($sp['variants']) && count($sp['variants']) > 0): ?>
-
-                                            <!-- Có biến thể → Quick Add -->
-                                            <a href="javascript:void(0);"
-                                               class="btn-cart btn-quick-add"
-                                               data-product-id="<?= $sp['id']; ?>"
-                                               data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
-                                               data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
-                                               data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'>
-                                                🛒 Thêm vào giỏ
-                                            </a>
-
-                                        <?php else: ?>
-
-                                            <!-- Không có biến thể → Add trực tiếp -->
-                                            <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">
-                                                🛒 Thêm vào giỏ
-                                            </a>
-
-                                        <?php endif; ?>
-                                    </div>
-
-                                </div>
-                            </div>
+                        <!-- Giá sản phẩm -->
+                        <div class="card-price">
+                            <span class="card-price-new"><?= number_format($sp['gia']); ?>₫</span>
                         </div>
 
-                    <?php endforeach; ?>
+                        <!-- Nút -->
+                        <div class="btn-group-vertical">
+                            <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">
+                                🔍 Xem chi tiết
+                            </a>
 
-                <?php else: ?>
+                            <?php if (!empty($sp['variants'])): ?>
+                                <a href="javascript:void(0);"
+                                   class="btn-cart btn-quick-add"
+                                   data-product-id="<?= $sp['id']; ?>"
+                                   data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
+                                   data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
+                                   data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'>
+                                    🛒 Thêm vào giỏ
+                                </a>
+                            <?php else: ?>
+                                <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">
+                                    🛒 Thêm vào giỏ
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
 
-                    <p style="text-align:center; width:100%;">Không tìm thấy sản phẩm nổi bật nào.</p>
+                </div>
 
-                <?php endif; ?>
-
-            </div>
-        </div>
-
-        <!-- MŨI TÊN SWIPER (ĐÚNG VỊ TRÍ) -->
-<div class="swiper-button-prev featured-prev"></div>
-<div class="swiper-button-next featured-next"></div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <p style="text-align:center; width:100%;">Không tìm thấy sản phẩm nổi bật nào.</p>
+        <?php endif; ?>
 
     </div>
 </section>
+
 <script>
 var swiperFeatured = new Swiper(".featured-carousel", {
     slidesPerView: 4,
