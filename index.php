@@ -109,6 +109,10 @@ switch ($page) {
     $page_title = 'Kết quả thanh toán';
     $page_file = 'client/pages/vnpay_return.php';
     break;
+    case 'order_detail':
+        $page_title = 'Chi Tiết Đơn Hàng';
+        $page_file = 'client/pages/order_detail.php';
+        break;
 
     default:
         $page_title = '404 - Không Tìm Thấy';
@@ -116,7 +120,7 @@ switch ($page) {
         break;
 }
 // (MỚI) BƯỚC 8.5: KIỂM TRA BẢO MẬT (TRƯỚC KHI TẢI HEADER)
-$pages_that_require_login = ['checkout', 'account', 'process_payment'];
+$pages_that_require_login = ['checkout', 'account', 'process_payment', 'order_detail'];
 if (in_array($page, $pages_that_require_login) && !isset($_SESSION['user_id'])) {
     // Người dùng chưa đăng nhập VÀ đang cố vào trang bảo mật
     header('Location: index.php?page=login');

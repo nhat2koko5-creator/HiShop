@@ -1,41 +1,90 @@
 <?php
 // FILE: client/pages/account.php
 
-// 1. BẢO VỆ TRANG (SỬA LỖI HEADERS SENT)
+// 1. BẢO VỆ TRANG
 if (!isset($_SESSION['user_id'])) {
     echo "<script>window.location.href='index.php?page=login';</script>";
     exit;
 }
 $user_id = $_SESSION['user_id'];
 
-// 2. ROUTER CON
-$section = $_GET['section'] ?? 'dashboard'; 
+// 2. ROUTER CON (Mặc định vào profile thay vì dashboard)
+$section = $_GET['section'] ?? 'profile'; 
 
 // 3. XỬ LÝ FORM (PROFILE & ADDRESS)
 $update_success = null;
 $update_error = null; 
 
-// A. Xử lý cập nhật thông tin cá nhân
+// FILE: client/pages/account.php
+
+// A. Xử lý cập nhật thông tin cá nhân (BAO GỒM AVATAR)
 if ($section == 'profile' && $_SERVER['REQUEST_METHOD'] == 'POST') {
     $ho_ten = trim($_POST['ho_ten'] ?? '');
     $so_dien_thoai = trim($_POST['so_dien_thoai'] ?? '');
     $ngay_sinh = $_POST['ngay_sinh'] ?? null;
     $gioi_tinh = $_POST['gioi_tinh'] ?? 'other';
+    
+    // Lấy avatar hiện tại từ DB (nếu có)
+    $avatar_new_name = $user_profile_data['avatar'] ?? null; 
+    $upload_error = null;
 
+    // 1. Xử lý Upload Avatar
+    if (isset($_FILES['avatar_file']) && $_FILES['avatar_file']['error'] === UPLOAD_ERR_OK) {
+        $file_tmp = $_FILES['avatar_file']['tmp_name'];
+        $file_name = $_FILES['avatar_file']['name'];
+        $file_size = $_FILES['avatar_file']['size'];
+        $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+
+        // Các định dạng cho phép
+        $allowed_ext = ['jpg', 'jpeg', 'png', 'gif'];
+        
+        if (!in_array($file_ext, $allowed_ext)) {
+            $upload_error = "Chỉ chấp nhận file ảnh (JPG, JPEG, PNG, GIF).";
+        } elseif ($file_size > 2 * 1024 * 1024) { // Giới hạn 2MB
+             $upload_error = "Kích thước ảnh không được vượt quá 2MB.";
+        } else {
+            // Tạo tên file mới để tránh trùng lặp: avatar_ID_Timestamp.ext
+            $avatar_new_name = 'avatar_' . $user_id . '_' . time() . '.' . $file_ext;
+            $upload_dir = 'assets/img/avatars/';
+            
+            // Tạo thư mục nếu chưa có
+            if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
+
+            if (move_uploaded_file($file_tmp, $upload_dir . $avatar_new_name)) {
+                // Upload thành công. (Tùy chọn: Có thể xóa ảnh cũ ở đây nếu muốn tiết kiệm bộ nhớ)
+            } else {
+                $upload_error = "Có lỗi xảy ra khi lưu ảnh.";
+                $avatar_new_name = $user_profile_data['avatar']; // Giữ lại ảnh cũ nếu lỗi
+            }
+        }
+    }
+
+    // 2. Kiểm tra lỗi và Cập nhật DB
     if (empty($ho_ten)) {
         $update_error = "Họ và tên không được để trống.";
+    } elseif ($upload_error) {
+        $update_error = $upload_error; // Hiển thị lỗi upload
     } else {
-        $result = updateUserProfile($pdo, $user_id, $ho_ten, $so_dien_thoai, $ngay_sinh, $gioi_tinh);
+        // Cần cập nhật hàm updateUserProfile trong src/user_functions.php để nhận thêm tham số avatar
+        // Ví dụ: updateUserProfile($pdo, $user_id, $ho_ten, $so_dien_thoai, $ngay_sinh, $gioi_tinh, $avatar_new_name);
+        
+        // GIẢ ĐỊNH: Bạn đã sửa hàm updateUserProfile để nhận tham số thứ 6 là $avatar_new_name
+        // Nếu chưa sửa hàm trong model, bạn cần vào đó thêm cột avatar = ? vào câu lệnh UPDATE.
+        
+        // Code tạm thời giả định hàm đã được sửa:
+        $result = updateUserProfile($pdo, $user_id, $ho_ten, $so_dien_thoai, $ngay_sinh, $gioi_tinh, $avatar_new_name);
+
         if ($result) {
             $update_success = "Cập nhật thông tin thành công!";
             $_SESSION['user_name'] = $ho_ten;
+            // Refresh lại dữ liệu mới nhất để hiển thị
+            $user_profile_data = getUserProfile($pdo, $user_id); 
         } else {
             $update_error = "Cập nhật thất bại. Vui lòng thử lại.";
         }
     }
 }
 
-// B. Xử lý thêm địa chỉ mới
 // B. Xử lý Địa chỉ (Thêm - Sửa - Xóa)
 if ($section == 'addresses' && $_SERVER['REQUEST_METHOD'] == 'POST') {
     $action = $_POST['action'] ?? '';
@@ -75,30 +124,15 @@ if ($section == 'addresses' && $_SERVER['REQUEST_METHOD'] == 'POST') {
 // 4. LẤY DỮ LIỆU
 $user_profile_data = getUserProfile($pdo, $user_id); 
 if (!$user_profile_data) {
-    // (SỬA LỖI) Dùng JS để chuyển hướng
     echo "<script>window.location.href='index.php?page=logout';</script>";
     exit;
 }
 
-// TÍNH TOÁN THỐNG KÊ
-$stats_orders_count = 0;
-$stats_total_spent = 0;
-$all_orders = getUserOrders($pdo, $user_id);
-if (!empty($all_orders)) {
-    $stats_orders_count = count($all_orders);
-    foreach ($all_orders as $order) {
-        if ($order['trang_thai'] !== 'cancelled') {
-            $stats_total_spent += $order['tong_tien'];
-        }
-    }
-}
-
 // Lấy dữ liệu cho section hiện tại
 switch ($section) {
-    case 'orders': $data = $all_orders; break;
+    case 'orders': $data = getUserOrders($pdo, $user_id); break;
     case 'addresses': $data = getUserAddresses($pdo, $user_id); break;
-    case 'profile':
-    case 'dashboard': 
+    case 'profile': 
     default: $data = $user_profile_data; break;
 }
 ?>
@@ -109,34 +143,42 @@ switch ($section) {
         <nav class="breadcrumb" style="font-size: 14px; color: #666; margin-bottom: 10px;">
             <a href="index.php" style="color: #666; text-decoration: none;">Trang chủ</a>
             <span style="margin: 0 8px;">&gt;</span>
-            <span style="color: #333; font-weight: 500;">Trang cá nhân</span>
+            <span style="color: #333; font-weight: 500;">Tài khoản</span>
         </nav>
-        <h1 style="font-size: 28px; font-weight: 700; color: #333; padding: 20px; text-align: center;">Trang Cá Nhân</h1>
     </div>
-
 
     <div class="cps-account-layout">
         
         <aside class="cps-sidebar">
+            <div class="sidebar-user-info">
+              <?php 
+                // Xác định avatar cho sidebar
+                $sidebar_avatar = 'https://ui-avatars.com/api/?name=' . urlencode($user_profile_data['ho_ten']) . '&background=ffebd0&color=fd7e14&size=64';
+                if (!empty($user_profile_data['avatar']) && file_exists('assets/img/avatars/' . $user_profile_data['avatar'])) {
+                    $sidebar_avatar = 'assets/img/avatars/' . $user_profile_data['avatar'];
+                }
+                ?>
+                <img src="<?php echo $sidebar_avatar; ?>" alt="Avatar" style="object-fit: cover;">
+                <div class="info-text">
+                    <strong><?php echo htmlspecialchars($user_profile_data['ho_ten']); ?></strong>
+                    <span>Thành viên</span>
+                </div>
+            </div>
+
             <ul class="cps-menu">
                 <li>
-                    <a href="index.php?page=account&section=dashboard" class="<?php echo ($section == 'dashboard') ? 'active' : ''; ?>">
-                        <span class="icon">🏠</span> Tổng quan
+                    <a href="index.php?page=account&section=profile" class="<?php echo ($section == 'profile') ? 'active' : ''; ?>">
+                        <span class="icon">👤</span> Thông tin tài khoản
                     </a>
                 </li>
                 <li>
                     <a href="index.php?page=account&section=orders" class="<?php echo ($section == 'orders') ? 'active' : ''; ?>">
-                        <span class="icon">📦</span> Lịch sử mua hàng
+                        <span class="icon">📦</span> Quản lý đơn hàng
                     </a>
                 </li>
                 <li>
                     <a href="index.php?page=account&section=addresses" class="<?php echo ($section == 'addresses') ? 'active' : ''; ?>">
                         <span class="icon">📍</span> Sổ địa chỉ
-                    </a>
-                </li>
-                <li>
-                    <a href="index.php?page=account&section=profile" class="<?php echo ($section == 'profile') ? 'active' : ''; ?>">
-                        <span class="icon">⚙️</span> Thông tin tài khoản
                     </a>
                 </li>
                 <li class="menu-spacer"></li>
@@ -151,76 +193,6 @@ switch ($section) {
         <section class="cps-content">
             <?php
             switch ($section) {
-                case 'dashboard':
-            ?>
-                <div class="cps-dashboard-grid">
-                    <div class="cps-card full-width">
-                        <div class="cps-card-header">
-                            <h3>Đơn hàng gần đây</h3>
-                            <?php if(!empty($all_orders)) : ?>
-                                <a href="index.php?page=account&section=orders">Xem tất cả &gt;</a>
-                            <?php endif; ?>
-                        </div>
-                        <div class="cps-card-body">
-                            <?php if (empty($all_orders)): ?>
-                                <div class="empty-state">
-                                    <p>Bạn chưa mua đơn hàng nào.</p>
-                                    <a href="index.php?page=product_list" class="btn btn-primary">Mua sắm ngay</a>
-                                </div>
-                            <?php else: 
-                                $latest_order = $all_orders[0];
-                            ?>
-                                <div class="mini-order-item">
-                                    <div class="moi-info">
-                                        <strong>Đơn hàng #<?php echo $latest_order['id']; ?></strong>
-                                        <span><?php echo date('d/m/Y', strtotime($latest_order['ngay_dat'])); ?></span>
-                                        <span class="price"><?php echo number_format($latest_order['tong_tien']); ?>đ</span>
-                                    </div>
-                                    <div class="moi-status">
-                                        <span class="status-tag <?php echo $latest_order['trang_thai'] == 'paid' ? 'success' : 'pending'; ?>">
-                                            <?php echo htmlspecialchars($latest_order['trang_thai']); ?>
-                                        </span>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-
-                    <div class="cps-card">
-                        <div class="cps-card-header">
-                            <h3>Thông tin cá nhân</h3>
-                            <a href="index.php?page=account&section=profile">Sửa &gt;</a>
-                        </div>
-                        <div class="cps-card-body">
-                            <div class="mini-profile-info">
-                                <p><strong>Họ tên:</strong> <?php echo htmlspecialchars($user_profile_data['ho_ten']); ?></p>
-                                <p><strong>SĐT:</strong> <?php echo htmlspecialchars($user_profile_data['so_dien_thoai'] ?? '--'); ?></p>
-                                <p><strong>Email:</strong> <?php echo htmlspecialchars($user_profile_data['email']); ?></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="cps-card">
-                        <div class="cps-card-header">
-                            <h3>Sổ địa chỉ</h3>
-                            <a href="index.php?page=account&section=addresses">Quản lý &gt;</a>
-                        </div>
-                        <div class="cps-card-body">
-                             <?php 
-                             $addresses = getUserAddresses($pdo, $user_id);
-                             if (empty($addresses)): ?>
-                                <p style="color: #888; font-size: 14px;">Chưa lưu địa chỉ nào.</p>
-                             <?php else: ?>
-                                <p style="font-size: 14px; line-height: 1.5;">
-                                    <?php echo htmlspecialchars($addresses[0]['dia_chi_cu_the']); ?>
-                                </p>
-                             <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            <?php
-                    break;
-
                 case 'profile':
                     if (file_exists('client/account/profile.php')) require_once 'client/account/profile.php'; 
                     break;
@@ -250,7 +222,6 @@ switch ($section) {
         </div>
         <div class="cps-modal-body">
             <p>Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?</p>
-            <div style="font-size: 40px; margin-top: 10px;">👋</div>
         </div>
         <div class="cps-modal-footer">
             <button class="btn btn-outline" id="cancelLogout">Ở lại</button>

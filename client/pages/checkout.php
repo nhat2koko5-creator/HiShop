@@ -53,11 +53,6 @@ if ($is_buy_now) {
 } else {
     // --- LUỒNG GIỎ HÀNG BÌNH THƯỜNG ---
     unset($_SESSION['buy_now_item']); 
-
-    // Hàm này đã được sửa ở functions.php để lấy kèm mau_sac, dung_luong_ssd
-    // **LƯU Ý QUAN TRỌNG:** Đối với luồng giỏ hàng bình thường, nếu bạn sử dụng luồng chọn sản phẩm như ở cart.php trước đó,
-    // bạn cần tùy chỉnh lại hàm này để lấy sản phẩm dựa trên tham số `selected_ids` từ URL, 
-    // nếu không, nó sẽ lấy toàn bộ giỏ hàng (như code gốc).
     $cartData = getCartItemsAndTotal($pdo, $_SESSION['user_id']); 
     $cart_items = $cartData['items'];
     $subtotal = $cartData['total'];
@@ -106,7 +101,7 @@ $total = $subtotal + $shipping - $discount;
 ?>
 
 <div class="container">
-    <h1 class="page-title">Thanh toán</h1>
+    <h1 class="page-title">Đặt Hàng</h1>
 
     <form method="POST" action="index.php?page=process_vnpay" id="checkout-form">
         <input type="hidden" name="shipping_distance" value="<?= $shipping_distance_km ?>">

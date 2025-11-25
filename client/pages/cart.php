@@ -33,7 +33,6 @@ $default_img = 'assets/img/no-image.png';
     <div class="cart-container" id="cart-wrapper">
         <?php if (empty($cart)): ?>
             <div class="cart-empty-msg" style="width: 100%; text-align: center; padding: 60px 20px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;">
-                <img src="assets/img/empty-cart.png" alt="Empty Cart" style="width: 120px; margin-bottom: 20px; opacity: 0.5;">
                 <h2 style="font-size: 18px; margin-bottom: 10px;">Giỏ hàng của bạn đang trống</h2>
                 <a href="index.php?page=product_list" class="btn-checkout" style="width: auto; display: inline-block; padding: 12px 30px;">
                     Tiếp tục mua sắm
@@ -139,7 +138,7 @@ $default_img = 'assets/img/no-image.png';
                     <input type="hidden" name="selected_ids" id="input-selected-ids" value="">
                     
                     <button type="button" class="btn-checkout" id="btn-checkout">
-                        THANH TOÁN NGAY
+                        TIẾN HÀNH ĐẶT HÀNG
                     </button>
                 </form>
                 
@@ -205,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
         summarySubtotal.textContent = formatPrice(total);
         summaryTotal.textContent = formatPrice(total);
         selectedCountEl.textContent = count;
-        btnCheckout.textContent = `THANH TOÁN NGAY (${count})`;
+        btnCheckout.textContent = `TIẾN HÀNH ĐẶT HÀNG (${count})`;
         
         // Cập nhật input ẩn để gửi sang checkout
         document.getElementById('input-selected-ids').value = selectedIds.join(',');

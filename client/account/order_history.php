@@ -1,110 +1,127 @@
 <?php
 // FILE: client/account/order_history.php
-// Biến $data (danh sách TOÀN BỘ đơn hàng) được truyền từ account.php
 
-// 1. ĐỊNH NGHĨA CÁC TRẠNG THÁI (Tabs)
-// Bạn cần đảm bảo các key (pending, confirmed...) khớp với giá trị trong CSDL của bạn
-$order_tabs = [
+// 1. XỬ LÝ TÌM KIẾM
+$keyword = $_GET['q'] ?? '';
+
+// 2. LẤY DỮ LIỆU (Gọi hàm vừa nâng cấp)
+// Truyền từ khóa vào hàm getUserOrders
+$all_orders = getUserOrders($pdo, $user_id, $keyword); 
+
+// 3. TAB TRẠNG THÁI
+$status_map = [
     'all'       => 'Tất cả',
-    'pending'   => 'Chờ xác nhận',
-    'confirmed' => 'Đã xác nhận',
-    'shipping'  => 'Đang vận chuyển',
-    'delivered' => 'Đã giao hàng', // Hoặc 'paid' tùy database
-    'cancelled' => 'Đã hủy'
+    'pending'   => 'Đang xử lý',
+    'shipping'  => 'Đang giao',
+    'delivered' => 'Hoàn tất',
+    'cancelled' => 'Đã hủy',
+    'returned'  => 'Trả hàng'
 ];
-
-// 2. LẤY TRẠNG THÁI HIỆN TẠI
 $current_status = $_GET['status'] ?? 'all';
 
-// 3. LỌC ĐƠN HÀNG THEO TRẠNG THÁI
+// 4. LỌC THEO TRẠNG THÁI (Client-side filtering)
 $filtered_orders = [];
-if (!empty($data)) {
-    foreach ($data as $order) {
-        $db_status = $order['trang_thai']; // Ví dụ: 'pending', 'paid', 'cancelled'
-        
-        // Logic mapping trạng thái (Tùy chỉnh theo CSDL của bạn)
-        // Ví dụ: Database lưu là 'paid' thì coi như là 'delivered'
-        $mapped_status = $db_status;
-        if ($db_status == 'paid') $mapped_status = 'delivered';
-        
+if (!empty($all_orders)) {
+    foreach ($all_orders as $order) {
+        $db_st = $order['trang_thai'];
         if ($current_status == 'all') {
             $filtered_orders[] = $order;
-        } elseif ($current_status == $mapped_status) {
+        } elseif ($current_status == 'delivered' && ($db_st == 'paid' || $db_st == 'delivered')) {
+            $filtered_orders[] = $order;
+        } elseif ($current_status == $db_st) {
             $filtered_orders[] = $order;
         }
     }
 }
 ?>
-
-<div class="cps-card full-width">
+<div class="cps-card full-width" style="min-height: 500px;">
     
-    <div class="order-tabs-container">
-        <div class="order-tabs">
-            <?php foreach ($order_tabs as $key => $label): ?>
-                <a href="index.php?page=account&section=orders&status=<?php echo $key; ?>" 
-                   class="order-tab-item <?php echo ($current_status == $key) ? 'active' : ''; ?>">
-                   <?php echo $label; ?>
+<div class="order-page-header">
+        <h3 class="section-title-simple">Đơn hàng của tôi</h3>
+        <form action="index.php" method="GET" class="order-search-box">
+            <input type="hidden" name="page" value="account">
+            <input type="hidden" name="section" value="orders">
+            <input type="text" name="q" value="<?= htmlspecialchars($keyword) ?>" placeholder="Tìm đơn hàng...">
+            <button type="submit"><i class="icon-search">🔍</i></button>
+        </form>
+    </div>
+
+    <div class="fpt-tabs-wrapper">
+        <div class="fpt-tabs">
+            <?php foreach ($status_map as $key => $label): ?>
+                <a href="index.php?page=account&section=orders&status=<?= $key ?>" 
+                   class="fpt-tab-item <?= ($current_status == $key) ? 'active' : '' ?>">
+                   <?= $label ?>
                 </a>
             <?php endforeach; ?>
         </div>
     </div>
 
-    <div class="cps-card-body">
+    <div class="cps-card-body" style="background-color: #f8f9fa; padding: 15px;">
         
         <?php if (empty($filtered_orders)): ?>
-            <div class="empty-state">
-                <p>Không có đơn hàng nào trong mục này.</p>
-                <a href="index.php?page=product_list" class="btn btn-primary">Mua sắm ngay</a>
+            <div class="empty-order-state">
+                <img src="assets/img/empty-box.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4076/4076432.png'" alt="Empty">
+                <p>Bạn chưa có đơn hàng nào</p>
+                <span class="sub-text">Cùng khám phá hàng ngàn sản phẩm tại HIShop nhé!</span>
+                <a href="index.php?page=product_list" class="btn btn-primary-red">Khám phá ngay</a>
             </div>
         <?php else: ?>
             
-            <div class="order-list-container">
-                <?php foreach ($filtered_orders as $order): ?>
-                    <div class="order-card-item">
-                        <div class="oci-header">
-                            <div class="oci-id">
-                                <span class="icon">📦</span>
-                                <strong>Đơn hàng #<?php echo htmlspecialchars($order['id']); ?></strong>
+            <div class="order-list-group">
+                <?php foreach ($filtered_orders as $order): 
+                    // Lấy chi tiết sản phẩm cho đơn hàng này
+                    $items = getOrderItems($pdo, $order['id']);
+                ?>
+                    <div class="fpt-order-card">
+                        <div class="foc-header">
+                            <div class="foc-id">
+                                <strong>#<?= htmlspecialchars($order['id']) ?></strong>
+                                <span class="foc-date"><?= date('d/m/Y H:i', strtotime($order['ngay_dat'])) ?></span>
                             </div>
-                            
-                            <?php 
-                                // Xử lý hiển thị badge trạng thái
-                                $statusClass = 'processing'; 
-                                $statusText = htmlspecialchars($order['trang_thai']);
-                                
-                                if ($order['trang_thai'] == 'paid' || $order['trang_thai'] == 'delivered') {
-                                    $statusClass = 'success';
-                                    $statusText = 'Đã giao hàng';
-                                } else if ($order['trang_thai'] == 'cancelled') {
-                                    $statusClass = 'cancelled';
-                                    $statusText = 'Đã hủy';
-                                } else if ($order['trang_thai'] == 'confirmed') {
-                                    $statusClass = 'info'; // Màu xanh dương
-                                    $statusText = 'Đã xác nhận';
-                                } else {
-                                    $statusClass = 'pending';
-                                    $statusText = 'Chờ xác nhận';
-                                }
+                            <div class="foc-status <?= $order['trang_thai'] ?>">
+                                <?php 
+                                    $st_labels = [
+                                        'pending' => 'Đang xử lý',
+                                        'paid' => 'Đã thanh toán',
+                                        'delivered' => 'Giao hàng thành công',
+                                        'cancelled' => 'Đã hủy'
+                                    ];
+                                    echo $st_labels[$order['trang_thai']] ?? $order['trang_thai'];
+                                ?>
+                            </div>
+                        </div>
+
+                        <div class="foc-body">
+                            <?php foreach ($items as $item): 
+                                $img = !empty($item['hinh_anh']) ? "assets/img/products/".$item['hinh_anh'] : "assets/img/no-image.png";
                             ?>
-                            <span class="status-tag <?php echo $statusClass; ?>"><?php echo $statusText; ?></span>
-                        </div>
-                        
-                        <div class="oci-body">
-                            <div class="oci-row">
-                                <span class="label">Ngày đặt hàng:</span>
-                                <span class="value"><?php echo date('H:i - d/m/Y', strtotime($order['ngay_dat'])); ?></span>
+                            <div class="foc-product-item">
+                                <div class="foc-img">
+                                    <img src="<?= $img ?>" alt="Product">
+                                </div>
+                                <div class="foc-info">
+                                    <div class="foc-name"><?= htmlspecialchars($item['ten_san_pham']) ?></div>
+                                    <div class="foc-variant">Số lượng: x<?= $item['so_luong'] ?></div>
+                                </div>
+                                <div class="foc-price">
+                                    <?= number_format($item['don_gia']) ?>₫
+                                </div>
                             </div>
-                            <div class="oci-row">
-                                <span class="label">Tổng tiền:</span>
-                                <span class="value price"><?php echo number_format($order['tong_tien']); ?>đ</span>
-                            </div>
+                            <?php endforeach; ?>
                         </div>
-                        
-                        <div class="oci-footer">
-                            <a href="index.php?page=order_detail&id=<?php echo $order['id']; ?>" class="btn-link">Xem chi tiết</a>
-                            <?php if ($order['trang_thai'] == 'paid' || $order['trang_thai'] == 'delivered'): ?>
-                                <a href="index.php?page=product_list" class="btn-sm btn-outline">Mua lại</a>
-                            <?php endif; ?>
+
+                        <div class="foc-footer">
+                            <div class="foc-total">
+                                <span>Thành tiền:</span>
+                                <strong class="total-price"><?= number_format($order['tong_tien']) ?>₫</strong>
+                            </div>
+                            <div class="foc-actions">
+                                <?php if ($order['trang_thai'] == 'paid' || $order['trang_thai'] == 'delivered'): ?>
+                                    <a href="index.php?page=product_list" class="btn btn-outline-red">Mua lại</a>
+                                <?php endif; ?>
+                                <a href="index.php?page=order_detail&id=<?= $order['id'] ?>" class="btn btn-solid-red">Xem chi tiết</a>
+                            </div>
                         </div>
                     </div>
                 <?php endforeach; ?>

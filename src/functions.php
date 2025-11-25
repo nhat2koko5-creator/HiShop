@@ -215,7 +215,8 @@ function getRelatedProducts(PDO $pdo, $category_id, $current_product_id) {
  */
 function getUserProfile(PDO $pdo, $user_id) {
     try {
-        $stmt = $pdo->prepare("SELECT ho_ten, email, so_dien_thoai, ngay_sinh, gioi_tinh 
+        // (ĐÃ SỬA) Thêm 'avatar' vào danh sách cột cần lấy
+        $stmt = $pdo->prepare("SELECT ho_ten, email, so_dien_thoai, ngay_sinh, gioi_tinh, avatar 
                               FROM nguoi_dung WHERE id = ?");
         $stmt->execute([$user_id]);
         return $stmt->fetch();
@@ -226,35 +227,85 @@ function getUserProfile(PDO $pdo, $user_id) {
 }
 
 /**
+ * (MỚI) Lấy chi tiết sản phẩm của 1 đơn hàng
+ */
+function getOrderItems(PDO $pdo, $order_id) {
+    try {
+        // Join bảng chi tiết đơn hàng với bảng sản phẩm để lấy tên và ảnh
+        // Lưu ý: Nếu bạn có lưu variant_id trong chi_tiet_don_hang, hãy join thêm bảng bien_the_san_pham
+        $sql = "
+            SELECT 
+                ct.*, 
+                sp.ten AS ten_san_pham, 
+                sp.hinh_anh
+            FROM chi_tiet_don_hang ct
+            JOIN san_pham sp ON ct.san_pham_id = sp.id
+            WHERE ct.don_hang_id = ?
+        ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$order_id]);
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        return [];
+    }
+}
+/**
  * Cập nhật thông tin cá nhân của người dùng.
  */
-function updateUserProfile(PDO $pdo, $user_id, $ho_ten, $so_dien_thoai, $ngay_sinh, $gioi_tinh) {
+function updateUserProfile(PDO $pdo, $user_id, $ho_ten, $so_dien_thoai, $ngay_sinh, $gioi_tinh, $avatar = null) {
     try {
-        $sql = "UPDATE nguoi_dung 
-                SET ho_ten = ?, so_dien_thoai = ?, ngay_sinh = ?, gioi_tinh = ?
-                WHERE id = ?";
-        $stmt = $pdo->prepare($sql);
-        
+        // Chuẩn bị dữ liệu số điện thoại và ngày sinh (tránh lỗi rỗng)
         $so_dien_thoai = empty($so_dien_thoai) ? null : $so_dien_thoai;
         $ngay_sinh = empty($ngay_sinh) ? null : $ngay_sinh;
 
-        $stmt->execute([$ho_ten, $so_dien_thoai, $ngay_sinh, $gioi_tinh, $user_id]);
+        // Kiểm tra xem có file avatar mới được gửi lên không
+        if ($avatar) {
+            // Có avatar -> Cập nhật cả cột 'avatar'
+            $sql = "UPDATE nguoi_dung 
+                    SET ho_ten = ?, so_dien_thoai = ?, ngay_sinh = ?, gioi_tinh = ?, avatar = ?
+                    WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$ho_ten, $so_dien_thoai, $ngay_sinh, $gioi_tinh, $avatar, $user_id]);
+        } else {
+            // Không có avatar -> Chỉ cập nhật thông tin văn bản (Giữ nguyên ảnh cũ)
+            $sql = "UPDATE nguoi_dung 
+                    SET ho_ten = ?, so_dien_thoai = ?, ngay_sinh = ?, gioi_tinh = ?
+                    WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$ho_ten, $so_dien_thoai, $ngay_sinh, $gioi_tinh, $user_id]);
+        }
+        
         return true; 
     } catch (PDOException $e) {
-        error_log($e->getMessage());
+        error_log("Lỗi update profile: " . $e->getMessage());
         return false; 
     }
 }
 
 /**
- * Lấy lịch sử đơn hàng của người dùng.
+ * (ĐÃ NÂNG CẤP) Lấy lịch sử đơn hàng (Hỗ trợ tìm kiếm)
  */
-function getUserOrders(PDO $pdo, $user_id) {
+function getUserOrders(PDO $pdo, $user_id, $keyword = '') {
     try {
-        $stmt = $pdo->prepare("SELECT id, ngay_dat, tong_tien, trang_thai 
-                              FROM don_hang WHERE nguoi_dung_id = ? 
-                              ORDER BY ngay_dat DESC");
-        $stmt->execute([$user_id]);
+        $sql = "SELECT DISTINCT d.id, d.ngay_dat, d.tong_tien, d.trang_thai 
+                FROM don_hang d
+                LEFT JOIN chi_tiet_don_hang ct ON d.id = ct.don_hang_id
+                LEFT JOIN san_pham sp ON ct.san_pham_id = sp.id
+                WHERE d.nguoi_dung_id = ?";
+        
+        $params = [$user_id];
+
+        if (!empty($keyword)) {
+            // Tìm theo ID đơn hàng HOẶC Tên sản phẩm
+            $sql .= " AND (d.id LIKE ? OR sp.ten LIKE ?)";
+            $params[] = "%$keyword%";
+            $params[] = "%$keyword%";
+        }
+
+        $sql .= " ORDER BY d.ngay_dat DESC";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
         return $stmt->fetchAll();
     } catch (PDOException $e) {
         error_log($e->getMessage());
@@ -262,6 +313,25 @@ function getUserOrders(PDO $pdo, $user_id) {
     }
 }
 
+/**
+ * (MỚI) Lấy thông tin chi tiết của 1 đơn hàng (Header)
+ */
+function getOrderById(PDO $pdo, $order_id, $user_id) {
+    try {
+        // Join thêm bảng thanh_toan để kiểm tra
+        $sql = "
+            SELECT d.*, 
+                   (SELECT COUNT(*) FROM thanh_toan t WHERE t.don_hang_id = d.id AND t.trang_thai = 'success') as is_paid_online
+            FROM don_hang d
+            WHERE d.id = ? AND d.nguoi_dung_id = ?
+        ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$order_id, $user_id]);
+        return $stmt->fetch();
+    } catch (PDOException $e) {
+        return null;
+    }
+}
 /**
  * Lấy danh sách địa chỉ của người dùng.
  */

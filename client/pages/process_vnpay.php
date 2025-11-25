@@ -52,9 +52,10 @@ $final_total = $subtotal - $discount;
 // 4. LƯU ĐƠN HÀNG VÀO DB (TRẠNG THÁI PENDING)
 try {
     $pdo->beginTransaction();
-    $sql = "INSERT INTO don_hang (nguoi_dung_id, ho_ten_nguoi_nhan, sdt_nguoi_nhan, dia_chi_giao_hang, ghi_chu, tong_tien, trang_thai, ma_khuyen_mai_id, ngay_dat) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, NOW())";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$user_id, $ho_ten, $so_dien_thoai, $dia_chi, $ghi_chu, $final_total, $coupon_id]);
+$sql = "INSERT INTO don_hang (nguoi_dung_id, ho_ten_nguoi_nhan, sdt_nguoi_nhan, dia_chi_giao_hang, ghi_chu, tong_tien, trang_thai, trang_thai_thanh_toan, ma_khuyen_mai_id, ngay_dat) 
+        VALUES (?, ?, ?, ?, ?, ?, 'pending', 'unpaid', ?, NOW())";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$user_id, $ho_ten, $so_dien_thoai, $dia_chi, $ghi_chu, $final_total, $coupon_id]);
     $order_id = $pdo->lastInsertId();
 
     $stmt_dt = $pdo->prepare("INSERT INTO chi_tiet_don_hang (don_hang_id, san_pham_id, so_luong, don_gia) VALUES (?, ?, ?, ?)");
