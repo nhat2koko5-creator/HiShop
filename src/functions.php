@@ -24,15 +24,28 @@ function getFeaturedProducts($pdo) {
     $sql = "
         SELECT sp.*
         FROM san_pham sp
-        INNER JOIN san_pham_noi_bat nb ON sp.id = nb.san_pham_id
-        ORDER BY nb.noi_bat_id DESC
+        JOIN (
+            SELECT san_pham_id, MAX(noi_bat_id) AS max_nb
+            FROM san_pham_noi_bat
+            GROUP BY san_pham_id
+        ) nb_max ON sp.id = nb_max.san_pham_id
+        ORDER BY nb_max.max_nb DESC
         LIMIT 8
     ";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Load variants cho từng sản phẩm
+    foreach ($products as &$sp) {
+        $sp['variants'] = getProductVariants($pdo, $sp['id']);
+    }
+
+    return $products;
 }
+
+
 
 /* =============================
    LẤY SẢN PHẨM GIẢM GIÁ
@@ -99,10 +112,9 @@ function getDiscountProducts($pdo) {
     }
 
     $p['variants'] = $variants;
+    }
+        return $products;
 }
-    return $products;
-}
-
 /* =============================
    TÍNH GIÁ SAU KHI GIẢM
    ============================= */
@@ -122,7 +134,6 @@ function getProductVariants(PDO $pdo, $productId) {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-
 /* ================================================
     LẤY SẢN PHẨM MỚI NHẤT
 =================================================*/
@@ -130,7 +141,6 @@ function getNewProducts(PDO $pdo){
     $stmt = $pdo->query("SELECT * FROM san_pham WHERE trang_thai = 1 ORDER BY id DESC LIMIT 8");
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-
 
 /* =====================================================
     LẤY CHI TIẾT SẢN PHẨM (ĐÃ BỔ SUNG GIÁ GIẢM)

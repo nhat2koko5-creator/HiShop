@@ -1,11 +1,6 @@
 <?php
 $featuredProducts = getFeaturedProducts($pdo);
 $discountProducts = getDiscountProducts($pdo);
-
-// Load biến thể cho sản phẩm nổi bật
-foreach ($featuredProducts as &$sp) {
-    $sp['variants'] = getProductVariants($pdo, $sp['id']);
-}
 ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <style>
@@ -143,19 +138,6 @@ foreach ($featuredProducts as &$sp) {
 
     </div>
 </section>
-
-<script>
-var swiperFeatured = new Swiper(".featured-carousel", {
-    slidesPerView: 4,
-    spaceBetween: 20,
-    loop: true,
-    navigation: {
-        nextEl: ".featured-prev",
-        prevEl: ".featured-next",
-    },
-});
-</script>
-
     <div class="variant-modal-overlay" id="quick-add-modal" style="display: none;">
         <div class="variant-modal-box">
             <div class="variant-modal-header">
