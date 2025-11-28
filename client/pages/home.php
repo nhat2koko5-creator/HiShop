@@ -8,11 +8,7 @@ $discountProducts = getDiscountProducts($pdo);
     display: grid;
     grid-template-columns: repeat(4, 1fr); /* mỗi dòng 4 sản phẩm */
     gap: 20px;
-    margin-top: 20px;
-}
-
-/* Nếu muốn 5 sản phẩm có thể chỉnh lại thành repeat(5,1fr) */
-
+    margin-top: 20px;}
 </style>
 <section class="hero">
     <div class="container">
