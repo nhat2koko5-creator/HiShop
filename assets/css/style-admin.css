@@ -444,3 +444,48 @@ body {
     color: #1b7b35;
     font-size: 14px;
 }
+/* ===============================
+   CSS TRANG QUẢN LÝ NGƯỜI DÙNG
+================================ */
+    .search-box {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #d9d9d9;
+    border-radius: 10px;
+    overflow: hidden;
+    width: 300px; /* bạn chỉnh theo ý muốn */
+}
+
+.search-box input {
+    border: none !important;
+    outline: none;
+    padding: 10px 14px;
+    flex: 1;
+    font-size: 14px;
+    color: #555;
+}
+
+.search-box input::placeholder {
+    color: #999;
+}
+
+.search-box .divider {
+    width: 1px;
+    background: #e0e0e0;
+    height: 24px;
+    margin: 0 8px;
+}
+
+.search-box button {
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    color: #333;
+    font-size: 16px;
+}
+
+.search-box button:hover {
+    color: #000;
+}
