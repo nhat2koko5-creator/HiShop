@@ -44,9 +44,6 @@ function getFeaturedProducts($pdo) {
 
     return $products;
 }
-
-
-
 /* =============================
    LẤY SẢN PHẨM GIẢM GIÁ
    ============================= */
