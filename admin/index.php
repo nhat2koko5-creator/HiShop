@@ -76,6 +76,7 @@ switch ($page) {
     <title>Admin - <?php echo htmlspecialchars($page_title); ?></title>
     
     <link rel="stylesheet" href="../assets/css/style-admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 

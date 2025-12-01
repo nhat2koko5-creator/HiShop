@@ -51,7 +51,7 @@ try {
                 if ($order["trang_thai"] == 'pending') {
                     if ($inputData['vnp_ResponseCode'] == '00' && $inputData['vnp_TransactionStatus'] == '00') {
                         // Cập nhật thành công
-                        $stmt_update = $pdo->prepare("UPDATE don_hang SET trang_thai = 'paid' WHERE id = ?");
+                        $stmt_update = $pdo->prepare("UPDATE don_hang SET trang_thai = 'confirmed', trang_thai_thanh_toan = 'paid' WHERE id = ?");
                         $stmt_update->execute([$order_id]);
                         
                         // Lưu log thanh toán

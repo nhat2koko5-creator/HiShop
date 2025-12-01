@@ -1,0 +1,299 @@
+/* admin/assets/css/orders-list.css */
+
+/* === 1. Stats Bar === */
+.stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.stat-box {
+    background: #fff;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border: 1px solid #f1f5f9;
+    transition: transform 0.2s ease;
+}
+
+.stat-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.icon-orange { background: #fff7ed; color: #ea580c; }
+.icon-blue { background: #eff6ff; color: #2563eb; }
+.icon-green { background: #f0fdf4; color: #16a34a; }
+
+.stat-info h4 {
+    margin: 0;
+    font-size: 28px; /* Tăng kích thước số */
+    font-weight: 800; /* Làm đậm số */
+    color: #1e293b;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+}
+
+.stat-info h4 small {
+    font-size: 16px;
+    font-weight: 600;
+    color: #64748b;
+    margin-left: 2px;
+}
+
+.stat-info p {
+    margin: 4px 0 0 0;
+    font-size: 14px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* === 2. Filters & Toolbar === */
+.filter-toolbar {
+    background: #fff;
+    padding: 16px 24px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.status-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    height: 40px; /* Chiều cao cố định */
+    display: inline-flex;
+    align-items: center;
+    padding: 0 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #64748b;
+    background: transparent;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.tab-btn:hover {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.tab-btn.active {
+    background: #4f46e5;
+    color: #fff;
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+}
+
+/* Search Box Cải tiến */
+.search-wrapper {
+    flex-grow: 1;
+    max-width: 320px;
+}
+
+.search-form-flex {
+    display: flex;
+    align-items: center;
+    height: 40px; /* Đồng bộ chiều cao với Tab */
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    transition: border-color 0.2s;
+}
+
+.search-form-flex:focus-within {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+}
+
+.search-input {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    padding: 0 12px;
+    font-size: 14px;
+    color: #334155;
+    height: 100%;
+}
+
+.search-btn {
+    width: 40px;
+    height: 100%;
+    border: none;
+    background: #f8fafc;
+    color: #64748b;
+    cursor: pointer;
+    border-left: 1px solid #cbd5e1;
+    transition: background 0.2s;
+}
+
+.search-btn:hover {
+    background: #e2e8f0;
+    color: #4f46e5;
+}
+
+/* === 3. Data Table === */
+.order-table-container {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    overflow-x: auto; /* Scroll ngang nếu bảng quá rộng */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.order-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px; /* Đảm bảo bảng không bị co quá nhỏ */
+}
+
+.order-table th {
+    background: #f8fafc;
+    padding: 16px 20px;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: 700;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    letter-spacing: 0.5px;
+}
+
+.order-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+.order-table tr:last-child td {
+    border-bottom: none;
+}
+
+.order-table tr:hover {
+    background: #f8fafc;
+}
+
+/* Specific Columns */
+.col-price {
+    font-family: 'Inter', sans-serif; /* Hoặc font số đẹp */
+    font-weight: 700;
+    color: #4f46e5; /* Màu tím xanh nổi bật */
+    font-size: 15px;
+}
+
+/* Badges */
+.badge {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+    white-space: nowrap;
+}
+.badge-warning { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
+.badge-info    { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+.badge-primary { background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; }
+.badge-success { background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
+.badge-danger  { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
+.badge-dark    { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+.text-success { color: #10b981; font-weight: 600; }
+.text-warning { color: #f59e0b; font-weight: 600; }
+.text-danger { color: #ef4444; font-weight: 600; }
+
+/* Actions Group */
+.action-group {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px; /* Khoảng cách giữa các nút */
+}
+
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #64748b;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.btn-icon:hover {
+    border-color: #4f46e5;
+    color: #4f46e5;
+    background: #eef2ff;
+}
+
+.status-select {
+    padding: 0 12px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    font-size: 13px;
+    color: #334155;
+    background: #fff;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.status-select:hover {
+    border-color: #cbd5e1;
+}
+
+.status-select:focus {
+    border-color: #4f46e5;
+}
+/* FIX LỖI NÚT KHÔNG BẤM ĐƯỢC */
+.action-group {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    position: relative; /* Quan trọng */
+    z-index: 50;        /* Đảm bảo nổi lên trên cùng */
+}
+
+.btn-icon {
+    cursor: pointer; /* Hiện bàn tay */
+    position: relative;
+    z-index: 51;     /* Nổi hơn cả group */
+}
+
+/* Khi hover vào nút mắt */
+.btn-view:hover {
+    background-color: #e0e7ff;
+    color: #4f46e5;
+    border-color: #4f46e5;
+}

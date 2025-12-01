@@ -2,7 +2,7 @@
 // FILE: client/pages/static_about.php (ĐÃ NÂNG CẤP)
 require_once 'client/layouts/header.php'; 
 ?>
-<link rel="stylesheet" href="assets/css/home.css">
+<link rel="stylesheet" href="assets/css/client/home.css">
 
 <div class="container">
     <div class="static-page-header">

@@ -160,91 +160,44 @@ function format_price($p) {
 
 
     <?php if (!empty($products)): ?>
-        <div class="product-grid">
-            <?php foreach ($products as $p):
-                $img_path = (!empty($p['hinh_anh']) && file_exists($img_folder . '/' . $p['hinh_anh'])) ? $img_folder . '/' . $p['hinh_anh'] : $default_img;
-                // base display price: prefer gia_from (from variants), fallback to sp.gia
-               // --- Chuẩn hóa: lấy giá gốc từ SQL (san_pham.gia) — bắt buộc dùng giá trong bảng san_pham
-$original_price = isset($p['gia']) ? (int)$p['gia'] : 0;
+<div class="product-grid">
+    <?php foreach ($products as $p): 
+        // 1. Xử lý ảnh
+        $img_path = (!empty($p['hinh_anh']) && file_exists($img_folder . '/' . $p['hinh_anh'])) 
+                    ? $img_folder . '/' . $p['hinh_anh'] 
+                    : $default_img;
 
-// Nếu bạn muốn hiển thị giá theo biến thể (nếu có) thay vì sp.gia, bật dòng bên dưới:
-// $display_price = (isset($p['gia_from']) && (int)$p['gia_from'] > 0) ? (int)$p['gia_from'] : $original_price;
+        // 2. Lấy giá hiển thị (Ưu tiên giá biến thể thấp nhất nếu có, không thì lấy giá gốc)
+        $display_price = isset($p['gia_from']) && $p['gia_from'] > 0 ? (int)$p['gia_from'] : (int)$p['gia'];
 
-// Nếu bạn muốn HIỆN THỰC 100% GIÁ TỪ SQL thì dùng:
-$display_price = $original_price;
+        // 3. Tính toán giảm giá (Query này nên tối ưu bằng JOIN ở câu SQL chính, nhưng tạm thời để đây cũng được)
+        $stmt_disc = $pdo->prepare("
+            SELECT g.loai_giam_gia, g.gia_tri
+            FROM san_pham_giam_gia spg
+            JOIN giam_gia g ON g.id = spg.giam_gia_id
+            WHERE spg.san_pham_id = ?
+              AND (g.ngay_bat_dau IS NULL OR g.ngay_bat_dau <= NOW())
+              AND (g.ngay_ket_thuc IS NULL OR g.ngay_ket_thuc >= NOW())
+            LIMIT 1
+        ");
+        $stmt_disc->execute([$p['id']]);
+        $discount = $stmt_disc->fetch(PDO::FETCH_ASSOC);
 
-// Nếu muốn debug nhanh (xóa/ comment khi không cần):
-// echo 'DBG original_price='.$original_price.' display_price='.$display_price;
+        $price_after = $display_price;
+        $discount_percent = 0;
 
-// --- Lấy giảm giá cho sản phẩm từ bảng san_pham_giam_gia (nếu có)
-$discount_percent = 0;
-$price_after = $display_price;
-
-$stmt_disc = $pdo->prepare("
-    SELECT g.loai_giam_gia, g.gia_tri
-    FROM san_pham_giam_gia spg
-    JOIN giam_gia g ON g.id = spg.giam_gia_id
-    WHERE spg.san_pham_id = ?
-      AND (g.ngay_bat_dau IS NULL OR g.ngay_bat_dau <= NOW())
-      AND (g.ngay_ket_thuc IS NULL OR g.ngay_ket_thuc >= NOW())
-    LIMIT 1
-");
-$stmt_disc->execute([$p['id']]);
-$discount = $stmt_disc->fetch(PDO::FETCH_ASSOC);
-
-if ($discount) {
-    if ($discount['loai_giam_gia'] === 'percent') {
-        // giảm theo %
-        $discount_percent = (int)$discount['gia_tri'];
-        // tính % dựa trên giá gốc từ san_pham.gia (original_price)
-        $price_after = (int) round($original_price * (100 - $discount_percent) / 100);
-    } else {
-        // giảm theo số tiền
-        $amount = (int)$discount['gia_tri'];
-        // áp trực tiếp tiền giảm trên display (còn có thể thay bằng original_price nếu bạn muốn)
-        // Mình dùng original_price để giá sau giảm đúng với DB giá ban đầu
-        $price_after = max(0, $original_price - $amount);
-        // quy đổi ra %
-        $discount_percent = $original_price > 0 ? (int) round(($amount / $original_price) * 100) : 0;
-    }
-}
-
-                // get discount (if any)
-// --- Lấy thông tin giảm giá ---
-// === Lấy giảm giá cho sản phẩm từ bảng san_pham_giam_gia ===
-$discount_percent = 0;
-$price_after = $display_price;
-
-// truy vấn discount theo sp.id
-$stmt_disc = $pdo->prepare("
-    SELECT g.loai_giam_gia, g.gia_tri
-    FROM san_pham_giam_gia spg
-    JOIN giam_gia g ON g.id = spg.giam_gia_id
-    WHERE spg.san_pham_id = ?
-      AND (g.ngay_bat_dau IS NULL OR g.ngay_bat_dau <= NOW())
-      AND (g.ngay_ket_thuc IS NULL OR g.ngay_ket_thuc >= NOW())
-    LIMIT 1
-");
-$stmt_disc->execute([$p['id']]);
-$discount = $stmt_disc->fetch(PDO::FETCH_ASSOC);
-
-// Nếu có giảm giá
-if ($discount) {
-    if ($discount['loai_giam_gia'] === 'percent') {
-        // giảm theo %
-        $discount_percent = (int)$discount['gia_tri'];
-        $price_after = (int) round($display_price * (100 - $discount_percent) / 100);
-    } else {
-        // giảm theo số tiền
-        $amount = (int)$discount['gia_tri'];
-        $price_after = max(0, $display_price - $amount);
-        // quy đổi ra %
-        $discount_percent = $display_price > 0 ? round(($amount / $display_price) * 100) : 0;
-    }
-}
-            ?>
-               <div class="product-card">
-            
+        if ($discount) {
+            if ($discount['loai_giam_gia'] === 'percent') {
+                $discount_percent = (int)$discount['gia_tri'];
+                $price_after = $display_price * (1 - $discount_percent / 100);
+            } else {
+                $amount = (int)$discount['gia_tri'];
+                $price_after = max(0, $display_price - $amount);
+                $discount_percent = $display_price > 0 ? round(($amount / $display_price) * 100) : 0;
+            }
+        }
+    ?>
+        <div class="product-card">
             <?php if ($discount_percent > 0): ?>
                 <div class="product-sale-tag">-<?= $discount_percent ?>%</div>
             <?php endif; ?>
@@ -257,7 +210,7 @@ if ($discount) {
                 <div class="card-title"><?= htmlspecialchars($p['ten']) ?></div>
 
                 <div class="card-price">
-                    <?php if ($discount_percent > 0 && $price_after < $display_price): ?>
+                    <?php if ($discount_percent > 0): ?>
                         <span class="card-price-old"><?= format_price($display_price) ?></span>
                         <span class="card-price-new"><?= format_price($price_after) ?></span>
                     <?php else: ?>
@@ -267,7 +220,7 @@ if ($discount) {
 
                 <div class="btn-group-vertical">
                     <a href="index.php?page=product_detail&id=<?= $p['id'] ?>" class="btn-view">🔍 Xem chi tiết</a>
-
+                    
                     <?php if (!empty($p['variants'])): ?>
                         <a href="javascript:void(0);" 
                            class="btn-cart btn-quick-buy"
@@ -278,12 +231,15 @@ if ($discount) {
                             🛒 Mua ngay
                         </a>
                     <?php else: ?>
-                        <a class="btn-cart" style="background:#ccc; cursor:not-allowed;">🛍️ Tạm hết hàng</a>
+                        <a href="index.php?page=cart&action=add&id=<?= $p['id'] ?>" class="btn-cart">
+                            🛒 Thêm vào giỏ
+                        </a>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
     <?php endforeach; ?>
+</div>
 </div>
     <?php else: ?>
         <p class="no-products">Không có sản phẩm nào trong danh mục này.</p>
