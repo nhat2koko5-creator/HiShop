@@ -2,14 +2,18 @@
 // FILE: client/pages/static_about.php (ĐÃ NÂNG CẤP)
 require_once 'client/layouts/header.php'; 
 ?>
+<link rel="stylesheet" href="assets/css/home.css">
+
 <div class="container">
-<div class="static-page-header">
-    <div class="breadcrumb" style="margin: 15px 0; font-size: 14px;">
-    <a href="index.php">Trang chủ</a> <span>›</span>
-    <span>Về chúng tôi</span>
-</div>
-    <h1>Về Chúng Tôi</h1>
-</div>
+    <div class="static-page-header">
+        <nav class="breadcrumb">
+            <a href="index.php">Trang chủ</a> 
+            <span>›</span>
+            <span class="current">Về chúng tôi</span>
+        </nav>
+        <h1>Về Chúng Tôi</h1>
+    </div>
+
     <div class="about-intro-grid">
         
       <div class="about-intro-text">

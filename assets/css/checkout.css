@@ -1,0 +1,478 @@
+/* ============================================================
+   STYLES CHO TRANG THANH TOÁN (CHECKOUT)
+   ============================================================ */
+
+/* --- 1. LAYOUT CHUNG (GRID 2 CỘT) --- */
+.checkout-layout {
+  display: grid;
+  /* Tỉ lệ: Cột Form (1.5 phần) - Cột Tóm tắt (1 phần) */
+  grid-template-columns: 1.5fr 1fr;
+  gap: 32px;
+  align-items: flex-start;
+  margin-bottom: 50px;
+}
+
+/* --- 2. CÁC KHỐI "CARD" (NỀN TRẮNG, BO GÓC) --- */
+.checkout-form,
+.order-summary,
+.payment-summary {
+  background: var(--color-white, #fff);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Khối bên phải (chứa Summary + Payment) */
+.checkout-summary-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  position: sticky;
+  top: 20px;
+}
+
+/* --- 3. FORM THÔNG TIN (BÊN TRÁI) --- */
+.checkout-form .form-section {
+  margin-bottom: 0;
+}
+
+.checkout-form .form-section-header h2 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.checkout-form .form-group {
+  margin-bottom: 16px;
+}
+
+.checkout-form .form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #374151;
+}
+
+/* --- 4. TÓM TẮT ĐƠN HÀNG (BÊN PHẢI) --- */
+.order-summary h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 24px;
+  color: #111827;
+}
+
+/* Danh sách sản phẩm */
+.summary-item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summary-item-image {
+  width: 60px;
+  height: 60px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.summary-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.summary-item-details {
+  flex: 1;
+}
+
+.summary-item-details p {
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.summary-item-price {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.summary-divider {
+  border: none;
+  height: 1px;
+  background-color: #e5e7eb;
+  margin: 24px 0;
+}
+
+/* Các dòng tổng tiền */
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 15px;
+}
+
+.summary-row span:first-child {
+  color: #6b7280;
+}
+
+.summary-row span:last-child {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.summary-row.total {
+  font-size: 18px;
+  font-weight: 700;
+  align-items: center;
+}
+
+.summary-row.total span:last-child {
+  color: #ef4444 !important; /* Màu đỏ */
+  font-size: 20px;
+}
+
+/* --- 5. MÃ GIẢM GIÁ (COUPON) --- */
+.coupon-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.coupon-header span {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.coupon-header a {
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.coupon-form {
+  display: flex;
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+.coupon-form input[type="text"] {
+  flex: 1;
+  border: 1px solid #e5e7eb;
+  padding: 10px 12px;
+  border-radius: 8px 0 0 8px;
+  outline: none;
+  font-size: 14px;
+  min-width: 0;
+}
+
+.coupon-form button {
+  border: none;
+  background: var(--color-primary, #4f46e5);
+  color: white;
+  padding: 0 16px;
+  cursor: pointer;
+  border-radius: 0 8px 8px 0;
+  font-weight: 600;
+  font-size: 14px;
+  transition: opacity 0.2s;
+}
+
+.coupon-form button.btn-remove {
+  background: #ef4444; /* Màu đỏ cho nút xóa */
+}
+
+.coupon-form button:hover {
+  opacity: 0.9;
+}
+
+/* --- 6. PHƯƠNG THỨC THANH TOÁN --- */
+.payment-summary h3 {
+  font-size: 18px;
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+
+.payment-methods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.payment-method-box {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s;
+  background: #fff;
+}
+
+.payment-method-box:hover {
+  border-color: #d1d5db;
+}
+
+.payment-method-box.active {
+  border-color: var(--color-primary, #4f46e5);
+  background-color: #f4f7fc; /* Màu nền nhạt */
+  box-shadow: 0 0 0 1px var(--color-primary, #4f46e5);
+}
+
+.payment-method-box input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary, #4f46e5);
+}
+
+.payment-method-box label {
+  font-weight: 600;
+  flex: 1;
+  cursor: pointer;
+}
+
+.terms-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+  font-size: 14px;
+}
+
+.terms-checkbox a {
+  font-weight: 600;
+  text-decoration: underline;
+  color: var(--color-primary, #4f46e5);
+}
+
+.checkout-btn {
+  margin-top: 24px;
+}
+
+/* Responsive Mobile */
+@media (max-width: 900px) {
+  .checkout-layout {
+    grid-template-columns: 1fr;
+  }
+  .checkout-summary-stack {
+    position: static;
+  }
+}
+
+/* --- 7. MODAL (POPUP MÃ GIẢM GIÁ & THÔNG BÁO) --- */
+.coupon-modal-overlay,
+.alert-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.coupon-modal,
+.alert-modal-box {
+  background: #fff;
+  width: 90%;
+  max-width: 420px;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.2s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header Modal */
+.coupon-modal-header,
+.alert-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.coupon-modal-header h3,
+.alert-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.close-modal-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #999;
+}
+
+/* Body Modal */
+.coupon-modal-body,
+.alert-modal-body {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Coupon Item trong Modal */
+.coupon-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #eee;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.coupon-item:hover {
+  background: #f9fafb;
+}
+
+.btn-apply-from-modal {
+  background: #f0f9ff;
+  color: var(--color-primary, #4f46e5);
+  border: 1px solid var(--color-primary, #4f46e5);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.btn-apply-from-modal:hover {
+  background: var(--color-primary, #4f46e5);
+  color: #fff;
+}
+
+/* Alert Colors */
+.alert-modal-box.success h3 {
+  color: #10b981;
+}
+.alert-modal-box.error h3 {
+  color: #ef4444;
+}
+.text-success {
+  color: #10b981 !important;
+}
+
+/* ============================================================
+   STYLES CHO TRANG KẾT QUẢ THANH TOÁN (ORDER RESULT)
+   (Dùng cho vnpay_return.php và confirmation.php)
+   ============================================================ */
+
+.result-box {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 40px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  border: 1px solid #e5e7eb;
+}
+
+.result-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.result-icon.success {
+  color: #10b981;
+}
+
+.result-icon.error {
+  color: #ef4444;
+}
+
+.result-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #1f2937;
+}
+
+.result-details {
+  margin: 30px 0;
+  text-align: left;
+  background: #f9fafb;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #f3f4f6;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  border-bottom: 1px dashed #e5e7eb;
+  padding-bottom: 8px;
+  font-size: 15px;
+}
+
+.detail-row:last-child {
+  border: none;
+  margin: 0;
+  padding-bottom: 0;
+}
+
+.detail-label {
+  color: #6b7280;
+}
+
+.detail-value {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+/* Các class nút bấm (chỉ định nghĩa lại nếu cần ghi đè, 
+   còn không nó sẽ dùng style global .btn từ style-client.css) */
+.action-buttons .btn {
+    min-width: 160px;
+}

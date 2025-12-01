@@ -170,6 +170,10 @@ switch ($action) {
         $response['status'] = 'success';
         $response['message'] = 'Đã thêm vào giỏ hàng';
         $response['cart_count'] = getCartCount($pdo, $user_id);
+        $currentCount = getCartCount($pdo, $user_id);
+        $_SESSION['global_cart_count'] = $currentCount; 
+
+        $response['cart_count'] = $currentCount;
         break;
 
 
@@ -201,6 +205,9 @@ switch ($action) {
             'item_total' => number_format($price * $quantity, 0, ',', '.') . '₫',
             'cart_count' => getCartCount($pdo, $user_id)
         ];
+        $currentCount = getCartCount($pdo, $user_id);
+        $_SESSION['global_cart_count'] = $currentCount; 
+        $response['cart_count'] = $currentCount;
         break;
 
 
@@ -216,6 +223,9 @@ switch ($action) {
 
         $response['status'] = 'success';
         $response['cart_count'] = getCartCount($pdo, $user_id);
+        $currentCount = getCartCount($pdo, $user_id);
+        $_SESSION['global_cart_count'] = $currentCount; 
+        $response['cart_count'] = $currentCount;
         break;
 
     

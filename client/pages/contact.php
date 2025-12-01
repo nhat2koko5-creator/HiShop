@@ -2,17 +2,15 @@
 // FILE: client/pages/contact.php (ĐÃ THIẾT KẾ LẠI HOÀN HẢO)
 require_once 'client/layouts/header.php'; 
 ?>
-
-
-
 <div class="container">
-<div class="static-page-header">
-    <div class="breadcrumb" style="margin: 15px 0; font-size: 14px;">
-    <a href="index.php">Trang chủ</a> <span>›</span>
-    <span>Liên hệ với chúng tôi</span>
-</div>
-    <h1>Liên Hệ Với Chúng Tôi</h1>
-</div>
+    <div class="static-page-header">
+        <nav class="breadcrumb">
+            <a href="index.php">Trang chủ</a> 
+            <span>›</span>
+            <span class="current">Liên hệ với chúng tôi</span>
+        </nav>
+        <h1>Liên Hệ Với Chúng Tôi</h1>
+    </div>
     <div class="contact-layout-new">
 
         <div class="contact-card contact-form-card">

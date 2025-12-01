@@ -26,7 +26,7 @@ if (!function_exists('price_format')) {
 $img_folder = 'assets/img/products';
 $default_img = 'assets/img/no-image.png';
 ?>
-
+<link rel="stylesheet" href="assets/css/cart.css">
 <div class="cart-page">
     <h1>Giỏ hàng của bạn</h1>
     
@@ -276,6 +276,9 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('item-total-val-' + key).value = rawPrice;
             
             updateSummary(); // Tính lại tổng
+            if (typeof updateCartIconCount === 'function') {
+                updateCartIconCount(data.cart_count);
+            }
         } else {
             showModalAlert(data.message || 'Lỗi cập nhật.');
         }
@@ -307,17 +310,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    async function handleDeleteItem(key) {
-        const data = await sendCartRequest('delete', { key: key });
-        if (data.status === 'success') {
-            document.getElementById('item-' + key).remove();
-            // Đơn giản reload để cập nhật lại danh sách & tổng
-            location.reload(); 
-        } else {
-            showModalAlert(data.message || 'Lỗi khi xóa.');
+     async function handleDeleteItem(key) {
+            const data = await sendCartRequest('delete', { key: key });
+            
+            if (data.status === 'success') {
+                // Reload trang ngay lập tức để cập nhật lại toàn bộ số liệu từ Server
+                // Điều này đảm bảo: Header, Tóm tắt đơn hàng và Danh sách sản phẩm luôn đúng 100%
+                window.location.reload(); 
+            } else {
+                showModalAlert(data.message || 'Lỗi khi xóa.');
+            }
+            
+            hideModalPrompt();
         }
-        hideModalPrompt();
-    }
 
     // --- 6. MODAL FUNCTIONS ---
     function showDeletePrompt(key) {

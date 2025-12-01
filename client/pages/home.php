@@ -2,6 +2,8 @@
 $featuredProducts = getFeaturedProducts($pdo);
 $discountProducts = getDiscountProducts($pdo);
 ?>
+<link rel="stylesheet" href="assets/css/home.css">
+<link rel="stylesheet" href="assets/css/product-list.css
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <style>
     .product-grid {
@@ -505,7 +507,7 @@ if (variant.hinh_anh && variant.hinh_anh !== "") {
         if (data.status === "success") {
             showPopup('🛒 Sản phẩm đã được thêm vào giỏ hàng!');
             if (typeof updateCartIconCount === "function") {
-                updateCartIconCount(data.totalItems);
+               updateCartIconCount(data.cart_count);
             }
         } else {
             // Xử lý lỗi (ví dụ: chưa đăng nhập)

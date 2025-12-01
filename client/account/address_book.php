@@ -1,7 +1,7 @@
 <?php
 // FILE: client/account/address_book.php
 ?>
-
+<link rel="stylesheet" href="assets/css/account.css">
 <div class="cps-card full-width">
     <div class="cps-card-header" style="display: flex; justify-content: space-between; align-items: center;">
         <h3>Sổ địa chỉ</h3>

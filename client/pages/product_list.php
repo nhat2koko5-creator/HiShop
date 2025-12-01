@@ -142,6 +142,7 @@ function format_price($p) {
 }
 
 ?>
+<link rel="stylesheet" href="assets/css/product_list.css">
 <div class="container">
     <div class="static-page-header" style="font-size: 14px;">
     <nav class="breadcrumb">
@@ -241,48 +242,49 @@ if ($discount) {
         $discount_percent = $display_price > 0 ? round(($amount / $display_price) * 100) : 0;
     }
 }
-
-
             ?>
-                <div class="card">
-                    <?php if ($discount_percent > 0): ?>
-                        <div class="discount-badge">-<?= $discount_percent ?>%</div>
+               <div class="product-card">
+            
+            <?php if ($discount_percent > 0): ?>
+                <div class="product-sale-tag">-<?= $discount_percent ?>%</div>
+            <?php endif; ?>
+
+            <div class="product-image">
+                <img src="<?= htmlspecialchars($img_path) ?>" alt="<?= htmlspecialchars($p['ten']) ?>">
+            </div>
+
+            <div class="card-content">
+                <div class="card-title"><?= htmlspecialchars($p['ten']) ?></div>
+
+                <div class="card-price">
+                    <?php if ($discount_percent > 0 && $price_after < $display_price): ?>
+                        <span class="card-price-old"><?= format_price($display_price) ?></span>
+                        <span class="card-price-new"><?= format_price($price_after) ?></span>
+                    <?php else: ?>
+                        <span class="card-price-new"><?= format_price($display_price) ?></span>
                     <?php endif; ?>
-
-                    <div class="image-wrapper">
-                        <img src="<?= htmlspecialchars($img_path) ?>" alt="<?= htmlspecialchars($p['ten']) ?>">
-                    </div>
-
-                    <div class="name"><?= htmlspecialchars($p['ten']) ?></div>
-
-                    <div class="price">
-                        <?php if ($discount_percent > 0 && $price_after < $display_price): ?>
-                            <span class="old"><?= format_price($display_price) ?></span>
-                            <span class="new"><?= format_price($price_after) ?></span>
-                        <?php else: ?>
-                            <span class="new"><?= format_price($display_price) ?></span>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="btn-group">
-                        <a href="index.php?page=product_detail&id=<?= $p['id'] ?>" class="btn btn-detail">🔍 Xem chi tiết</a>
-
-                        <?php if (!empty($p['variants'])): ?>
-                            <a href="javascript:void(0);" 
-                               class="btn btn-buy btn-quick-buy"
-                               data-product-id="<?= $p['id'] ?>"
-                               data-product-name="<?= htmlspecialchars($p['ten']) ?>"
-                               data-product-image="<?= htmlspecialchars($p['hinh_anh']) ?>"
-                               data-variants='<?= htmlspecialchars(json_encode($p['variants']), ENT_QUOTES) ?>'>
-                                🛍️ Mua ngay
-                            </a>
-                        <?php else: ?>
-                            <a class="btn btn-buy" disabled>🛍️ Tạm hết hàng</a>
-                        <?php endif; ?>
-                    </div>
                 </div>
-            <?php endforeach; ?>
+
+                <div class="btn-group-vertical">
+                    <a href="index.php?page=product_detail&id=<?= $p['id'] ?>" class="btn-view">🔍 Xem chi tiết</a>
+
+                    <?php if (!empty($p['variants'])): ?>
+                        <a href="javascript:void(0);" 
+                           class="btn-cart btn-quick-buy"
+                           data-product-id="<?= $p['id'] ?>"
+                           data-product-name="<?= htmlspecialchars($p['ten']) ?>"
+                           data-product-image="<?= htmlspecialchars($p['hinh_anh']) ?>"
+                           data-variants='<?= htmlspecialchars(json_encode($p['variants']), ENT_QUOTES) ?>'>
+                            🛒 Mua ngay
+                        </a>
+                    <?php else: ?>
+                        <a class="btn-cart" style="background:#ccc; cursor:not-allowed;">🛍️ Tạm hết hàng</a>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
+    <?php endforeach; ?>
+</div>
     <?php else: ?>
         <p class="no-products">Không có sản phẩm nào trong danh mục này.</p>
     <?php endif; ?>

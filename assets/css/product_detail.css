@@ -1,0 +1,308 @@
+/* ============================================================
+   STYLES CHO TRANG CHI TIẾT SẢN PHẨM (PDP)
+   ============================================================ */
+
+/* --- 1. LAYOUT CHUNG & BREADCRUMB --- */
+.container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+/* Breadcrumb nằm trong static-page-header (dùng lại style nếu có, hoặc định nghĩa thêm) */
+.breadcrumb {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 10px;
+}
+.breadcrumb a {
+    color: #6b7280;
+    text-decoration: none;
+}
+.breadcrumb a:hover {
+    color: #0f62fe; /* Màu primary */
+}
+.breadcrumb .current {
+    color: #111827;
+    font-weight: 600;
+}
+
+/* Grid chính chia 2 cột */
+.grid {
+    display: grid;
+    gap: 28px;
+    grid-template-columns: 1fr;
+    margin-top: 20px;
+}
+
+@media (min-width: 900px) {
+    .grid {
+        grid-template-columns: 1fr 1fr; /* PC: 2 cột bằng nhau */
+    }
+}
+
+/* --- 2. CỘT TRÁI: HÌNH ẢNH --- */
+.image-panel {
+    background: #fff;
+    border-radius: 14px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(18, 38, 63, 0.06);
+    border: 1px solid #e5e7eb;
+}
+
+.image-container {
+    width: 100%;
+    max-width: 320px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+}
+
+.image-container img {
+    max-width: 100%;
+    max-height: 340px;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.image-container img:hover {
+    transform: scale(1.05);
+}
+
+/* Trạng thái tồn kho (dưới ảnh) */
+.stock-info {
+    margin-top: 12px;
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 14px;
+}
+
+.stock-info .out {
+    color: #dc2626;
+    font-weight: bold;
+}
+
+/* --- 3. CỘT PHẢI: THÔNG TIN --- */
+.info {
+    padding: 0 10px;
+}
+
+.info h1 {
+    font-size: 28px;
+    margin-bottom: 10px;
+    color: #1f2937;
+    line-height: 1.3;
+}
+
+.short-desc {
+    margin: 15px 0;
+    color: #4b5563;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+/* Giá sản phẩm */
+.price-product {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #f3f4f6;
+    padding-bottom: 15px;
+}
+
+.price-product .current {
+    color: #ef4444; /* Màu đỏ */
+    font-weight: 700;
+    font-size: 28px;
+}
+
+.price-note {
+    font-size: 14px;
+    color: #6b7280;
+    font-style: italic;
+}
+
+/* Tùy chọn (Màu, SSD...) */
+.option-group {
+    margin-bottom: 20px;
+}
+
+.option-group h4 {
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.option-box {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.option {
+    border: 1px solid #d1d5db;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fff;
+    font-size: 14px;
+    color: #374151;
+    min-width: 60px;
+    text-align: center;
+}
+
+.option:hover {
+    border-color: #0f62fe;
+    color: #0f62fe;
+}
+
+.option.active {
+    background-color: #0f62fe;
+    color: white;
+    border-color: #0f62fe;
+    font-weight: 500;
+}
+
+/* Nút hành động (Mua ngay / Thêm giỏ) */
+.actions {
+    margin-top: 30px;
+    display: flex;
+    gap: 15px;
+}
+
+.actions .btn {
+    flex: 1;
+    padding: 14px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Nút Ghost (Mua ngay) */
+.btn-ghost {
+    background: #fff;
+    color: #0f62fe;
+    border: 1px solid #0f62fe;
+}
+.btn-ghost:hover {
+    background: #f0f7ff;
+}
+
+/* Trạng thái disabled cho nút */
+.btn[disabled] {
+    background-color: #e5e7eb !important;
+    color: #9ca3af !important;
+    border-color: #e5e7eb !important;
+    cursor: not-allowed !important;
+    opacity: 1;
+}
+
+/* --- 4. TABS (THÔNG SỐ & MÔ TẢ) --- */
+.tab-container {
+    margin-top: 40px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+}
+
+.tab-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 10px;
+}
+
+.tab-buttons button {
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 15px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.tab-buttons button:hover {
+    color: #0f62fe;
+    background: #f3f4f6;
+}
+
+.tab-buttons button.active {
+    color: #0f62fe;
+    background: #e0eaff;
+}
+
+.tab-content {
+    display: none;
+    line-height: 1.8;
+    color: #374151;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content ul {
+    list-style: none;
+    padding: 0;
+}
+
+.tab-content ul li {
+    padding: 10px 0;
+    border-bottom: 1px dashed #e5e7eb;
+    display: flex;
+}
+.tab-content ul li strong {
+    min-width: 150px;
+    color: #111;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- 5. SẢN PHẨM LIÊN QUAN (RELATED) --- */
+.section {
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
+
+.related-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 1024px) {
+    .related-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+    .related-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+    .related-grid { grid-template-columns: 1fr; }
+}
+
+/* Card trong related products (Nếu chưa có trong global) */
+.related-grid .product-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}

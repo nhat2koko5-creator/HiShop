@@ -105,7 +105,8 @@ $default_img = 'assets/img/no-image.png';
 $img_path = (!empty($product['hinh_anh'])) ? $img_folder . '/' . $product['hinh_anh'] : $default_img;
 if (!file_exists($img_path)) $img_path = $default_img;
 ?>
-
+<link rel="stylesheet" href="assets/css/product_detail.css">
+<link rel="stylesheet" href="assets/css/product_list.css">
 <div class="container">
   <div class="static-page-header">
   <div class="breadcrumb">
@@ -198,22 +199,44 @@ if (!file_exists($img_path)) $img_path = $default_img;
       <?php endif; ?>
     </div>
   </div>
-  <div class="section">
-    <h2>Sản phẩm liên quan</h2>
+ <div class="section">
+    <h2 class="section-title" style="text-align: left; margin-bottom: 20px;">Sản phẩm liên quan</h2>
+    
     <div class="related-grid">
       <?php foreach ($related_products as $r): 
         $r_img = (!empty($r['hinh_anh']) && file_exists($img_folder . '/' . $r['hinh_anh'])) ? $img_folder . '/' . $r['hinh_anh'] : $default_img;
       ?>
-      <div class="card">
-        <img src="<?= htmlspecialchars($r_img) ?>" alt="<?= htmlspecialchars($r['ten']) ?>">
-        <div class="name"><?= htmlspecialchars($r['ten']) ?></div>
-        <div class="price"><?= price_format($r['gia']) ?></div>
-        <div class="spec"><?= htmlspecialchars($r['cpu']) ?> | <?= htmlspecialchars($r['ram']) ?></div>
-        <div class="card-actions">
-          <button class="btn-ghost" onclick="window.location.href='index.php?page=product_detail&id=<?= $r['id'] ?>'">👁️ Xem chi tiết</button>
-          <button class="btn-primary" onclick="window.location.href='index.php?page=checkout&id=<?= $r['id'] ?>'">🛍️ Mua ngay</button>
+      
+      <div class="product-card">
+        
+        <div class="product-image">
+            <img src="<?= htmlspecialchars($r_img) ?>" alt="<?= htmlspecialchars($r['ten']) ?>">
+        </div>
+
+        <div class="card-content">
+            <div class="card-title"><?= htmlspecialchars($r['ten']) ?></div>
+            
+            <div class="card-price">
+                <span class="card-price-new"><?= price_format($r['gia']) ?></span>
+            </div>
+            
+            <?php if (!empty($r['cpu']) || !empty($r['ram'])): ?>
+                <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px; text-align: center;">
+                    <?= htmlspecialchars($r['cpu']) ?> <?= !empty($r['ram']) ? ' | ' . htmlspecialchars($r['ram']) : '' ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="btn-group-vertical">
+                <a href="index.php?page=product_detail&id=<?= $r['id'] ?>" class="btn-view">
+                    🔍 Xem chi tiết
+                </a>
+                <a href="index.php?page=product_detail&id=<?= $r['id'] ?>" class="btn-cart">
+                    🛍️ Mua ngay
+                </a>
+            </div>
         </div>
       </div>
+      
       <?php endforeach; ?>
     </div>
   </div>
@@ -365,10 +388,10 @@ addCartBtn.addEventListener("click", function(){
   })
   .then(res => res.json())
   .then(data => {
-    if (data.status === "success") {
+if (data.status === "success") {
       showPopup('🛒 Sản phẩm đã được thêm vào giỏ hàng!');
       if (typeof updateCartIconCount === "function") {
-        updateCartIconCount(data.totalItems);
+        updateCartIconCount(data.cart_count);
       }
     } else {
       showPopup("Lỗi: " + data.message, true);

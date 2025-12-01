@@ -1,0 +1,1039 @@
+/* ============================================================
+   STYLES CHO TRANG TÀI KHOẢN (ACCOUNT PAGE)
+   ============================================================ */
+
+/* --- 1. LAYOUT CHUNG --- */
+.cps-account-layout {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .cps-account-layout {
+    grid-template-columns: 1fr; /* Mobile: 1 cột */
+  }
+}
+
+/* --- 2. SIDEBAR (MENU TRÁI - KIỂU FPT/CELLPHONES) --- */
+.cps-sidebar {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+  padding: 0;
+  overflow: hidden;
+  height: fit-content;
+  border: 1px solid #eee;
+}
+
+/* Header nhỏ trong sidebar (Avatar + Tên) */
+.sidebar-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background-color: #fcfcfc;
+  border-bottom: 1px solid #eee;
+}
+
+.sidebar-user-info img {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.sidebar-user-info .info-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-user-info strong {
+  font-size: 15px;
+  color: #333;
+}
+
+.sidebar-user-info span {
+  font-size: 12px;
+  color: #888;
+}
+
+/* Menu List */
+.cps-menu {
+  list-style: none;
+  padding: 10px 0;
+  margin: 0;
+}
+
+.cps-menu li {
+  margin: 0;
+}
+
+.cps-menu a {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  color: #444;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.cps-menu .icon {
+  margin-right: 12px;
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+.cps-menu a:hover {
+  background-color: #f8f9fa;
+  color: #000;
+}
+
+/* Active State */
+.cps-menu a.active {
+  background-color: #fff5f5; /* Nền đỏ nhạt */
+  color: #cb1c22; /* Chữ đỏ */
+  font-weight: 700;
+  border-left-color: #cb1c22;
+}
+
+.menu-spacer {
+  height: 1px;
+  background: #eee;
+  margin: 8px 20px;
+}
+
+.logout-item {
+  color: #666 !important;
+}
+
+.logout-item:hover {
+  color: #cb1c22 !important;
+  background-color: #fff !important;
+}
+
+/* --- 3. PROFILE VIEW (GIAO DIỆN CÁ NHÂN) --- */
+.profile-view-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #eee;
+}
+
+.profile-avatar-large img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin-bottom: 30px;
+  border: 4px solid #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  object-fit: cover;
+}
+
+.profile-info-list {
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 30px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 15px;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+.info-label {
+  color: #666;
+  font-weight: 500;
+}
+.info-value {
+  color: #333;
+  font-weight: 600;
+  text-align: right;
+}
+
+.btn-danger {
+  background-color: #cb1c22;
+  color: white !important;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.btn-danger:hover {
+  background-color: #a91419;
+}
+.btn-wide {
+  min-width: 200px;
+  text-align: center;
+  display: inline-block;
+}
+
+.profile-edit-form {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* --- 4. DASHBOARD CARDS & WIDGETS --- */
+.cps-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.cps-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #eee;
+}
+.cps-card.full-width {
+  grid-column: 1 / -1;
+}
+
+.cps-card-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f9fafb;
+}
+.cps-card-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+.cps-card-body {
+  padding: 20px;
+  flex: 1;
+}
+
+/* Mini Order Item */
+.mini-order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+.moi-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.moi-info .price {
+  color: #ef4444;
+  font-weight: 600;
+}
+.status-tag {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.status-tag.success {
+  background: #dcfce7;
+  color: #166534;
+}
+.status-tag.pending {
+  background: #fef9c3;
+  color: #854d0e;
+}
+.status-tag.info {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+/* ============================================================
+   STYLES RIÊNG CHO TRANG LỊCH SỬ ĐƠN HÀNG (ORDER HISTORY)
+   ============================================================ */
+
+/* --- 1. HEADER & TÌM KIẾM (ĐÃ FIX LỖI BỐ CỤC) --- */
+.order-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+}
+
+.section-title-simple {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+    color: #333;
+}
+
+.order-search-box {
+    position: relative;
+    width: 300px;
+}
+
+.order-search-box input {
+    width: 100%;
+    padding: 10px 40px 10px 15px; /* Chừa chỗ bên phải cho nút */
+    border-radius: 99px; /* Bo tròn đều */
+    border: 1px solid #e5e7eb;
+    outline: none;
+    background: #f9fafb;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.order-search-box input:focus {
+    background: #fff;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* (FIX) Định vị nút tìm kiếm tuyệt đối vào góc phải */
+.order-search-box button {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 8px;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.order-search-box button:hover {
+    color: #4f46e5;
+}
+
+/* --- 2. TABS TRẠNG THÁI --- */
+.fpt-tabs-wrapper {
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    padding: 0 20px;
+    overflow-x: auto; /* Cho phép cuộn ngang trên mobile */
+}
+
+.fpt-tabs {
+    display: flex;
+    gap: 30px;
+    white-space: nowrap;
+}
+
+.fpt-tab-item {
+    padding: 15px 0;
+    text-decoration: none;
+    color: #6b7280;
+    font-weight: 500;
+    font-size: 15px;
+    position: relative;
+    transition: color 0.2s;
+    border-bottom: 3px solid transparent;
+}
+
+.fpt-tab-item:hover {
+    color: #cb1c22;
+}
+
+.fpt-tab-item.active {
+    color: #cb1c22;
+    font-weight: 700;
+    border-bottom-color: #cb1c22;
+}
+
+/* --- 3. EMPTY STATE (KHI KHÔNG CÓ ĐƠN) --- */
+.empty-order-state {
+    background: #fff;
+    text-align: center;
+    padding: 60px 20px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.empty-order-state img {
+    width: 120px;
+    margin-bottom: 20px;
+    opacity: 0.6;
+}
+
+.empty-order-state p {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.empty-order-state .sub-text {
+    color: #6b7280;
+    margin-bottom: 24px;
+    display: block;
+}
+
+/* --- 4. DANH SÁCH ĐƠN HÀNG (CARDS) --- */
+.order-list-group {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.fpt-order-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+
+.fpt-order-card:hover {
+    box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+}
+
+/* Header Card */
+.foc-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+}
+
+.foc-id strong {
+    font-size: 15px;
+    color: #111827;
+    margin-right: 10px;
+}
+
+.foc-date {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+/* (FIX) STYLE CHO TRẠNG THÁI (STATUS BADGE) */
+.foc-status {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 20px;
+    text-transform: capitalize;
+    border: 1px solid transparent;
+}
+
+/* Màu sắc từng trạng thái */
+.foc-status.pending { /* Chờ xử lý: Màu vàng cam */
+    color: #d97706;
+    background-color: #fffbeb;
+    border-color: #fcd34d;
+}
+
+.foc-status.processing { /* Đang xử lý: Màu xanh dương */
+    color: #2563eb;
+    background-color: #eff6ff;
+    border-color: #bfdbfe;
+}
+
+.foc-status.shipping { /* Đang giao: Màu xanh tím */
+    color: #4f46e5;
+    background-color: #eef2ff;
+    border-color: #c7d2fe;
+}
+
+.foc-status.delivered, 
+.foc-status.paid { /* Thành công: Màu xanh lá */
+    color: #059669;
+    background-color: #ecfdf5;
+    border-color: #6ee7b7;
+}
+
+.foc-status.cancelled, 
+.foc-status.failed, 
+.foc-status.returned { /* Thất bại/Hủy: Màu đỏ */
+    color: #dc2626;
+    background-color: #fef2f2;
+    border-color: #fca5a5;
+}
+
+/* Body Card (Sản phẩm) */
+.foc-body {
+    padding: 0 20px;
+}
+
+.foc-product-item {
+    display: flex;
+    gap: 16px;
+    padding: 20px 0;
+    border-bottom: 1px dashed #e5e7eb;
+}
+
+.foc-product-item:last-child {
+    border-bottom: none;
+}
+
+.foc-img {
+    width: 80px;
+    height: 80px;
+    border: 1px solid #f3f4f6;
+    border-radius: 8px;
+    padding: 4px;
+    flex-shrink: 0;
+}
+
+.foc-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.foc-info {
+    flex: 1;
+}
+
+.foc-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: #1f2937;
+    margin-bottom: 4px;
+    line-height: 1.4;
+}
+
+.foc-variant {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.foc-price {
+    font-weight: 600;
+    color: #cb1c22;
+    font-size: 15px;
+}
+
+/* Footer Card (Tổng tiền & Nút) */
+.foc-footer {
+    padding: 16px 20px;
+    background: #f9fafb;
+    border-top: 1px solid #f3f4f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.foc-total span {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.total-price {
+    font-size: 18px;
+    color: #cb1c22;
+    margin-left: 8px;
+    font-weight: 700;
+}
+
+.foc-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Nút bấm */
+.btn-primary-red, .btn-solid-red {
+    background: #cb1c22;
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: 0.2s;
+    border: 1px solid #cb1c22;
+}
+
+.btn-primary-red:hover, .btn-solid-red:hover {
+    background: #a91419;
+    color: #fff;
+}
+
+.btn-outline-red {
+    border: 1px solid #cb1c22;
+    color: #cb1c22;
+    padding: 8px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: 0.2s;
+    background: #fff;
+}
+
+.btn-outline-red:hover {
+    background: #fff5f5;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .order-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    .order-search-box {
+        width: 100%;
+    }
+    .foc-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .foc-footer {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 15px;
+    }
+    .foc-total {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
+}
+
+/* ============================================================
+   STYLES DESIGN: CHI TIẾT ĐƠN HÀNG (MODERN UI)
+   ============================================================ */
+
+/* --- 1. Container & Layout --- */
+.order-detail-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    font-family: 'Inter', sans-serif;
+    color: #1f2937;
+}
+
+/* --- 2. Header (Thông tin chung) --- */
+.od-header {
+    background: #fff;
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); /* Bóng nhẹ */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Đường viền màu trang trí bên trái */
+.od-header::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background-color: var(--color-primary, #4f46e5);
+}
+
+.od-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 6px 0;
+}
+
+.od-date {
+    font-size: 14px;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Badge trạng thái (Style đè lên inline style của PHP để đẹp hơn) */
+.od-status-badge {
+    padding: 8px 16px !important;
+    border-radius: 30px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* --- 3. Grid Thông tin (Địa chỉ & Thanh toán) --- */
+.od-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.od-info-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    height: 100%;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.od-info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.08);
+}
+
+.od-info-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #374151;
+    margin: 0 0 16px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f3f4f6;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.od-info-content {
+    font-size: 15px;
+    color: #4b5563;
+    line-height: 1.6;
+}
+
+.od-info-content p {
+    margin-bottom: 8px;
+}
+
+.od-info-content strong {
+    color: #111827;
+}
+
+/* Hộp trạng thái thanh toán bên trong card */
+.payment-status-box {
+    background: #f9fafb !important;
+    padding: 16px !important;
+    border-radius: 10px !important;
+    border: 1px solid #e5e7eb !important;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+/* --- 4. Danh sách sản phẩm --- */
+.od-products-card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.od-products-header {
+    background-color: #f8fafc;
+    padding: 16px 24px;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 15px;
+}
+
+.od-products-list {
+    padding: 0;
+}
+
+.od-item {
+    display: flex;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.od-item:hover {
+    background-color: #fcfcfc;
+}
+
+.od-item:last-child {
+    border-bottom: none;
+}
+
+.od-item-img {
+    width: 80px;
+    height: 80px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 5px;
+    margin-right: 20px;
+    flex-shrink: 0;
+    background: #fff;
+}
+
+.od-item-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.od-item-info {
+    flex: 1;
+}
+
+.od-item-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.od-item-meta {
+    font-size: 14px;
+    color: #6b7280;
+    background: #f3f4f6;
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.od-item-price {
+    font-size: 16px;
+    font-weight: 700;
+    color: #374151;
+}
+
+/* --- 5. Footer (Tổng tiền) --- */
+.od-footer {
+    background-color: #f8fafc;
+    padding: 24px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.od-total-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.od-total-row span:first-child {
+    margin-right: 20px;
+}
+
+.od-total-row span:last-child {
+    font-weight: 600;
+    color: #374151;
+    min-width: 120px;
+    text-align: right;
+}
+
+.od-total-row.final {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px dashed #cbd5e1;
+}
+
+.od-total-row.final span:first-child {
+    font-size: 16px;
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.od-total-row.final span:last-child {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ef4444; /* Màu đỏ nổi bật */
+}
+
+/* --- Responsive Mobile --- */
+@media (max-width: 768px) {
+    .od-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .od-status-badge {
+        align-self: flex-start;
+    }
+
+    .od-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .od-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .od-item-img {
+        width: 60px;
+        height: 60px;
+    }
+
+    .od-item-price {
+        align-self: flex-end;
+        font-size: 18px;
+        color: #ef4444;
+    }
+}
+/* --- 7. SỔ ĐỊA CHỈ & FORM CHUNG --- */
+.address-book {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.address-card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fff;
+}
+.address-card-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+/* Form Styles */
+.cps-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.cps-input {
+  padding: 10px 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  width: 100%;
+}
+.cps-input:focus {
+  border-color: #4f46e5;
+  outline: none;
+}
+.alert-box {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+.alert-box.success {
+  background-color: #dcfce7;
+  color: #166534;
+}
+.alert-box.error {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* Nút nhỏ cho Address */
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+.btn-text {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #007bff;
+  cursor: pointer;
+}
+.btn-text.text-red {
+  color: #dc3545;
+}
+
+/* --- 8. MODAL ĐĂNG XUẤT (POPUP) --- */
+.cps-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+.cps-modal-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+.cps-modal {
+  background: #fff;
+  width: 90%;
+  max-width: 400px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.cps-modal-overlay.show .cps-modal {
+  transform: translateY(0);
+}
+.cps-modal-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.cps-modal-body {
+  padding: 30px 20px;
+  text-align: center;
+}
+.cps-modal-footer {
+  padding: 20px;
+  background: #f9fafb;
+  display: flex;
+  gap: 15px;
+}
+.cps-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #999;
+}

@@ -60,8 +60,10 @@ if (!isset($page_title)) {
                         <button type="submit" class="icon-btn nav-search-btn">🔍</button>
                     </form>
                     
-                    <a href="index.php?page=cart" class="icon-btn cart-icon-wrapper">
-                        🛒 <span id="cart-item-count"><?php echo $total_cart_items; ?></span>
+                   <a href="index.php?page=cart" class="icon-btn cart-icon-wrapper">
+                        🛒 <span id="cart-item-count" style="display: <?php echo ($total_cart_items > 0) ? 'flex' : 'none'; ?>;">
+                            <?php echo $total_cart_items; ?>
+                        </span>
                     </a>
                     
                     <?php if (isset($_SESSION['user_id'])): ?>
@@ -98,16 +100,6 @@ if (!isset($page_title)) {
     </header>
 
     <main>
-    
-    <div class="modal-prompt-overlay" id="modal-prompt-overlay">
-        <div class="modal-prompt-box" id="modal-prompt-box">
-            <p class="modal-prompt-message" id="modal-prompt-message">Nội dung thông báo</p>
-            <div class="prompt-buttons">
-                <button class="btn-prompt-secondary" id="btn-prompt-secondary">Nút Phụ</button>
-                <button class="btn-prompt-primary" id="btn-prompt-primary">Nút Chính</button>
-            </div>
-        </div>
-    </div>
     
     <script>
     document.addEventListener("DOMContentLoaded", function() {

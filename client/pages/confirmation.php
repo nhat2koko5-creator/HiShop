@@ -19,7 +19,7 @@ if (!empty($real_order_id)) {
 
 // Sử dụng style của trang 404/static để hiển thị
 ?>
-
+<link rel="stylesheet" href="assets/css/confirmation.css">
 <div class="container" style="padding: var(--spacing-64) 0; text-align: center;">
     
     <?php if ($status === 'paid'): // Thành công ?>

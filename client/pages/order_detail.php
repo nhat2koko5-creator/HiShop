@@ -52,7 +52,7 @@ if ($order_status == 'shipping')  $current_step = 3;
 if ($order_status == 'delivered') $current_step = 4;
 if ($order_status == 'cancelled' || $order_status == 'returned') $current_step = 0;
 ?>
-
+<link rel="stylesheet" href="assets/css/account.css">
 <div class="container" style="margin-top: 30px; margin-bottom: 50px;">
     
     <div class="mb-4" style="margin-bottom: 20px;">
@@ -82,16 +82,15 @@ if ($order_status == 'cancelled' || $order_status == 'returned') $current_step =
                 </div>
             </div>
 
-            <div class="od-info-card">
+        <div class="od-info-card">
                 <h3>Thông tin thanh toán</h3>
                 <div class="od-info-content">
                     <p style="margin-bottom: 12px;">Hình thức: <strong>Thanh toán qua VNPAY</strong></p>
                     
-                    <div style="background: #fff; padding: 12px; border-radius: 8px; border: 1px solid <?= $pay_info['color'] ?>40; display:flex; align-items:center; gap:10px;">
-                        <span style="font-size: 20px;"><?= $pay_info['icon'] ?></span>
-                        <div>
-                            <span style="font-size: 12px; color: #888; display:block;">Trạng thái tiền:</span>
-                            <strong style="color: <?= $pay_info['color'] ?>; font-size:14px;"><?= $pay_info['text'] ?></strong>
+                    <div class="payment-status-box" style="background: #fff; padding: 12px; border-radius: 8px; border: 1px solid <?= $pay_info['color'] ?>40;">
+                        <span style="font-size: 24px;"><?= $pay_info['icon'] ?></span> <div>
+                            <span style="font-size: 13px; color: #6b7280; display:block; font-weight: 500;">Trạng thái tiền:</span>
+                            <strong style="color: <?= $pay_info['color'] ?>; font-size:15px;"><?= $pay_info['text'] ?></strong>
                         </div>
                     </div>
 
@@ -146,39 +145,5 @@ if ($order_status == 'cancelled' || $order_status == 'returned') $current_step =
 </div>
 
 <style>
-/* (Giữ nguyên CSS cũ của order_detail) */
-.od-header { display: flex; justify-content: space-between; align-items: flex-start; background: #fff; padding: 24px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-.od-title h1 { font-size: 22px; margin: 0 0 8px 0; font-weight: 700; color: #1f2937; }
-.od-date { font-size: 14px; color: #6b7280; }
-.od-status-badge { padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: 600; text-transform: capitalize; }
 
-.od-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-.od-info-card { background: #fff; border-radius: 12px; padding: 24px; border: 1px solid #eee; }
-.od-info-card h3 { font-size: 16px; font-weight: 600; margin: 0 0 16px 0; border-bottom: 1px solid #f3f4f6; padding-bottom: 12px; }
-.od-info-content p { margin-bottom: 8px; font-size: 14px; color: #4b5563; }
-
-.od-products-card { background: #fff; border-radius: 12px; border: 1px solid #eee; overflow: hidden; }
-.od-products-header { background: #f9fafb; padding: 16px 24px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; }
-.od-item { display: flex; padding: 20px 24px; border-bottom: 1px solid #f3f4f6; align-items: center; }
-.od-item:last-child { border-bottom: none; }
-.od-item-img { width: 70px; height: 70px; border: 1px solid #f3f4f6; border-radius: 8px; padding: 4px; margin-right: 20px; flex-shrink: 0; }
-.od-item-img img { width: 100%; height: 100%; object-fit: contain; }
-.od-item-info { flex: 1; }
-.od-item-name { font-weight: 600; font-size: 15px; margin-bottom: 6px; color: #111; }
-.od-item-meta { font-size: 13px; color: #6b7280; }
-.od-item-price { font-weight: 700; font-size: 15px; color: #1f2937; }
-
-.od-footer { padding: 24px; background: #fcfcfc; border-top: 1px solid #eee; }
-.od-total-row { display: flex; justify-content: flex-end; margin-bottom: 10px; font-size: 14px; }
-.od-total-row span:first-child { margin-right: 30px; color: #6b7280; }
-.od-total-row span:last-child { min-width: 120px; text-align: right; font-weight: 500; color: #111; }
-.od-total-row.final { margin-top: 16px; border-top: 1px dashed #e5e7eb; padding-top: 16px; align-items: center; }
-.od-total-row.final span:first-child { font-size: 16px; font-weight: 600; color: #111; }
-.od-total-row.final span:last-child { color: #ef4444; font-size: 22px; font-weight: 700; }
-
-@media (max-width: 768px) {
-    .od-grid { grid-template-columns: 1fr; }
-    .od-header { flex-direction: column; gap: 12px; }
-    .order-progress-track { display: none; } 
-}
 </style>

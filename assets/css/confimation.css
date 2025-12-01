@@ -1,0 +1,55 @@
+/* FILE: assets/css/confirmation.css */
+
+.confirmation-container {
+    text-align: center;
+    padding: 80px 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.confirmation-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.confirmation-icon i {
+    color: white;
+    font-size: 40px;
+}
+
+/* Biến thể màu sắc */
+.confirmation-icon.success {
+    background-color: #10b981; /* Xanh lá */
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+}
+
+.confirmation-icon.error {
+    background-color: #ef4444; /* Đỏ */
+    box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+}
+
+.confirmation-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 16px;
+}
+
+.confirmation-message {
+    font-size: 16px;
+    color: #6b7280;
+    line-height: 1.6;
+    margin-bottom: 40px;
+}
+
+.confirmation-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}

@@ -34,6 +34,7 @@ if (!empty($all_orders)) {
     }
 }
 ?>
+<link rel="stylesheet" href="assets/css/account.css">
 <div class="cps-card full-width" style="min-height: 500px;">
     
 <div class="order-page-header">

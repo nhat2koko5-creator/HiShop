@@ -15,7 +15,7 @@ function getAvatarUrl($data) {
 }
 $current_avatar = getAvatarUrl($data);
 ?>
-
+<link rel="stylesheet" href="assets/css/account.css">
 <div class="cps-card full-width" style="min-height: 400px;">
     <div class="cps-card-header">
         <h3>Thông tin cá nhân</h3>
