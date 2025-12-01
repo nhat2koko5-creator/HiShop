@@ -35,7 +35,7 @@
     position: relative;
     overflow: hidden;
     /* Ảnh nền mặc định - bạn có thể thay đổi đường dẫn */
-    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("../img/banner.jpg");
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("../../img/banner.jpg");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

@@ -136,7 +136,7 @@ switch ($section) {
     default: $data = $user_profile_data; break;
 }
 ?>
-<link rel="stylesheet" href="assets/css/account.css">
+<link rel="stylesheet" href="assets/css/client/account.css">
 <div class="container" style="margin-top: 20px; margin-bottom: 40px;">
     
     <div style="margin-bottom: 20px;">

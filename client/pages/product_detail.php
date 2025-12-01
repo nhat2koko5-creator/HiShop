@@ -105,8 +105,8 @@ $default_img = 'assets/img/no-image.png';
 $img_path = (!empty($product['hinh_anh'])) ? $img_folder . '/' . $product['hinh_anh'] : $default_img;
 if (!file_exists($img_path)) $img_path = $default_img;
 ?>
-<link rel="stylesheet" href="assets/css/product_detail.css">
-<link rel="stylesheet" href="assets/css/product_list.css">
+<link rel="stylesheet" href="assets/css/client/product_detail.css">
+<link rel="stylesheet" href="assets/css/client/product_list.css">
 <div class="container">
   <div class="static-page-header">
   <div class="breadcrumb">

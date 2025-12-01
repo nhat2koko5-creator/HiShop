@@ -99,7 +99,7 @@ $shipping_display = 'Miễn phí'; // Hiển thị trên giao diện
 
 $total = $subtotal + $shipping - $discount;
 ?>
-<link rel="stylesheet" href="assets/css/checkout.css">
+<link rel="stylesheet" href="assets/css/client/checkout.css">
 <div class="container">
     <h1 class="page-title">Đặt Hàng</h1>
 

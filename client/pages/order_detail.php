@@ -52,7 +52,7 @@ if ($order_status == 'shipping')  $current_step = 3;
 if ($order_status == 'delivered') $current_step = 4;
 if ($order_status == 'cancelled' || $order_status == 'returned') $current_step = 0;
 ?>
-<link rel="stylesheet" href="assets/css/account.css">
+<link rel="stylesheet" href="assets/css/client/account.css">
 <div class="container" style="margin-top: 30px; margin-bottom: 50px;">
     
     <div class="mb-4" style="margin-bottom: 20px;">

@@ -89,7 +89,7 @@ if ($secureHash == $vnp_SecureHash) {
 ?>
 
 <?php require_once 'client/layouts/header.php'; ?>
-<link rel="stylesheet" href="assets/css/checkout.css">
+<link rel="stylesheet" href="assets/css/client/checkout.css">
 <style>
 
 </style>

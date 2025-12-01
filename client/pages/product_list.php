@@ -142,7 +142,7 @@ function format_price($p) {
 }
 
 ?>
-<link rel="stylesheet" href="assets/css/product_list.css">
+<link rel="stylesheet" href="assets/css/client/product_list.css">
 <div class="container">
     <div class="static-page-header" style="font-size: 14px;">
     <nav class="breadcrumb">

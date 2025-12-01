@@ -26,7 +26,7 @@ if (!function_exists('price_format')) {
 $img_folder = 'assets/img/products';
 $default_img = 'assets/img/no-image.png';
 ?>
-<link rel="stylesheet" href="assets/css/cart.css">
+<link rel="stylesheet" href="assets/css/client/cart.css">
 <div class="cart-page">
     <h1>Giỏ hàng của bạn</h1>
     
