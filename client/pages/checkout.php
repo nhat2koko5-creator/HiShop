@@ -228,7 +228,7 @@ $total = $subtotal + $shipping - $discount;
                     </div>
                 </div> 
             </div> 
-        </div> 
+        </div>     
     </form> 
 </div> 
 
