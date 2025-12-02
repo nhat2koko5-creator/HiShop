@@ -85,14 +85,15 @@ $products = $stmt->fetchAll();
 ========================== */
 $categories = $pdo->query("SELECT * FROM danh_muc ORDER BY ten ASC")->fetchAll();
 ?>
+<?php require_once 'layouts/header.php'; ?>
+
 <style>
 
 </style>
 <div class="admin-page">
 <h1 class="title">QUẢN LÝ SẢN PHẨM</h1>
 <div class="action-bar">
-    <button class="btn-add">+ Thêm sản phẩm</button>
-
+    <button class="btn-add" onclick="openModal()">+ Thêm sản phẩm</button>
 <form method="GET" class="search-wrapper" action="index.php">
     <input type="hidden" name="page" value="products_list">
 
@@ -147,7 +148,7 @@ $categories = $pdo->query("SELECT * FROM danh_muc ORDER BY ten ASC")->fetchAll()
                 <?php foreach ($products as $p): ?>
                     <tr>
                         <td class="text-center"><?= $p['id'] ?></td>
-                        <td><img src="<?= $p['hinh_anh'] ?>" width="60" style="border-radius:8px;"></td>
+                        <td><img src="/HiShop/assets/img/products/<?= $p['hinh_anh'] ?>" width="60"></td>
                         <td><?= htmlspecialchars($p['ten']) ?></td>
                         <td><?= number_format($p['gia']) ?>₫</td>
                         <td><?= $p['so_luong'] ?></td>

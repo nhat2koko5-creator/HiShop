@@ -155,6 +155,7 @@
     display: flex;
     align-items: baseline;
     gap: 8px;
+    text-align: center;
 }
 
 .card-price-new {
@@ -191,14 +192,14 @@
 }
 
 .btn-view {
-    background-color: #fff;
-    color: #374151;
+    background-color: #007bff;
+    color: #ffffff;
     border: 1px solid #d1d5db;
 }
 .btn-view:hover {
-    background-color: #f3f4f6;
+    background-color: #0056b3;
     border-color: #9ca3af;
-    color: #111;
+    color: #ffffff;
 }
 
 .btn-cart {

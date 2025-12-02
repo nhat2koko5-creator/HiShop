@@ -1,4 +1,5 @@
 <?php
+
 // FILE: product_detail.php (ĐÃ NÂNG CẤP LÊN BIẾN THỂ ĐỘNG)
 require_once 'client/layouts/header.php';
 
@@ -216,7 +217,7 @@ if (!file_exists($img_path)) $img_path = $default_img;
         <div class="card-content">
             <div class="card-title"><?= htmlspecialchars($r['ten']) ?></div>
             
-            <div class="card-price">
+            <div class="card-price" style="justify-content: center; margin-bottom: 8px;">
                 <span class="card-price-new"><?= price_format($r['gia']) ?></span>
             </div>
             

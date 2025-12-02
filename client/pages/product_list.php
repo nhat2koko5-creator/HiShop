@@ -209,7 +209,7 @@ function format_price($p) {
             <div class="card-content">
                 <div class="card-title"><?= htmlspecialchars($p['ten']) ?></div>
 
-                <div class="card-price">
+                <div class="card-price" style="justify-content: center; margin-bottom: 8px;">
                     <?php if ($discount_percent > 0): ?>
                         <span class="card-price-old"><?= format_price($display_price) ?></span>
                         <span class="card-price-new"><?= format_price($price_after) ?></span>
