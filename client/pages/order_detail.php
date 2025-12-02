@@ -1,7 +1,6 @@
 <?php
 // FILE: client/pages/order_detail.php
 
-// 1. KIỂM TRA ĐĂNG NHẬP
 if (!isset($_SESSION['user_id'])) {
     echo "<script>window.location.href='index.php?page=login';</script>";
     exit;
@@ -10,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 $order_id = $_GET['id'] ?? 0;
 $user_id = $_SESSION['user_id'];
 
-// 2. LẤY THÔNG TIN ĐƠN HÀNG (Không cần join bảng thanh_toan nữa vì đã có cột riêng)
+// Lấy thông tin đơn hàng
 $stmt = $pdo->prepare("SELECT * FROM don_hang WHERE id = ? AND nguoi_dung_id = ?");
 $stmt->execute([$order_id, $user_id]);
 $order = $stmt->fetch();
@@ -21,36 +20,30 @@ if (!$order) {
 }
 $order_items = getOrderItems($pdo, $order_id);
 
-// 3. CẤU HÌNH HIỂN THỊ (MAPPING)
-$order_status = $order['trang_thai'];           // pending, confirmed, shipping, delivered, cancelled
-$pay_status   = $order['trang_thai_thanh_toan']; // unpaid, paid, refunded
+// CẤU HÌNH HIỂN THỊ
+$order_status = $order['trang_thai_don_hang']; 
+$pay_status   = $order['trang_thai_thanh_toan'];
+// [MỚI] Lấy phương thức thanh toán
+$payment_method = $order['phuong_thuc_thanh_toan'] ?? 'COD'; 
 
-// A. Trạng thái đơn hàng
+// Mảng màu sắc trạng thái đơn hàng
 $st_labels = [
-    'pending'   => ['text' => 'Chờ xác nhận',    'color' => '#f59e0b', 'bg' => '#fffbeb'], 
-    'confirmed' => ['text' => 'Đã xác nhận',     'color' => '#3b82f6', 'bg' => '#eff6ff'], 
-    'shipping'  => ['text' => 'Đang vận chuyển', 'color' => '#3b82f6', 'bg' => '#eff6ff'], 
-    'delivered' => ['text' => 'Giao thành công', 'color' => '#10b981', 'bg' => '#ecfdf5'], 
-    'cancelled' => ['text' => 'Đã hủy',          'color' => '#ef4444', 'bg' => '#fef2f2'], 
-    'returned'  => ['text' => 'Trả hàng',        'color' => '#ef4444', 'bg' => '#fef2f2']
+    'Chờ xử lý'      => ['text' => 'Chờ xử lý',       'color' => '#f59e0b', 'bg' => '#fffbeb'], 
+    'Đã xác nhận'    => ['text' => 'Đã xác nhận',     'color' => '#3b82f6', 'bg' => '#eff6ff'], 
+    'Đang giao hàng' => ['text' => 'Đang vận chuyển', 'color' => '#3b82f6', 'bg' => '#eff6ff'], 
+    'Đã giao hàng'   => ['text' => 'Giao thành công', 'color' => '#10b981', 'bg' => '#ecfdf5'], 
+    'Đã hủy'         => ['text' => 'Đã hủy',          'color' => '#ef4444', 'bg' => '#fef2f2'], 
+    'Trả hàng'       => ['text' => 'Trả hàng',        'color' => '#ef4444', 'bg' => '#fef2f2']
 ];
 $status_info = $st_labels[$order_status] ?? ['text' => $order_status, 'color' => '#333', 'bg' => '#f3f4f6'];
 
-// B. Trạng thái thanh toán
+// Mảng trạng thái thanh toán
 $pay_labels = [
-    'unpaid'   => ['text' => 'Chưa thanh toán', 'color' => '#f59e0b', 'icon' => '⏳'],
-    'paid'     => ['text' => 'Đã thanh toán',   'color' => '#10b981', 'icon' => '✅'],
-    'refunded' => ['text' => 'Đã hoàn tiền',    'color' => '#6b7280', 'icon' => '↩️']
+    'Chưa thanh toán' => ['text' => 'Chưa thanh toán', 'color' => '#f59e0b', 'icon' => '⏳'],
+    'Đã thanh toán'   => ['text' => 'Đã thanh toán',   'color' => '#10b981', 'icon' => '✅'],
+    'Đã hoàn tiền'    => ['text' => 'Đã hoàn tiền',    'color' => '#6b7280', 'icon' => '↩️']
 ];
-$pay_info = $pay_labels[$pay_status] ?? ['text' => 'Không rõ', 'color' => '#333', 'icon' => '❓'];
-
-
-// 4. LOGIC THANH TIẾN TRÌNH (4 BƯỚC CHUẨN)
-$current_step = 1;
-if ($order_status == 'confirmed') $current_step = 2;
-if ($order_status == 'shipping')  $current_step = 3;
-if ($order_status == 'delivered') $current_step = 4;
-if ($order_status == 'cancelled' || $order_status == 'returned') $current_step = 0;
+$pay_info = $pay_labels[$pay_status] ?? ['text' => $pay_status, 'color' => '#333', 'icon' => '❓'];
 ?>
 <link rel="stylesheet" href="assets/css/client/account.css">
 <div class="container" style="margin-top: 30px; margin-bottom: 50px;">
@@ -82,18 +75,44 @@ if ($order_status == 'cancelled' || $order_status == 'returned') $current_step =
                 </div>
             </div>
 
-        <div class="od-info-card">
+            <div class="od-info-card">
                 <h3>Thông tin thanh toán</h3>
                 <div class="od-info-content">
-                    <p style="margin-bottom: 12px;">Hình thức: <strong>Thanh toán qua VNPAY</strong></p>
+                    <p style="margin-bottom: 12px;">Hình thức: 
+                        <strong>
+                            <?php 
+                                if ($payment_method == 'COD') echo "Thanh toán khi nhận hàng (COD)";
+                                else if ($payment_method == 'VNPAY') echo "Thanh toán qua VNPAY";
+                                else echo $payment_method;
+                            ?>
+                        </strong>
+                    </p>
                     
                     <div class="payment-status-box" style="background: #fff; padding: 12px; border-radius: 8px; border: 1px solid <?= $pay_info['color'] ?>40;">
-                        <span style="font-size: 24px;"><?= $pay_info['icon'] ?></span> <div>
+                        <span style="font-size: 24px;"><?= $pay_info['icon'] ?></span> 
+                        <div>
                             <span style="font-size: 13px; color: #6b7280; display:block; font-weight: 500;">Trạng thái tiền:</span>
                             <strong style="color: <?= $pay_info['color'] ?>; font-size:15px;"><?= $pay_info['text'] ?></strong>
                         </div>
                     </div>
 
+                    <?php 
+                    // [SỬA] Chỉ hiện nút thanh toán lại nếu là VNPAY
+                    if ($pay_status == 'Chưa thanh toán' 
+                        && $order_status != 'Đã hủy' 
+                        && $order_status != 'Trả hàng'
+                        && $payment_method == 'VNPAY'): // <-- Thêm điều kiện này
+                    ?>
+                        <div style="margin-top: 15px;">
+                            <a href="client/pages/process_vnpay.php?repay_order_id=<?= $order['id'] ?>" class="btn btn-primary" style="width: 100%; text-align: center; display: block; background-color: #007bff; color: white; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+                                💳 Thanh toán ngay
+                            </a>
+                            <p style="font-size: 12px; color: #dc3545; margin-top: 8px; text-align: center;">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Đơn hàng chưa được thanh toán.
+                            </p>
+                        </div>
+                    <?php endif; ?>
+                    
                     <?php if(!empty($order['ghi_chu'])): ?>
                         <div style="margin-top: 15px;">
                             <p style="color:#666; font-size: 13px; margin-bottom: 4px;">Ghi chú:</p>
@@ -108,7 +127,8 @@ if ($order_status == 'cancelled' || $order_status == 'returned') $current_step =
             <div class="od-products-header">Sản phẩm</div>
             <div class="od-products-list">
                 <?php foreach ($order_items as $item): 
-                    $img = !empty($item['hinh_anh']) ? "assets/img/products/".$item['hinh_anh'] : "assets/img/no-image.png";
+                    $imgName = !empty($item['hinh_bien_the']) ? $item['hinh_bien_the'] : $item['hinh_anh'];
+                    $img = !empty($imgName) ? "assets/img/products/".$imgName : "assets/img/no-image.png";
                 ?>
                 <div class="od-item">
                     <div class="od-item-img">
@@ -116,6 +136,15 @@ if ($order_status == 'cancelled' || $order_status == 'returned') $current_step =
                     </div>
                     <div class="od-item-info">
                         <div class="od-item-name"><?= htmlspecialchars($item['ten_san_pham']) ?></div>
+                        
+                        <?php if (!empty($item['mau_sac']) || !empty($item['dung_luong_ssd'])): ?>
+                            <div class="od-item-meta" style="margin-bottom: 6px; display: block;">
+                                Phân loại: <?= htmlspecialchars($item['mau_sac'] ?? '') ?> 
+                                <?= (!empty($item['mau_sac']) && !empty($item['dung_luong_ssd'])) ? '-' : '' ?> 
+                                <?= htmlspecialchars($item['dung_luong_ssd'] ?? '') ?>
+                            </div>
+                        <?php endif; ?>
+
                         <div class="od-item-meta">Số lượng: x<?= $item['so_luong'] ?></div>
                     </div>
                     <div class="od-item-price">
@@ -143,7 +172,3 @@ if ($order_status == 'cancelled' || $order_status == 'returned') $current_step =
 
     </div>
 </div>
-
-<style>
-
-</style>

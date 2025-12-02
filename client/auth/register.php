@@ -1,4 +1,5 @@
 <?php
+// FILE: client/auth/register.php
 $errors = [];
 
 // 1. KIỂM TRA NẾU NGƯỜI DÙNG NHẤN NÚT "ĐĂNG KÝ"
@@ -33,12 +34,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errors[] = 'Mật khẩu nhập lại không khớp.';
     }
     
-    // Xử lý ngày sinh (nếu rỗng thì gán NULL)
+    // --- [MỚI] XỬ LÝ & VALIDATE NGÀY SINH (16+) ---
     if (empty($ngay_sinh)) {
         $ngay_sinh = null;
+        // Nếu bạn muốn bắt buộc nhập ngày sinh để kiểm tra tuổi, hãy bỏ comment dòng dưới:
+        // $errors[] = 'Vui lòng nhập ngày sinh để xác minh độ tuổi.';
+    } else {
+        // Tính toán độ tuổi
+        $dateOfBirth = new DateTime($ngay_sinh);
+        $today = new DateTime();
+        
+        // Kiểm tra xem người dùng có nhập ngày tương lai không
+        if ($dateOfBirth > $today) {
+            $errors[] = 'Ngày sinh không hợp lệ ! Vui lòng chọn lại.';
+        } else {
+            // Tính khoảng cách năm
+            $age = $today->diff($dateOfBirth)->y;
+            
+            // Kiểm tra đủ 16 tuổi
+            if ($age < 16) {
+                $errors[] = 'Bạn phải từ 16 tuổi trở lên mới được đăng ký tài khoản.';
+            }
+        }
     }
     
-    // Xử lý giới tính (khớp với CSDL: 'male', 'female', 'other')
+    // Xử lý giới tính
     if (!in_array($gioi_tinh, ['male', 'female', 'other'])) {
         $gioi_tinh = 'other'; // Mặc định
     }
@@ -66,20 +86,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // 5. TẠO TÀI KHOẢN (NẾU TẤT CẢ ĐỀU ỔN)
     if (empty($errors)) {
         try {
-            // (QUAN TRỌNG) Băm mật khẩu trước khi lưu
+            // Băm mật khẩu
             $hashed_password = password_hash($mat_khau, PASSWORD_DEFAULT);
             
-            // Lấy vai_tro_id cho 'Khách hàng' (Giả sử là ID 2)
-            // (Dựa trên CSDL của bạn, 1 = Admin, 2 = Khách hàng)
+            // Vai trò Khách hàng = 2
             $vai_tro_id = 2; 
 
-            // Chuẩn bị câu lệnh SQL
             $sql = "INSERT INTO nguoi_dung (ho_ten, email, so_dien_thoai, ngay_sinh, gioi_tinh, mat_khau, vai_tro_id, trang_thai) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, 1)";
             
             $stmt = $pdo->prepare($sql);
             
-            // Thực thi
             $stmt->execute([
                 $ho_ten,
                 $email,
@@ -90,8 +107,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $vai_tro_id
             ]);
 
-            // 6. CHUYỂN HƯỚNG VỀ TRANG ĐĂNG NHẬP
-            // Gửi một thông báo thành công qua URL
+            // 6. CHUYỂN HƯỚNG
             header("Location: index.php?page=login&register=success");
             exit;
 
@@ -99,7 +115,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $errors[] = "Lỗi khi tạo tài khoản: " . $e->getMessage();
         }
     }
-} // Kết thúc xử lý POST
+} 
 ?>
 
 <!DOCTYPE html>
@@ -133,30 +149,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             <div class="form-group">
                 <label for="ho_ten" class="form-label">Họ và tên</label>
-                <input type="text" id="ho_ten" name="ho_ten" class="form-input" placeholder="Nguyễn Văn A" required>
+                <input type="text" id="ho_ten" name="ho_ten" class="form-input" placeholder="Nguyễn Văn A" value="<?= htmlspecialchars($_POST['ho_ten'] ?? '') ?>" required>
             </div>
             
             <div class="form-group">
                 <label for="email" class="form-label">Email</label>
-                <input type="email" id="email" name="email" class="form-input" placeholder="ban@email.com" required>
+                <input type="email" id="email" name="email" class="form-input" placeholder="ban@email.com" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
             </div>
             
             <div class="form-group">
                 <label for="so_dien_thoai" class="form-label">Số điện thoại (Tùy chọn)</label>
-                <input type="tel" id="so_dien_thoai" name="so_dien_thoai" class="form-input" placeholder="0901234567">
+                <input type="tel" id="so_dien_thoai" name="so_dien_thoai" class="form-input" placeholder="0901234567" value="<?= htmlspecialchars($_POST['so_dien_thoai'] ?? '') ?>">
             </div>
             
             <div class="form-grid-2">
                 <div class="form-group">
-                    <label for="ngay_sinh" class="form-label">Ngày sinh (Tùy chọn)</label>
-                    <input type="date" id="ngay_sinh" name="ngay_sinh" class="form-input">
+                    <label for="ngay_sinh" class="form-label">Ngày sinh</label>
+                    <input type="date" id="ngay_sinh" name="ngay_sinh" class="form-input" value="<?= htmlspecialchars($_POST['ngay_sinh'] ?? '') ?>">
                 </div>
                 <div class="form-group">
-                    <label for="gioi_tinh" class="form-label">Giới tính (Tùy chọn)</label>
+                    <label for="gioi_tinh" class="form-label">Giới tính</label>
                     <select id="gioi_tinh" name="gioi_tinh" class="form-select">
-                        <option value="other">Khác</option>
-                        <option value="male">Nam</option>
-                        <option value="female">Nữ</option>
+                        <option value="other" <?= (isset($_POST['gioi_tinh']) && $_POST['gioi_tinh'] == 'other') ? 'selected' : '' ?>>Khác</option>
+                        <option value="male" <?= (isset($_POST['gioi_tinh']) && $_POST['gioi_tinh'] == 'male') ? 'selected' : '' ?>>Nam</option>
+                        <option value="female" <?= (isset($_POST['gioi_tinh']) && $_POST['gioi_tinh'] == 'female') ? 'selected' : '' ?>>Nữ</option>
                     </select>
                 </div>
             </div>
