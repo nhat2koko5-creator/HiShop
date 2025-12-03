@@ -13,44 +13,57 @@ date_default_timezone_set('Asia/Ho_Chi_Minh');
 if (!isset($_SESSION['user_id'])) die("Vui lòng đăng nhập.");
 $user_id = $_SESSION['user_id'];
 
-// 2. LẤY DỮ LIỆU TỪ FORM
+// 2. LẤY DỮ LIỆU
 $ho_ten = $_POST['ho_ten'] ?? 'Khach';
 $so_dien_thoai = $_POST['so_dien_thoai'] ?? '0987654321';
 $dia_chi = $_POST['dia_chi'] ?? 'Hanoi';
 $ghi_chu = $_POST['ghi_chu'] ?? '';
 $order_type = $_POST['order_type'] ?? 'cart';
+$payment_method = $_POST['payment_method'] ?? 'cod';
 
-// [MỚI] Lấy phương thức thanh toán
-$payment_method = $_POST['payment_method'] ?? 'cod'; // Mặc định là COD
-
-// 3. CHUẨN HÓA DỮ LIỆU SẢN PHẨM (GIỮ NGUYÊN CODE CŨ CỦA BẠN TỪ DÒNG 23-107)
-$subtotal = 0;
-$order_items = [];
-
-// --- LOGIC THANH TOÁN LẠI (REPAY) ---
+// --- [QUAN TRỌNG] LOGIC THANH TOÁN LẠI (REPAY) ---
 if (isset($_GET['repay_order_id'])) {
     $repay_id = (int)$_GET['repay_order_id'];
-    $stmt = $pdo->prepare("SELECT * FROM don_hang WHERE id = ? AND nguoi_dung_id = ? AND trang_thai_thanh_toan = 'Chưa thanh toán'");
+    
+    // Kiểm tra kỹ lưỡng:
+    // 1. Đúng chủ đơn hàng (user_id)
+    // 2. Trạng thái thanh toán phải là 'Chưa thanh toán'
+    // 3. Trạng thái đơn KHÔNG được là 'Đã hủy'
+    $stmt = $pdo->prepare("
+        SELECT * FROM don_hang 
+        WHERE id = ? 
+        AND nguoi_dung_id = ? 
+        AND trang_thai_thanh_toan = 'Chưa thanh toán'
+        AND trang_thai_don_hang != 'Đã hủy'
+    ");
     $stmt->execute([$repay_id, $user_id]);
     $order = $stmt->fetch();
 
     if (!$order) {
-        die("Đơn hàng không hợp lệ hoặc đã thanh toán.");
+        // Nếu không tìm thấy đơn hợp lệ -> Chuyển hướng về trang lỗi hoặc thông báo
+        echo "<script>
+            alert('Không thể thanh toán lại đơn hàng này (Đơn không tồn tại, đã thanh toán, hoặc đã bị hủy).');
+            window.location.href = 'index.php?page=account&section=orders';
+        </script>";
+        exit;
     }
+
+    // Lấy số tiền cần thanh toán
     $final_total = $order['tong_tien'];
     $order_id = $order['id'];
     
-    // Nếu repay mà chọn COD thì redirect luôn (trường hợp hiếm, thường repay là để thanh toán online)
-    if ($payment_method == 'cod') {
-         header('Location: index.php?page=confirmation&id=' . $order_id);
-         exit;
-    }
-    
+    // Chuyển hướng sang tạo URL VNPay
     goto vnpay_config; 
 }
-// ------------------------------------
+// -----------------------------------------------------
 
-// ... (ĐOẠN CODE LẤY GIỎ HÀNG / MUA NGAY / COUPON GIỮ NGUYÊN KHÔNG ĐỔI) ...
+// ... (Các phần xử lý Mua mới / Giỏ hàng giữ nguyên) ...
+// ... (Đoạn code từ dòng 39 đến 119 của file cũ - Logic tạo đơn mới) ...
+
+// (Tôi copy lại đoạn tạo đơn mới ở đây để file hoàn chỉnh)
+$subtotal = 0;
+$order_items = [];
+
 if ($order_type === 'buy_now') {
     if (!isset($_SESSION['buy_now_item'])) die("Lỗi session: Không tìm thấy sản phẩm.");
     $item = $_SESSION['buy_now_item'];
@@ -59,7 +72,6 @@ if ($order_type === 'buy_now') {
     $order_items[] = ['san_pham_id' => $sp_id, 'bien_the_id' => $variant_id, 'so_luong' => $item['so_luong'], 'gia' => $item['gia']];
     $subtotal = $item['gia'] * $item['so_luong'];
 } else {
-    // Logic lấy giỏ hàng (Giữ nguyên)
     $sql_cart = "SELECT gh.san_pham_id, gh.bien_the_id, gh.so_luong, COALESCE(v.gia, p.gia) as gia_chuan FROM gio_hang gh JOIN san_pham p ON gh.san_pham_id = p.id LEFT JOIN bien_the_san_pham v ON gh.bien_the_id = v.id WHERE gh.nguoi_dung_id = ?";
     $stmt_cart = $pdo->prepare($sql_cart);
     $stmt_cart->execute([$user_id]);
@@ -83,54 +95,40 @@ if (isset($_SESSION['promo'])) {
 }
 $final_total = $subtotal - $discount;
 
-
-// 4. LƯU ĐƠN HÀNG VÀO DB
 try {
     $pdo->beginTransaction();
-    
-    // [MỚI] Thêm cột phuong_thuc_thanh_toan vào câu lệnh INSERT
-    $sql = "INSERT INTO don_hang (nguoi_dung_id, ho_ten_nguoi_nhan, sdt_nguoi_nhan, dia_chi_giao_hang, ghi_chu, tong_tien, trang_thai_don_hang, trang_thai_thanh_toan, ma_khuyen_mai_id, phuong_thuc_thanh_toan, ngay_dat) 
-            VALUES (?, ?, ?, ?, ?, ?, 'Chờ xử lý', 'Chưa thanh toán', ?, ?, NOW())";
-    
-    // Convert payment method sang tên hiển thị đẹp hơn
+    $sql = "INSERT INTO don_hang (nguoi_dung_id, ho_ten_nguoi_nhan, sdt_nguoi_nhan, dia_chi_giao_hang, ghi_chu, tong_tien, trang_thai_don_hang, trang_thai_thanh_toan, ma_khuyen_mai_id, phuong_thuc_thanh_toan, ngay_dat) VALUES (?, ?, ?, ?, ?, ?, 'Chờ xử lý', 'Chưa thanh toán', ?, ?, NOW())";
     $payment_method_text = ($payment_method == 'vnpay') ? 'VNPAY' : 'COD';
-
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$user_id, $ho_ten, $so_dien_thoai, $dia_chi, $ghi_chu, $final_total, $coupon_id, $payment_method_text]);
     $order_id = $pdo->lastInsertId();
 
-    // Insert chi tiết đơn hàng (Giữ nguyên)
     $stmt_dt = $pdo->prepare("INSERT INTO chi_tiet_don_hang (don_hang_id, san_pham_id, bien_the_id, so_luong, don_gia) VALUES (?, ?, ?, ?, ?)");
     foreach ($order_items as $it) {
         $stmt_dt->execute([$order_id, $it['san_pham_id'], $it['bien_the_id'], $it['so_luong'], $it['gia']]);
     }
 
-    // Xóa giỏ hàng
     if ($order_type === 'cart') {
         $pdo->prepare("DELETE FROM gio_hang WHERE nguoi_dung_id = ?")->execute([$user_id]);
     } else {
         unset($_SESSION['buy_now_item']);
     }
     unset($_SESSION['promo']);
-    
     $pdo->commit();
-
 } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
     die("Lỗi xử lý đơn hàng: " . $e->getMessage());
 }
 
-// 5. PHÂN LUỒNG XỬ LÝ THANH TOÁN
 if ($payment_method === 'cod') {
-    // --- NẾU LÀ COD: CHUYỂN HƯỚNG ĐẾN TRANG CẢM ƠN ---
     header('Location: index.php?page=confirmation&id=' . $order_id);
     exit;
 }
 
-// --- NẾU LÀ VNPAY: TIẾP TỤC CẤU HÌNH DƯỚI ĐÂY ---
+// --- CẤU HÌNH VNPAY (DÙNG CHUNG CHO CẢ MUA MỚI VÀ REPAY) ---
 vnpay_config: 
 
-$vnp_TxnRef = $order_id; 
+$vnp_TxnRef = $order_id . "_" . time(); // [QUAN TRỌNG] Thêm time() để mã không trùng nếu thanh toán lại nhiều lần
 $vnp_OrderInfo = "Thanh toan don hang " . $order_id;
 $vnp_OrderType = "other";
 $vnp_Amount = (int)$final_total * 100; 

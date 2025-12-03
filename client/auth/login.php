@@ -22,9 +22,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // 4. NẾU KHÔNG CÓ LỖI VALIDATE, BẮT ĐẦU KIỂM TRA CSDL
-    if (empty($errors)) {
+if (empty($errors)) {
         try {
-            // 5. Tìm người dùng bằng email
             $stmt = $pdo->prepare("SELECT * FROM nguoi_dung WHERE email = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch();
@@ -32,35 +31,73 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // 6. KIỂM TRA NGƯỜI DÙNG VÀ MẬT KHẨU
             if ($user && password_verify($mat_khau, $user['mat_khau'])) {
                 
-                // 7. ĐĂNG NHẬP THÀNH CÔNG!
-                
-                // (Bảo mật) Làm mới ID session
-                session_regenerate_id(true); 
-                
-                // (QUAN TRỌNG) Lưu thông tin người dùng vào SESSION
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_name'] = $user['ho_ten'];
-                $_SESSION['user_role_id'] = $user['vai_tro_id'];
-                
-                // 8. (ĐÃ SỬA LỖI) PHÂN LUỒNG (REDIRECT) DỰA TRÊN VAI TRÒ
-                if ($user['vai_tro_id'] == 1) {
-                    // Nếu là Admin (vai_tro_id = 1), chuyển đến trang Admin
-                    header("Location: admin/index.php");
-                } else {
-                    // Nếu là User (vai_tro_id = 2), chuyển về trang chủ
-                    header("Location: index.php?page=home");
+                // [MỚI] KIỂM TRA TRẠNG THÁI TÀI KHOẢN
+                if ($user['trang_thai'] == 0) {
+                    // Nếu bị khóa -> Báo lỗi và không cho Login
+                    $reason = $user['ly_do_khoa'] ?? 'Vi phạm chính sách cộng đồng.';
+                    $errors[] = "Tài khoản của bạn đã bị vô hiệu hóa.<br><strong>Lý do:</strong> " . htmlspecialchars($reason);
+                } 
+                else {
+                    // [NẾU KHÔNG BỊ KHÓA -> ĐĂNG NHẬP BÌNH THƯỜNG]
+                    
+                    session_regenerate_id(true); 
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['user_name'] = $user['ho_ten'];
+                    $_SESSION['user_role_id'] = $user['vai_tro_id'];
+                    
+                    if ($user['vai_tro_id'] == 1) {
+                        header("Location: admin/index.php");
+                    } else {
+                        header("Location: index.php?page=home");
+                    }
+                    exit; 
                 }
-                exit; // Dừng kịch bản ngay sau khi chuyển hướng
 
             } else {
-                // 9. ĐĂNG NHẬP THẤT BẠI
+                $errors[] = 'Email hoặc mật khẩu không chính xác.';
+            }
+        } catch (PDOException $e) {
+            $errors[] = "Lỗi CSDL: " . $e->getMessage();
+        }
+    }if (empty($errors)) {
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM nguoi_dung WHERE email = ?");
+            $stmt->execute([$email]);
+            $user = $stmt->fetch();
+
+            // 6. KIỂM TRA NGƯỜI DÙNG VÀ MẬT KHẨU
+            if ($user && password_verify($mat_khau, $user['mat_khau'])) {
+                
+                // [MỚI] KIỂM TRA TRẠNG THÁI TÀI KHOẢN
+                if ($user['trang_thai'] == 0) {
+                    // Nếu bị khóa -> Báo lỗi và không cho Login
+                    $reason = $user['ly_do_khoa'] ?? 'Vi phạm chính sách cộng đồng.';
+                    $errors[] = "Tài khoản của bạn đã bị vô hiệu hóa.<br><strong>Lý do:</strong> " . htmlspecialchars($reason);
+                } 
+                else {
+                    // [NẾU KHÔNG BỊ KHÓA -> ĐĂNG NHẬP BÌNH THƯỜNG]
+                    
+                    session_regenerate_id(true); 
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['user_name'] = $user['ho_ten'];
+                    $_SESSION['user_role_id'] = $user['vai_tro_id'];
+                    
+                    if ($user['vai_tro_id'] == 1) {
+                        header("Location: admin/index.php");
+                    } else {
+                        header("Location: index.php?page=home");
+                    }
+                    exit; 
+                }
+
+            } else {
                 $errors[] = 'Email hoặc mật khẩu không chính xác.';
             }
         } catch (PDOException $e) {
             $errors[] = "Lỗi CSDL: " . $e->getMessage();
         }
     }
-} // Kết thúc xử lý POST
+}
 ?>
 
 <!DOCTYPE html>
