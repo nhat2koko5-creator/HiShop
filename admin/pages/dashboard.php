@@ -1,30 +1,40 @@
 <?php
 // FILE: admin/pages/dashboard.php
 
-// 1. LẤY DỮ LIỆU
+// 1. LẤY DỮ LIỆU TỔNG QUAN
 $total_products = $pdo->query("SELECT COUNT(*) FROM san_pham")->fetchColumn();
 $total_orders   = $pdo->query("SELECT COUNT(*) FROM don_hang")->fetchColumn();
 $total_users    = $pdo->query("SELECT COUNT(*) FROM nguoi_dung WHERE vai_tro_id = 2")->fetchColumn();
-$total_revenue  = $pdo->query("SELECT SUM(tong_tien) FROM don_hang WHERE trang_thai_thanh_toan = 'paid'")->fetchColumn();
+
+// Sửa: Check theo 'Đã thanh toán'
+$total_revenue  = $pdo->query("SELECT SUM(tong_tien) FROM don_hang WHERE trang_thai_thanh_toan = 'Đã thanh toán'")->fetchColumn();
 
 $total_cats = $pdo->query("SELECT COUNT(*) FROM danh_muc")->fetchColumn();
 $orders_this_month = $pdo->query("SELECT COUNT(*) FROM don_hang WHERE MONTH(ngay_dat) = MONTH(CURRENT_DATE()) AND YEAR(ngay_dat) = YEAR(CURRENT_DATE())")->fetchColumn();
-$revenue_this_month = $pdo->query("SELECT SUM(tong_tien) FROM don_hang WHERE trang_thai_thanh_toan = 'paid' AND MONTH(ngay_dat) = MONTH(CURRENT_DATE()) AND YEAR(ngay_dat) = YEAR(CURRENT_DATE())")->fetchColumn();
 
-$st_pending   = $pdo->query("SELECT COUNT(*) FROM don_hang WHERE trang_thai = 'pending'")->fetchColumn();
-$st_shipping  = $pdo->query("SELECT COUNT(*) FROM don_hang WHERE trang_thai = 'shipping'")->fetchColumn();
-$st_delivered = $pdo->query("SELECT COUNT(*) FROM don_hang WHERE trang_thai = 'delivered'")->fetchColumn();
-$st_cancelled = $pdo->query("SELECT COUNT(*) FROM don_hang WHERE trang_thai = 'cancelled'")->fetchColumn();
+// Sửa: Check theo 'Đã thanh toán'
+$revenue_this_month = $pdo->query("SELECT SUM(tong_tien) FROM don_hang WHERE trang_thai_thanh_toan = 'Đã thanh toán' AND MONTH(ngay_dat) = MONTH(CURRENT_DATE()) AND YEAR(ngay_dat) = YEAR(CURRENT_DATE())")->fetchColumn();
 
-// Biểu đồ
-$sql_chart_revenue = "SELECT DATE_FORMAT(ngay_dat, '%m/%Y') as thang, SUM(tong_tien) as doanh_thu FROM don_hang WHERE trang_thai_thanh_toan = 'paid' GROUP BY DATE_FORMAT(ngay_dat, '%Y-%m') ORDER BY ngay_dat DESC LIMIT 6";
+// 2. LẤY THỐNG KÊ TRẠNG THÁI (Sửa tên cột và giá trị tiếng Việt)
+// Cột: trang_thai_don_hang
+// Giá trị: Chờ xử lý, Đang giao hàng, Đã giao hàng, Đã hủy
+$st_pending   = $pdo->query("SELECT COUNT(*) FROM don_hang WHERE trang_thai_don_hang = 'Chờ xử lý'")->fetchColumn();
+$st_shipping  = $pdo->query("SELECT COUNT(*) FROM don_hang WHERE trang_thai_don_hang = 'Đang giao hàng'")->fetchColumn();
+$st_delivered = $pdo->query("SELECT COUNT(*) FROM don_hang WHERE trang_thai_don_hang = 'Đã giao hàng'")->fetchColumn();
+$st_cancelled = $pdo->query("SELECT COUNT(*) FROM don_hang WHERE trang_thai_don_hang = 'Đã hủy'")->fetchColumn();
+
+// 3. DỮ LIỆU BIỂU ĐỒ DOANH THU
+// Sửa: trang_thai_thanh_toan = 'Đã thanh toán'
+$sql_chart_revenue = "SELECT DATE_FORMAT(ngay_dat, '%m/%Y') as thang, SUM(tong_tien) as doanh_thu FROM don_hang WHERE trang_thai_thanh_toan = 'Đã thanh toán' GROUP BY DATE_FORMAT(ngay_dat, '%Y-%m') ORDER BY ngay_dat DESC LIMIT 6";
 $stmt_rev = $pdo->prepare($sql_chart_revenue);
 $stmt_rev->execute();
 $revenue_data = array_reverse($stmt_rev->fetchAll(PDO::FETCH_ASSOC));
 $chart_labels = []; $chart_values = [];
 foreach ($revenue_data as $d) { $chart_labels[] = $d['thang']; $chart_values[] = (int)$d['doanh_thu']; }
 
-$sql_top_products = "SELECT sp.ten, SUM(ct.so_luong) as da_ban FROM chi_tiet_don_hang ct JOIN san_pham sp ON ct.san_pham_id = sp.id JOIN don_hang dh ON ct.don_hang_id = dh.id WHERE dh.trang_thai_thanh_toan = 'paid' GROUP BY sp.id ORDER BY da_ban DESC LIMIT 5";
+// 4. TOP SẢN PHẨM BÁN CHẠY
+// Sửa: dh.trang_thai_thanh_toan = 'Đã thanh toán'
+$sql_top_products = "SELECT sp.ten, SUM(ct.so_luong) as da_ban FROM chi_tiet_don_hang ct JOIN san_pham sp ON ct.san_pham_id = sp.id JOIN don_hang dh ON ct.don_hang_id = dh.id WHERE dh.trang_thai_thanh_toan = 'Đã thanh toán' GROUP BY sp.id ORDER BY da_ban DESC LIMIT 5";
 $stmt_top = $pdo->prepare($sql_top_products);
 $stmt_top->execute();
 $top_products = $stmt_top->fetchAll(PDO::FETCH_ASSOC);
@@ -33,7 +43,7 @@ foreach ($top_products as $p) { $top_labels[] = mb_strimwidth($p['ten'], 0, 25, 
 ?>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="assets/css/admin/dashboard.css">
+<link rel="stylesheet" href="../assets/css/admin/dashboard.css">
 
 <div class="admin-page-content dashboard-container">
     
@@ -106,7 +116,7 @@ foreach ($top_products as $p) { $top_labels[] = mb_strimwidth($p['ten'], 0, 25, 
 
     <div class="grid-4">
         <div class="status-card">
-            <div class="status-label">Chờ xác nhận</div>
+            <div class="status-label">Chờ xử lý</div>
             <div class="status-val text-warning"><?= $st_pending ?></div>
         </div>
         <div class="status-card">
