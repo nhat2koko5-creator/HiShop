@@ -1,71 +1,82 @@
 <?php
 // FILE: admin/pages/orders_list.php
 
-// 1. XỬ LÝ CẬP NHẬT TRẠNG THÁI
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] == 'update_status') {
-    $order_id = (int)$_POST['order_id'];
-    $new_status = $_POST['status'];
-    $allowed_status = ['pending', 'confirmed', 'shipping', 'delivered', 'cancelled', 'returned'];
-    
-    if (in_array($new_status, $allowed_status)) {
-        $stmt = $pdo->prepare("UPDATE don_hang SET trang_thai = ? WHERE id = ?");
-        $stmt->execute([$new_status, $order_id]);
-        if ($new_status == 'delivered') {
-            $pdo->prepare("UPDATE don_hang SET trang_thai_thanh_toan = 'paid' WHERE id = ?")->execute([$order_id]);
-        }
-        $msg_success = "Đã cập nhật trạng thái đơn hàng #$order_id";
-    }
-}
+// --- CẤU HÌNH ---
+$limit = 10; // Số đơn hàng mỗi trang (Chỉnh thành 10 cho gọn)
+$current_page = isset($_GET['p']) ? max(1, (int)$_GET['p']) : 1;
+$offset = ($current_page - 1) * $limit;
 
-// 2. QUERY DỮ LIỆU
-$status_filter = $_GET['status'] ?? 'all';
+$status_map = [
+    'pending'   => 'Chờ xử lý',
+    'confirmed' => 'Đã xác nhận',
+    'shipping'  => 'Đang giao hàng',
+    'delivered' => 'Đã giao hàng',
+    'cancelled' => 'Đã hủy',
+    'returned'  => 'Trả hàng'
+];
+
+// --- QUERY DỮ LIỆU ---
+$current_tab = $_GET['status'] ?? 'all';
 $search_query = trim($_GET['q'] ?? '');
 
-$sql = "SELECT d.*, u.ho_ten 
-        FROM don_hang d 
-        JOIN nguoi_dung u ON d.nguoi_dung_id = u.id 
-        WHERE 1=1";
+// 1. Xây dựng câu Query cơ bản
+$sql_base = "FROM don_hang d JOIN nguoi_dung u ON d.nguoi_dung_id = u.id WHERE 1=1";
 $params = [];
 
-if ($status_filter !== 'all') {
-    $sql .= " AND d.trang_thai = ?";
-    $params[] = $status_filter;
+if ($current_tab !== 'all' && isset($status_map[$current_tab])) {
+    $sql_base .= " AND d.trang_thai_don_hang = ?";
+    $params[] = $status_map[$current_tab]; 
 }
-if (!empty($search_query)) {
-    $sql .= " AND (d.id LIKE ? OR u.ho_ten LIKE ?)";
-    $params[] = "%$search_query%";
-    $params[] = "%$search_query%";
-}
-$sql .= " ORDER BY d.ngay_dat DESC";
 
-$stmt = $pdo->prepare($sql);
+if (!empty($search_query)) {
+    $sql_base .= " AND (d.id LIKE ? OR u.ho_ten LIKE ?)";
+    $params[] = "%$search_query%";
+    $params[] = "%$search_query%";
+}
+
+// 2. Đếm tổng số bản ghi (Để làm phân trang)
+$stmt_count = $pdo->prepare("SELECT COUNT(*) $sql_base");
+$stmt_count->execute($params);
+$total_records = $stmt_count->fetchColumn();
+$total_pages = ceil($total_records / $limit);
+
+// 3. Lấy dữ liệu phân trang
+$sql_final = "SELECT d.*, u.ho_ten $sql_base ORDER BY d.ngay_dat DESC LIMIT $limit OFFSET $offset";
+$stmt = $pdo->prepare($sql_final);
 $stmt->execute($params);
 $orders = $stmt->fetchAll();
 
-// 3. THỐNG KÊ
-$count_pending = $pdo->query("SELECT COUNT(*) FROM don_hang WHERE trang_thai = 'pending'")->fetchColumn();
-$count_shipping = $pdo->query("SELECT COUNT(*) FROM don_hang WHERE trang_thai = 'shipping'")->fetchColumn();
-$total_revenue_today = $pdo->query("SELECT SUM(tong_tien) FROM don_hang WHERE trang_thai = 'paid' AND DATE(ngay_dat) = CURDATE()")->fetchColumn();
+// --- THỐNG KÊ (Giữ nguyên) ---
+$count_pending = $pdo->query("SELECT COUNT(*) FROM don_hang WHERE trang_thai_don_hang = 'Chờ xử lý'")->fetchColumn();
+$count_shipping = $pdo->query("SELECT COUNT(*) FROM don_hang WHERE trang_thai_don_hang = 'Đang giao hàng'")->fetchColumn();
+$total_revenue_today = $pdo->query("SELECT SUM(tong_tien) FROM don_hang WHERE trang_thai_thanh_toan = 'Đã thanh toán' AND DATE(ngay_dat) = CURDATE()")->fetchColumn();
 
-// HELPER FUNCTIONS
+// --- HELPER FUNCTIONS ---
 function getStatusBadge($status) {
-    $map = [
-        'pending'   => ['label' => 'Chờ xác nhận', 'class' => 'badge-warning'],
-        'confirmed' => ['label' => 'Đã xác nhận',  'class' => 'badge-info'],
-        'shipping'  => ['label' => 'Đang giao',    'class' => 'badge-primary'],
-        'delivered' => ['label' => 'Hoàn tất',     'class' => 'badge-success'],
-        'cancelled' => ['label' => 'Đã hủy',       'class' => 'badge-danger'],
-        'returned'  => ['label' => 'Trả hàng',     'class' => 'badge-dark']
-    ];
-    return $map[$status] ?? ['label' => $status, 'class' => 'badge-secondary'];
+    switch ($status) {
+        case 'Chờ xử lý':       return ['class' => 'badge-warning'];
+        case 'Đã xác nhận':     return ['class' => 'badge-info'];
+        case 'Đang giao hàng':  return ['class' => 'badge-primary'];
+        case 'Đã giao hàng':    return ['class' => 'badge-success'];
+        case 'Đã hủy':          return ['class' => 'badge-danger'];
+        default:                return ['class' => 'badge-secondary'];
+    }
 }
+
 function getPaymentBadge($status) {
-    $map = [
-        'unpaid'   => ['label' => 'Chưa TT', 'class' => 'text-warning'],
-        'paid'     => ['label' => 'Đã TT',   'class' => 'text-success'],
-        'refunded' => ['label' => 'Hoàn tiền', 'class' => 'text-danger']
-    ];
-    return $map[$status] ?? ['label' => $status, 'class' => 'text-secondary'];
+    switch ($status) {
+        case 'Chưa thanh toán': return ['class' => 'text-warning', 'label' => 'Chưa TT'];
+        case 'Đã thanh toán':   return ['class' => 'text-success', 'label' => 'Đã TT'];
+        case 'Đã hoàn tiền':    return ['class' => 'text-danger',  'label' => 'Hoàn tiền'];
+        default:                return ['class' => 'text-secondary','label' => $status];
+    }
+}
+
+// Hàm tạo link phân trang giữ nguyên các tham số lọc
+function getPageUrl($page) {
+    $params = $_GET;
+    $params['p'] = $page;
+    return 'index.php?' . http_build_query($params);
 }
 ?>
 
@@ -78,7 +89,7 @@ function getPaymentBadge($status) {
             <div class="stat-icon icon-orange"><i class="fa-solid fa-clock"></i></div>
             <div class="stat-info">
                 <h4><?= $count_pending ?></h4>
-                <p>Đơn chờ xác nhận</p>
+                <p>Đơn chờ xử lý</p>
             </div>
         </div>
         <div class="stat-box">
@@ -97,68 +108,70 @@ function getPaymentBadge($status) {
         </div>
     </div>
 
-    <?php if (isset($msg_success)): ?>
-        <div class="alert alert-success" style="margin-bottom: 20px;"><?= $msg_success ?></div>
-    <?php endif; ?>
-
     <div class="filter-toolbar">
         <div class="status-tabs">
-            <a href="index.php?page=orders_list&status=all" class="tab-btn <?= $status_filter=='all'?'active':'' ?>">Tất cả</a>
-            <a href="index.php?page=orders_list&status=pending" class="tab-btn <?= $status_filter=='pending'?'active':'' ?>">Chờ xác nhận</a>
-            <a href="index.php?page=orders_list&status=confirmed" class="tab-btn <?= $status_filter=='confirmed'?'active':'' ?>">Đã xác nhận</a>
-            <a href="index.php?page=orders_list&status=shipping" class="tab-btn <?= $status_filter=='shipping'?'active':'' ?>">Đang giao</a>
-            <a href="index.php?page=orders_list&status=delivered" class="tab-btn <?= $status_filter=='delivered'?'active':'' ?>">Hoàn tất</a>
-            <a href="index.php?page=orders_list&status=cancelled" class="tab-btn <?= $status_filter=='cancelled'?'active':'' ?>">Đã hủy</a>
+            <a href="index.php?page=orders_list&status=all" class="tab-btn <?= $current_tab=='all'?'active':'' ?>">Tất cả</a>
+            <a href="index.php?page=orders_list&status=pending" class="tab-btn <?= $current_tab=='pending'?'active':'' ?>">Chờ xử lý</a>
+            <a href="index.php?page=orders_list&status=confirmed" class="tab-btn <?= $current_tab=='confirmed'?'active':'' ?>">Đã xác nhận</a>
+            <a href="index.php?page=orders_list&status=shipping" class="tab-btn <?= $current_tab=='shipping'?'active':'' ?>">Đang giao</a>
+            <a href="index.php?page=orders_list&status=delivered" class="tab-btn <?= $current_tab=='delivered'?'active':'' ?>">Hoàn tất</a>
+            <a href="index.php?page=orders_list&status=cancelled" class="tab-btn <?= $current_tab=='cancelled'?'active':'' ?>">Đã hủy</a>
         </div>
 
         <div class="search-wrapper">
             <form method="GET" class="search-form-flex">
                 <input type="hidden" name="page" value="orders_list">
-                <input type="hidden" name="status" value="<?= $status_filter ?>">
-                <input type="text" name="q" class="search-input" placeholder="Mã đơn hoặc tên khách..." value="<?= htmlspecialchars($search_query) ?>">
+                <input type="hidden" name="status" value="<?= $current_tab ?>">
+                <input type="text" name="q" class="search-input" placeholder="Mã đơn, tên khách..." value="<?= htmlspecialchars($search_query) ?>">
                 <button class="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
             </form>
         </div>
     </div>
 
     <div class="order-table-container">
-        <table class="order-table">
+        <table class="order-table table-compact">
             <thead>
                 <tr>
-                    <th width="10%">Mã Đơn</th>
-                    <th width="20%">Khách Hàng</th>
+                    <th width="8%">Mã</th>
+                    <th width="22%">Khách Hàng</th>
                     <th width="15%">Ngày Đặt</th>
-                    <th width="15%">Thanh Toán</th>
-                    <th width="15%">Tổng Tiền</th>
-                    <th width="15%">Trạng Thái</th>
-                    <th width="10%" style="text-align: right;">Thao tác</th>
+                    <th width="10%">PTTT</th>
+                    <th width="12%">Thanh Toán</th>
+                    <th width="13%">Tổng Tiền</th>
+                    <th width="12%">Trạng Thái</th>
+                    <th width="8%" style="text-align: right;">Hành động</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($orders)): ?>
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 60px; color: #6b7280;">
-                            <img src="../assets/img/empty-box.png" style="width: 64px; opacity: 0.5; margin-bottom: 10px;" alt="Empty">
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #6b7280;">
                             <p>Không tìm thấy đơn hàng nào.</p>
                         </td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($orders as $order): 
-                        $status_badge = getStatusBadge($order['trang_thai']);
+                        $status_badge = getStatusBadge($order['trang_thai_don_hang']);
                         $payment_badge = getPaymentBadge($order['trang_thai_thanh_toan']);
+                        $pttt = $order['phuong_thuc_thanh_toan'] ?? 'COD';
                     ?>
                     <tr>
-                        <td style="font-weight: 700; color: var(--color-text-primary);">#<?= $order['id'] ?></td>
+                        <td style="font-weight: 700; color: #334155;">#<?= $order['id'] ?></td>
                         
                         <td>
-                            <div style="font-weight: 600; color: var(--color-text-primary);"><?= htmlspecialchars($order['ho_ten']) ?></div>
-                            <div style="font-size: 13px; color: #6b7280; margin-top: 2px;"><?= htmlspecialchars($order['sdt_nguoi_nhan']) ?></div>
+                            <div style="font-weight: 600; color: #1e293b; font-size: 13px;"><?= htmlspecialchars($order['ho_ten']) ?></div>
                         </td>
                         
-                        <td style="color: #4b5563;"><?= date('d/m/Y H:i', strtotime($order['ngay_dat'])) ?></td>
+                        <td style="color: #64748b; font-size: 13px;">
+                            <?= date('d/m/Y H:i', strtotime($order['ngay_dat'])) ?>
+                        </td>
+
+                        <td>
+                            <span class="badge-pill"><?= htmlspecialchars($pttt) ?></span>
+                        </td>
                         
                         <td>
-                            <span class="<?= $payment_badge['class'] ?>">
+                            <span class="<?= $payment_badge['class'] ?>" style="font-size: 12px; font-weight: 600;">
                                 <?= $payment_badge['label'] ?>
                             </span>
                         </td>
@@ -169,28 +182,14 @@ function getPaymentBadge($status) {
                         
                         <td>
                             <span class="badge <?= $status_badge['class'] ?>">
-                                <?= $status_badge['label'] ?>
+                                <?= $order['trang_thai_don_hang'] ?>
                             </span>
                         </td>
                         
                         <td style="text-align: right;">
-                            <div class="action-group">
-                                <a href="#" class="btn-icon btn-view" title="Xem chi tiết">
-                                    <i class="fa-regular fa-eye"></i>
-                                </a>
-                                
-                                <form method="POST" class="form-update-status">
-                                    <input type="hidden" name="action" value="update_status">
-                                    <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                                    <select name="status" class="status-select" onchange="if(confirm('Xác nhận đổi trạng thái?')) this.form.submit()">
-                                        <option value="" disabled selected>Cập nhật...</option>
-                                        <option value="confirmed">Xác nhận</option>
-                                        <option value="shipping">Giao hàng</option>
-                                        <option value="delivered">Hoàn tất</option>
-                                        <option value="cancelled">Hủy đơn</option>
-                                    </select>
-                                </form>
-                            </div>
+                            <a href="index.php?page=order_detail&id=<?= $order['id'] ?>" class="btn-detail-sm">
+                               <i class="fa-solid fa-eye"></i> Xem chi tiết
+                            </a>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -198,4 +197,26 @@ function getPaymentBadge($status) {
             </tbody>
         </table>
     </div>
+
+    <?php if ($total_pages > 1): ?>
+    <div class="pagination-container">
+        <div class="pagination-info">
+            Hiển thị <strong><?= count($orders) ?></strong> trên tổng <strong><?= $total_records ?></strong> đơn hàng
+        </div>
+        <div class="pagination-links">
+            <?php if ($current_page > 1): ?>
+                <a href="<?= getPageUrl($current_page - 1) ?>" class="page-link"><i class="fa-solid fa-chevron-left"></i></a>
+            <?php endif; ?>
+
+            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                <a href="<?= getPageUrl($i) ?>" class="page-link <?= $i == $current_page ? 'active' : '' ?>"><?= $i ?></a>
+            <?php endfor; ?>
+
+            <?php if ($current_page < $total_pages): ?>
+                <a href="<?= getPageUrl($current_page + 1) ?>" class="page-link"><i class="fa-solid fa-chevron-right"></i></a>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
 </div>

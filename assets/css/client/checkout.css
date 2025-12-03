@@ -394,85 +394,200 @@
   color: #10b981 !important;
 }
 
-/* ============================================================
-   STYLES CHO TRANG KẾT QUẢ THANH TOÁN (ORDER RESULT)
-   (Dùng cho vnpay_return.php và confirmation.php)
-   ============================================================ */
+/* --- CSS MỚI CHO TRANG KẾT QUẢ VNPAY (Thêm vào cuối file checkout.css) --- */
 
-.result-box {
-  max-width: 600px;
-  margin: 50px auto;
-  padding: 40px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  text-align: center;
-  border: 1px solid #e5e7eb;
+.payment-result-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh; /* Chiếm phần lớn chiều cao màn hình */
+    padding: 40px 20px;
+    background-color: #f8f9fa; /* Màu nền nhẹ cho cả vùng */
 }
 
-.result-icon {
-  font-size: 60px;
-  margin-bottom: 20px;
-  display: block;
+.payment-result-card {
+    background: #fff;
+    width: 100%;
+    max-width: 500px; /* Giới hạn chiều rộng card */
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Đổ bóng mềm mại hiện đại */
+    padding: 40px;
+    text-align: center;
+    transition: all 0.3s ease;
 }
 
-.result-icon.success {
-  color: #10b981;
+/* 1. Header Styles */
+.pr-icon-wrapper {
+    margin-bottom: 20px;
 }
 
-.result-icon.error {
-  color: #ef4444;
+.pr-svg-icon {
+    width: 80px;
+    height: 80px;
 }
 
-.result-title {
-  font-size: 24px;
-  font-weight: 700;
-  margin-bottom: 10px;
-  color: #1f2937;
+/* Màu sắc dựa trên trạng thái */
+.success-mode .pr-svg-icon { color: #10b981; /* Xanh lá */ }
+.success-mode .pr-title { color: #10b981; }
+
+.error-mode .pr-svg-icon { color: #ef4444; /* Đỏ */ }
+.error-mode .pr-title { color: #ef4444; }
+
+.pr-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 10px;
 }
 
-.result-details {
-  margin: 30px 0;
-  text-align: left;
-  background: #f9fafb;
-  padding: 20px;
-  border-radius: 8px;
-  border: 1px solid #f3f4f6;
+.pr-desc {
+    color: #6b7280;
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: 30px;
 }
 
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  border-bottom: 1px dashed #e5e7eb;
-  padding-bottom: 8px;
-  font-size: 15px;
+/* 2. Key Info Box Styles */
+.pr-key-info {
+    background-color: #f3f4f6;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
 }
 
-.detail-row:last-child {
-  border: none;
-  margin: 0;
-  padding-bottom: 0;
+.pr-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 15px;
 }
 
-.detail-label {
-  color: #6b7280;
+.pr-info-item:last-child {
+    margin-bottom: 0;
 }
 
-.detail-value {
-  font-weight: 600;
-  color: #1f2937;
+.pr-label {
+    color: #6b7280;
 }
 
-.action-buttons {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-  margin-top: 30px;
+.pr-value {
+    font-weight: 600;
+    color: #111827;
 }
 
-/* Các class nút bấm (chỉ định nghĩa lại nếu cần ghi đè, 
-   còn không nó sẽ dùng style global .btn từ style-client.css) */
-.action-buttons .btn {
-    min-width: 160px;
+.pr-value.highlight {
+    color: #3b82f6; /* Màu xanh dương cho mã đơn */
+}
+
+.pr-value.total-amount {
+    font-size: 18px;
+    color: #ef4444; /* Màu đỏ cho tổng tiền */
+}
+
+/* 3. Technical Details Toggler Styles */
+.pr-tech-details-wrapper {
+    margin-bottom: 30px;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 20px;
+}
+
+.pr-toggle-btn {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0 auto;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.pr-toggle-btn:hover {
+    background-color: #eff6ff;
+}
+
+.pr-tech-details-content {
+    display: none; /* Ẩn mặc định */
+    margin-top: 20px;
+    text-align: left;
+    background: #fff;
+    padding: 15px;
+    border: 1px dashed #d1d5db;
+    border-radius: 8px;
+}
+
+.pr-tech-details-content.show {
+    display: block; /* Hiện khi có class show */
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Tận dụng lại class .detail-row trong checkout.css cũ cho phần nội dung ẩn */
+.pr-tech-details-content .detail-row {
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+/* 4. Action Buttons Styles */
+.pr-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+/* Tinh chỉnh lại nút primary và outline cho đẹp hơn */
+.btn-primary.btn-block {
+    background-color: #3b82f6;
+    border: none;
+}
+.btn-primary.btn-block:hover {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-outline.btn-block {
+    border: 2px solid #d1d5db;
+    color: #374151;
+}
+.btn-outline.btn-block:hover {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive cho màn hình nhỏ */
+@media (max-width: 576px) {
+    .payment-result-container {
+        padding: 20px 15px;
+    }
+    .payment-result-card {
+        padding: 30px 20px;
+    }
+    .pr-svg-icon {
+        width: 60px;
+        height: 60px;
+    }
+    .pr-title {
+        font-size: 20px;
+    }
 }

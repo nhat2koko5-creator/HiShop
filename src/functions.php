@@ -228,15 +228,19 @@ function getUserProfile(PDO $pdo, $user_id) {
  */
 function getOrderItems(PDO $pdo, $order_id) {
     try {
-        // Join bảng chi tiết đơn hàng với bảng sản phẩm để lấy tên và ảnh
-        // Lưu ý: Nếu bạn có lưu variant_id trong chi_tiet_don_hang, hãy join thêm bảng bien_the_san_pham
         $sql = "
             SELECT 
                 ct.*, 
                 sp.ten AS ten_san_pham, 
-                sp.hinh_anh
+                sp.hinh_anh,
+                -- Lấy thông tin biến thể
+                bt.mau_sac,
+                bt.dung_luong_ssd,
+                bt.hinh_anh as hinh_bien_the
             FROM chi_tiet_don_hang ct
             JOIN san_pham sp ON ct.san_pham_id = sp.id
+            -- Join trái để nếu không có biến thể thì vẫn lấy được sản phẩm
+            LEFT JOIN bien_the_san_pham bt ON ct.bien_the_id = bt.id
             WHERE ct.don_hang_id = ?
         ";
         $stmt = $pdo->prepare($sql);
@@ -280,11 +284,13 @@ function updateUserProfile(PDO $pdo, $user_id, $ho_ten, $so_dien_thoai, $ngay_si
 }
 
 /**
- * (ĐÃ NÂNG CẤP) Lấy lịch sử đơn hàng (Hỗ trợ tìm kiếm)
+ * (ĐÃ SỬA) Lấy lịch sử đơn hàng
+ * Thêm cột d.trang_thai_thanh_toan để xử lý logic hủy đơn
  */
 function getUserOrders(PDO $pdo, $user_id, $keyword = '') {
     try {
-        $sql = "SELECT DISTINCT d.id, d.ngay_dat, d.tong_tien, d.trang_thai 
+        // [FIX] Thêm d.trang_thai_thanh_toan vào danh sách cột
+        $sql = "SELECT DISTINCT d.id, d.ngay_dat, d.tong_tien, d.trang_thai_don_hang, d.trang_thai_thanh_toan
                 FROM don_hang d
                 LEFT JOIN chi_tiet_don_hang ct ON d.id = ct.don_hang_id
                 LEFT JOIN san_pham sp ON ct.san_pham_id = sp.id
@@ -293,7 +299,6 @@ function getUserOrders(PDO $pdo, $user_id, $keyword = '') {
         $params = [$user_id];
 
         if (!empty($keyword)) {
-            // Tìm theo ID đơn hàng HOẶC Tên sản phẩm
             $sql .= " AND (d.id LIKE ? OR sp.ten LIKE ?)";
             $params[] = "%$keyword%";
             $params[] = "%$keyword%";
@@ -382,15 +387,18 @@ function sendEmail($to_email, $to_name, $subject, $body) {
         return false; // Gửi thất bại
     }
 }
+
 /**
  * (MỚI) LẤY THỐNG KÊ TỔNG QUAN CHO ADMIN DASHBOARD
+ * CẬP NHẬT: Logic tính doanh thu theo trạng thái tiếng Việt
  */
 function getAdminDashboardStats(PDO $pdo) {
     $stats = [];
     
-    // 1. Tổng doanh thu (chỉ tính đơn đã thanh toán 'paid')
-    $stmt1 = $pdo->query("SELECT SUM(tong_tien) as total_revenue FROM don_hang WHERE trang_thai = 'paid'");
-    $stats['total_revenue'] = $stmt1->fetchColumn();
+    // 1. Tổng doanh thu (chỉ tính đơn đã thanh toán 'Đã thanh toán')
+    // Sửa: trang_thai = 'paid' -> trang_thai_thanh_toan = 'Đã thanh toán'
+    $stmt1 = $pdo->query("SELECT SUM(tong_tien) as total_revenue FROM don_hang WHERE trang_thai_thanh_toan = 'Đã thanh toán'");
+    $stats['total_revenue'] = $stmt1->fetchColumn() ?: 0; // Thêm ?: 0 để tránh null nếu chưa có đơn
 
     // 2. Tổng đơn hàng
     $stmt2 = $pdo->query("SELECT COUNT(id) as total_orders FROM don_hang");
@@ -407,13 +415,16 @@ function getAdminDashboardStats(PDO $pdo) {
     return $stats;
 }
 
+
 /**
  * (MỚI) LẤY CÁC ĐƠN HÀNG MỚI NHẤT CHO ADMIN DASHBOARD
+ * CẬP NHẬT: Đổi d.trang_thai -> d.trang_thai_don_hang
  */
 function getRecentOrders(PDO $pdo, $limit = 5) {
     try {
+        // Sửa d.trang_thai -> d.trang_thai_don_hang
         $sql = "
-            SELECT d.id, d.ngay_dat, d.tong_tien, d.trang_thai, n.ho_ten
+            SELECT d.id, d.ngay_dat, d.tong_tien, d.trang_thai_don_hang, n.ho_ten
             FROM don_hang AS d
             JOIN nguoi_dung AS n ON d.nguoi_dung_id = n.id
             ORDER BY d.ngay_dat DESC
@@ -428,6 +439,10 @@ function getRecentOrders(PDO $pdo, $limit = 5) {
         return [];
     }
 }
+
+
+
+
 /**
  * (MỚI) Lấy tất cả sản phẩm và tổng tiền trong giỏ hàng của người dùng
  * Dựa trên bảng: `gio_hang`, `san_pham`
@@ -554,7 +569,7 @@ function updateUserAddress(PDO $pdo, $user_id, $address_id, $new_address) {
 
 
 function getProductsWithDiscount($pdo, $category_id = null) {
-
+    // SỬA LỖI: Thay product_id -> san_pham_id, sale_id -> giam_gia_id
     $sql = "
         SELECT 
             sp.*,
@@ -562,9 +577,10 @@ function getProductsWithDiscount($pdo, $category_id = null) {
             g.loai_giam_gia,
             g.gia_tri
         FROM san_pham sp
-        LEFT JOIN san_pham_giam_gia spgg ON sp.id = spgg.product_id
-        LEFT JOIN giam_gia g ON spgg.sale_id = g.id
-        WHERE 1
+        JOIN san_pham_giam_gia spgg ON sp.id = spgg.san_pham_id 
+        JOIN giam_gia g ON spgg.giam_gia_id = g.id
+        WHERE (g.ngay_bat_dau IS NULL OR g.ngay_bat_dau <= NOW())
+          AND (g.ngay_ket_thuc IS NULL OR g.ngay_ket_thuc >= NOW())
     ";
 
     if ($category_id !== null) {
@@ -581,13 +597,13 @@ function getProductsWithDiscount($pdo, $category_id = null) {
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $products = [];
-
     foreach ($rows as $sp) {
-        $calc = apply_discount($sp);
-
+        // Gọi hàm apply_discount (đã thêm ở bước trước)
+        $calc = apply_discount($sp); 
+        
         $sp['gia_goc'] = $calc['gia_goc'];
         $sp['gia_moi'] = $calc['gia_moi'];
-        $sp['discount_percent'] = $calc['discount_percent'];
+        $sp['phan_tram_giam'] = $calc['phan_tram_giam']; // Đồng bộ key
 
         $products[] = $sp;
     }
@@ -646,4 +662,41 @@ function getCouponByCode(PDO $pdo, $code) {
         return null;
     }
 }
+
+/**
+ * Hàm tính toán giá giảm (Thêm vào cuối file functions.php)
+ */
+function apply_discount($product) {
+    $price_original = $product['gia'];
+    $price_final = $price_original;
+    $discount_percent = 0;
+
+    if (!empty($product['loai_giam_gia']) && isset($product['gia_tri'])) {
+        if ($product['loai_giam_gia'] === 'percent') {
+            $discount_amount = $price_original * ($product['gia_tri'] / 100);
+            $price_final = $price_original - $discount_amount;
+            $discount_percent = $product['gia_tri'];
+        } elseif ($product['loai_giam_gia'] === 'amount') {
+            $price_final = $price_original - $product['gia_tri'];
+            if ($price_original > 0) {
+                $discount_percent = round(($product['gia_tri'] / $price_original) * 100);
+            }
+        }
+    }
+
+    if ($price_final < 0) $price_final = 0;
+
+    return [
+        'gia_goc' => $price_original,
+        'gia_moi' => $price_final,
+        'phan_tram_giam' => $discount_percent,
+        'is_discounted' => ($price_final < $price_original)
+    ];
+}
+
+// Alias để tránh lỗi gọi tên hàm cũ
+function applyDiscount($product) {
+    return apply_discount($product);
+}
+
 ?>

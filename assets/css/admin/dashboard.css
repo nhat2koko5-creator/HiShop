@@ -1,235 +1,148 @@
-/* === FIX LỖI GIAO DIỆN === */
+    /* === FIX LỖI GIAO DIỆN === */
+    
+    /* 1. Cưỡng chế màu nền XÁM cho toàn bộ vùng nội dung Admin */
+    .admin-main-content, body {
+        background-color: #f3f6f9 !important;
+    }
 
-/* 1. Cưỡng chế màu nền XÁM cho toàn bộ vùng nội dung Admin */
-.admin-main-content,
-body {
-  background-color: #f3f6f9 !important;
-}
+    .dashboard-container {
+        font-family: 'Inter', sans-serif;
+        padding: 10px 20px 50px 20px;
+        color: #3f4254;
+    }
 
-.dashboard-container {
-  font-family: "Inter", sans-serif;
-  padding: 10px 20px 50px 20px;
-  color: #3f4254;
-}
+    /* Tiêu đề Section */
+    .section-heading {
+        font-size: 14px;
+        font-weight: 700;
+        color: #009ef7;
+        margin-bottom: 20px;
+        margin-top: 30px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .section-heading i { font-size: 16px; }
+    .section-heading:first-child { margin-top: 0; }
 
-/* Tiêu đề Section */
-.section-heading {
-  font-size: 14px;
-  font-weight: 700;
-  color: #009ef7;
-  margin-bottom: 20px;
-  margin-top: 30px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.section-heading i {
-  font-size: 16px;
-}
-.section-heading:first-child {
-  margin-top: 0;
-}
+    /* CARD STYLE */
+    .white-card {
+        background: #ffffff;
+        border-radius: 8px;
+        padding: 24px 28px;
+        /* Đổ bóng đậm hơn để nổi lên trên nền xám */
+        box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05); 
+        border: 1px solid #ffffff;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .white-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.1);
+    }
 
-/* CARD STYLE */
-.white-card {
-  background: #ffffff;
-  border-radius: 8px;
-  padding: 24px 28px;
-  /* Đổ bóng đậm hơn để nổi lên trên nền xám */
-  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
-  border: 1px solid #ffffff;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  transition: all 0.3s ease;
-  position: relative;
-}
+    /* Viền trên màu sắc */
+    .border-top-blue   { border-top: 4px solid #009ef7; }
+    .border-top-green  { border-top: 4px solid #50cd89; }
+    .border-top-warning{ border-top: 4px solid #ffc700; }
+    .border-top-danger { border-top: 4px solid #f1416c; }
+    .border-top-purple { border-top: 4px solid #7239ea; }
+    .border-top-cyan   { border-top: 4px solid #00b2ff; }
+    .border-top-pink   { border-top: 4px solid #d946ef; }
 
-.white-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.1);
-}
+    /* Nội dung Card */
+    .card-label {
+        font-size: 13px;
+        color: #b5b5c3;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+    }
+    .card-value {
+        font-size: 26px;
+        font-weight: 800;
+        color: #181c32;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    /* ICON ĐƯỢC TÔ MÀU (NEW) */
+    .card-icon {
+        font-size: 24px;
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        float: left;
+        margin-right: 15px;
+    }
 
-/* Viền trên màu sắc */
-.border-top-blue {
-  border-top: 4px solid #009ef7;
-}
-.border-top-green {
-  border-top: 4px solid #50cd89;
-}
-.border-top-warning {
-  border-top: 4px solid #ffc700;
-}
-.border-top-danger {
-  border-top: 4px solid #f1416c;
-}
-.border-top-purple {
-  border-top: 4px solid #7239ea;
-}
-.border-top-cyan {
-  border-top: 4px solid #00b2ff;
-}
-.border-top-pink {
-  border-top: 4px solid #d946ef;
-}
+    /* Màu icon theo từng loại thẻ */
+    .border-top-blue .card-icon   { background: #f1faff; color: #009ef7; }
+    .border-top-green .card-icon  { background: #e8fff3; color: #50cd89; }
+    .border-top-warning .card-icon{ background: #fff8dd; color: #ffc700; }
+    .border-top-danger .card-icon { background: #fff5f8; color: #f1416c; }
+    .border-top-purple .card-icon { background: #f8f5ff; color: #7239ea; }
+    .border-top-cyan .card-icon   { background: #f0fdff; color: #00b2ff; }
+    .border-top-pink .card-icon   { background: #fdf2ff; color: #d946ef; }
 
-/* Nội dung Card */
-.card-label {
-  font-size: 13px;
-  color: #b5b5c3;
-  font-weight: 600;
-  text-transform: uppercase;
-  margin-bottom: 10px;
-}
-.card-value {
-  font-size: 26px;
-  font-weight: 800;
-  color: #181c32;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
+    /* GRIDS */
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 24px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 24px; }
+    .grid-charts { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-top: 30px; }
 
-/* ICON ĐƯỢC TÔ MÀU (NEW) */
-.card-icon {
-  font-size: 24px;
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  float: left;
-  margin-right: 15px;
-}
+    /* STATUS WIDGETS */
+    .status-card {
+        background: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        border: 1px dashed #e4e6ef;
+        transition: 0.2s;
+    }
+    .status-card:hover { border-color: #009ef7; border-style: solid; transform: translateY(-3px); }
+    
+    .status-label { font-size: 13px; color: #7e8299; margin-bottom: 5px; font-weight: 600; }
+    .status-val { font-size: 24px; font-weight: 700; }
+    
+    .text-warning { color: #ffc700; }
+    .text-primary { color: #009ef7; }
+    .text-success { color: #50cd89; }
+    .text-danger  { color: #f1416c; }
 
-/* Màu icon theo từng loại thẻ */
-.border-top-blue .card-icon {
-  background: #f1faff;
-  color: #009ef7;
-}
-.border-top-green .card-icon {
-  background: #e8fff3;
-  color: #50cd89;
-}
-.border-top-warning .card-icon {
-  background: #fff8dd;
-  color: #ffc700;
-}
-.border-top-danger .card-icon {
-  background: #fff5f8;
-  color: #f1416c;
-}
-.border-top-purple .card-icon {
-  background: #f8f5ff;
-  color: #7239ea;
-}
-.border-top-cyan .card-icon {
-  background: #f0fdff;
-  color: #00b2ff;
-}
-.border-top-pink .card-icon {
-  background: #fdf2ff;
-  color: #d946ef;
-}
+    /* CHART BOX */
+    .chart-wrapper {
+        background: #fff;
+        padding: 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
+    }
+    .chart-header {
+        border-bottom: 1px solid #eff2f5;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .chart-title { font-size: 16px; font-weight: 700; color: #181c32; }
 
-/* GRIDS */
-.grid-4 {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-  margin-bottom: 24px;
-}
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  margin-bottom: 24px;
-}
-.grid-charts {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 24px;
-  margin-top: 30px;
-}
-
-/* STATUS WIDGETS */
-.status-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 20px;
-  text-align: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
-  border: 1px dashed #e4e6ef;
-  transition: 0.2s;
-}
-.status-card:hover {
-  border-color: #009ef7;
-  border-style: solid;
-  transform: translateY(-3px);
-}
-
-.status-label {
-  font-size: 13px;
-  color: #7e8299;
-  margin-bottom: 5px;
-  font-weight: 600;
-}
-.status-val {
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.text-warning {
-  color: #ffc700;
-}
-.text-primary {
-  color: #009ef7;
-}
-.text-success {
-  color: #50cd89;
-}
-.text-danger {
-  color: #f1416c;
-}
-
-/* CHART BOX */
-.chart-wrapper {
-  background: #fff;
-  padding: 24px;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
-}
-.chart-header {
-  border-bottom: 1px solid #eff2f5;
-  padding-bottom: 15px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.chart-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #181c32;
-}
-
-/* RESPONSIVE */
-@media (max-width: 1200px) {
-  .grid-4,
-  .grid-3 {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .grid-charts {
-    grid-template-columns: 1fr;
-  }
-}
-@media (max-width: 600px) {
-  .grid-4,
-  .grid-3 {
-    grid-template-columns: 1fr;
-  }
-}
+    /* RESPONSIVE */
+    @media (max-width: 1200px) {
+        .grid-4, .grid-3 { grid-template-columns: repeat(2, 1fr); }
+        .grid-charts { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+        .grid-4, .grid-3 { grid-template-columns: 1fr; }
+    }

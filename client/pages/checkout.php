@@ -210,23 +210,55 @@ $total = $subtotal + $shipping - $discount;
                 </div> 
 
                 <div class="payment-summary">
-                    <h3>Phương thức thanh toán</h3>
-                    <div class="payment-methods-list">
-                        <div class="payment-method-box active">
-                            <input type="radio" id="payment_vnpay" name="payment_method" value="vnpay" checked>
-                            <img src="assets/img/vnpay-logo.png" alt="VNPAY" style="height: 24px;"> 
-                            <label for="payment_vnpay" style="margin-left: 8px;">Thanh toán qua VNPAY</label>
+                <h3>Phương thức thanh toán</h3>
+                <div class="payment-methods-list">
+                    
+                    <div class="payment-method-box active">
+                        <input type="radio" id="payment_cod" name="payment_method" value="cod" checked>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-left: 8px;">
+                            <i class="fa-solid fa-money-bill-wave" style="color: #10b981; font-size: 20px;"></i>
+                            <div style="display: flex; flex-direction: column;">
+                                <label for="payment_cod" style="cursor: pointer;">Thanh toán khi nhận hàng (COD)</label>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="terms-checkbox">
-                        <input type="checkbox" id="terms" name="terms" required>
-                        <label for="terms">Tôi đồng ý với <a href="index.php?page=static_policy" target="_blank">điều khoản và chính sách</a>.</label>
+                    <div class="payment-method-box">
+                        <input type="radio" id="payment_vnpay" name="payment_method" value="vnpay">
+                        <img src="assets/img/vnpay.jpg" alt="VNPAY" style="height: 24px; margin-left: 8px;"> 
+                        <label for="payment_vnpay" style="margin-left: 8px; cursor: pointer;">Thanh toán qua VNPAY</label>
                     </div>
-                    <div class="checkout-btn">
-                        <button type="submit" class="btn btn-primary" style="width: 100%;">Đặt hàng</button>
-                    </div>
-                </div> 
+
+                </div>
+
+                <div class="terms-checkbox">
+                    <input type="checkbox" id="terms" name="terms" required checkdate> <label for="terms">Tôi đồng ý với <a href="index.php?page=static_policy" target="_blank">điều khoản và chính sách</a>.</label>
+                </div>
+                <div class="checkout-btn">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Đặt hàng</button>
+                </div>
+            </div> 
+
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
+                
+                function updateActiveMethod() {
+                    paymentRadios.forEach(radio => {
+                        const box = radio.closest('.payment-method-box');
+                        if (radio.checked) {
+                            box.classList.add('active');
+                        } else {
+                            box.classList.remove('active');
+                        }
+                    });
+                }
+
+                paymentRadios.forEach(radio => {
+                    radio.addEventListener('change', updateActiveMethod);
+                });
+            });
+            </script>
             </div> 
         </div>     
     </form> 

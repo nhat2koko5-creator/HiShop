@@ -32,6 +32,11 @@ switch ($page) {
         $page_title = 'Quản lý Đơn Hàng';
         $page_file = 'pages/orders_list.php';
         break;
+        
+    case 'order_detail':
+        $page_title = 'Chi tiết Đơn Hàng';
+        $page_file = 'pages/order_detail.php';
+        break;
 
     case 'categories_list':
         $page_title = 'Quản lý Danh Mục';
