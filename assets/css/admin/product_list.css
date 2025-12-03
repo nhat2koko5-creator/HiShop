@@ -1,0 +1,78 @@
+.btn-variant {
+  background: #0d6efd;        /* màu xanh chuẩn bootstrap primary */
+  color: #ffffff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+}
+
+/* Phiên bản nhỏ (btn-sm) */
+.btn-variant.btn-sm {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 5px;
+}
+
+/* Hover / focus */
+.btn-variant:hover,
+.btn-variant:focus {
+  filter: brightness(0.92);
+  text-decoration: none;
+  outline: none;
+}
+
+/* Disabled */
+.btn-variant:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+/* Modal – cho phép cuộn nội dung */
+.modal-box {
+    max-height: 90vh;         /* modal tối đa 90% chiều cao màn hình */
+    overflow-y: auto;         /* BẬT cuộn dọc */
+    padding-right: 10px;      /* tránh bị che bởi scrollbar */
+    box-sizing: border-box;
+}
+
+/* Vẫn giữ nút Lưu – Hủy nằm cuối modal */
+.modal-actions {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+}
+/* Nút Thêm biến thể (bạn đang dùng) */
+.btn-add-variant {
+    background: #28a745;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+/* Làm nút Xóa biến thể giống hệt nhưng màu đỏ */
+.btn-delete {
+    background: #dc3545;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.btn-delete:hover {
+    background: #c82333;
+}
