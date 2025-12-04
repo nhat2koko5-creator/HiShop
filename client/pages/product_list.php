@@ -78,21 +78,44 @@ $exec_params[] = $offset;
 // Rebuild statement: if there are category params, replace the '?' placeholders with named ones to avoid confusion.
 // Simpler: prepare statement dynamically with named param for category if exists.
 
-if (!empty($params)) {
-    // We originally appended '?', so let's rebuild WHERE with a named category param
-    // (Assume only one category filter as in this page)
-    $where_clauses2 = ['sp.trang_thai = 1'];
-    if ($category_id > 0) {
-        $where_clauses2[] = 'sp.danh_muc_id = :category_id';
-    }
-    $where_sql2 = implode(' AND ', $where_clauses2);
-    $sql_products = "SELECT sp.* FROM san_pham sp WHERE $where_sql2 ORDER BY sp.id DESC LIMIT :limit OFFSET :offset";
-    $stmt_products = $pdo->prepare($sql_products);
-    $stmt_products->bindValue(':category_id', $category_id, PDO::PARAM_INT);
-} else {
-    $sql_products = "SELECT sp.* FROM san_pham sp WHERE sp.trang_thai = 1 ORDER BY sp.id DESC LIMIT :limit OFFSET :offset";
-    $stmt_products = $pdo->prepare($sql_products);
+/* ---------------- LẤY SẢN PHẨM (có thông số kỹ thuật) ---------------- */
+
+// Rebuild WHERE condition with named parameter for category
+$where_clauses2 = ['sp.trang_thai = 1'];
+if ($category_id > 0) {
+    $where_clauses2[] = 'sp.danh_muc_id = :category_id';
 }
+$where_sql2 = implode(' AND ', $where_clauses2);
+
+// SỬA ĐỔI: Thêm JOIN với thong_so và sử dụng GROUP BY để tránh lặp hàng
+$sql_products = "
+    SELECT 
+        sp.*, 
+        MAX(ts.cpu) AS cpu, 
+        MAX(ts.ram) AS ram
+    FROM san_pham sp
+    -- LEFT JOIN để lấy thông số kỹ thuật
+    LEFT JOIN san_pham_thong_so spts ON spts.san_pham_id = sp.id
+    LEFT JOIN thong_so ts ON ts.id = spts.thong_so_id
+    
+    WHERE $where_sql2
+    
+    GROUP BY sp.id, sp.ten, sp.hinh_anh, sp.gia, sp.danh_muc_id, sp.mo_ta, sp.trang_thai -- Group tất cả cột sp.*
+    
+    ORDER BY sp.id DESC 
+    LIMIT :limit OFFSET :offset
+";
+
+$stmt_products = $pdo->prepare($sql_products);
+
+// Bind category param nếu có
+if ($category_id > 0) {
+    $stmt_products->bindValue(':category_id', $category_id, PDO::PARAM_INT);
+}
+
+// bind limit/offset as integers
+$stmt_products->bindValue(':limit', (int)$products_per_page, PDO::PARAM_INT);
+$stmt_products->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
 
 // bind limit/offset as integers
 $stmt_products->bindValue(':limit', (int)$products_per_page, PDO::PARAM_INT);
@@ -205,19 +228,37 @@ function format_price($p) {
             <div class="product-image">
                 <img src="<?= htmlspecialchars($img_path) ?>" alt="<?= htmlspecialchars($p['ten']) ?>">
             </div>
+<div class="card-content">
+<div class="card-title"><?= htmlspecialchars($p['ten']) ?></div>
 
-            <div class="card-content">
-                <div class="card-title"><?= htmlspecialchars($p['ten']) ?></div>
+<div class="card-price" style="justify-content: center; margin-bottom: 8px;">
+<?php if ($discount_percent > 0): ?>
+<span class="card-price-old"><?= format_price($display_price) ?></span>
+<span class="card-price-new"><?= format_price($price_after) ?></span>
+<?php else: ?>
+<span class="card-price-new"><?= format_price($display_price) ?></span>
+<?php endif; ?>
+</div>
 
-                <div class="card-price" style="justify-content: center; margin-bottom: 8px;">
-                    <?php if ($discount_percent > 0): ?>
-                        <span class="card-price-old"><?= format_price($display_price) ?></span>
-                        <span class="card-price-new"><?= format_price($price_after) ?></span>
-                    <?php else: ?>
-                        <span class="card-price-new"><?= format_price($display_price) ?></span>
-                    <?php endif; ?>
+                <?php 
+                $cpu_display = !empty($p['cpu']) ? "CPU: " . htmlspecialchars($p['cpu']) : '';
+                $ram_display = !empty($p['ram']) ? "RAM: " . htmlspecialchars($p['ram']) : '';
+                
+                $spec_line = '';
+                if ($cpu_display && $ram_display) {
+                    $spec_line = $cpu_display . '||' . $ram_display; 
+                } elseif ($cpu_display) {
+                    $spec_line = $cpu_display;
+                } elseif ($ram_display) {
+                    $spec_line = $ram_display;
+                }
+                ?>
+
+                <?php if ($spec_line): ?>
+                <div class="product-specs" style="font-size: 13px; color: #666; margin-bottom: 10px; font-weight: 500;">
+                    <?= $spec_line ?>
                 </div>
-
+                <?php endif; ?>
                 <div class="btn-group-vertical">
                     <a href="index.php?page=product_detail&id=<?= $p['id'] ?>" class="btn-view">🔍 Xem chi tiết</a>
                     
