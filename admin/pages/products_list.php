@@ -198,7 +198,7 @@ $categories = $pdo->query("SELECT * FROM danh_muc ORDER BY ten ASC")->fetchAll()
                     <th width="60">ID</th>
                     <th>Hình ảnh</th>
                     <th>Tên sản phẩm</th>
-                    <th>Giá</th>
+                    <th>Giá</th> <!-- vẫn giữ cột, nhưng giá sẽ để dấu — -->
                     <th>Số lượng</th>
                     <th>Danh mục</th>
                     <th width="140" class="text-end">Thao tác</th>
@@ -215,41 +215,50 @@ $categories = $pdo->query("SELECT * FROM danh_muc ORDER BY ten ASC")->fetchAll()
                 <?php foreach ($products as $p): ?>
 
     <!-- HÀNG SẢN PHẨM CHÍNH -->
-    <tr style="background-color: #f8fea7ff;">
-        <td class="text-center"><?= $p['id'] ?></td>
+    <tr>
+        <td class="text-center">
+    <button class="toggle-arrow" onclick="toggleVariants(<?= $p['id'] ?>)">
+        ▶
+    </button>
+    <?= $p['id'] ?>
+</td>
+
         <td><img src="/HiShop/assets/img/products/<?= $p['hinh_anh'] ?>" width="60"></td>
         <td><?= htmlspecialchars($p['ten']) ?></td>
-        <td><?= number_format($p['gia']) ?>₫</td>
+        <!-- <td><?= number_format($p['gia']) ?>₫</td> -->
+        <td>—</td> <!-- Hiển thị dấu gạch cho đẹp -->
         <td><?= ($p['tong_bien_the'] !== null ? $p['tong_bien_the'] : 0) ?></td>
         <td><?= $p['ten_danh_muc'] ?? "Không có" ?></td>
 
-        <td class="text-end">
-            <!-- SỬA -->
-            <a href="#"
-               class="btn btn-sm btn-warning"
-               onclick="openEditModal(
-                            <?= $p['id'] ?>,
-                            '<?= htmlspecialchars($p['ten'], ENT_QUOTES) ?>',
-                            '<?= $p['gia'] ?>',
-                            '<?= $p['so_luong'] ?>',
-                            '<?= htmlspecialchars($p['hinh_anh'], ENT_QUOTES) ?>',
-                            '<?= htmlspecialchars($p['mo_ta'], ENT_QUOTES) ?>',
-                            '<?= $p['danh_muc_id'] ?>'
-                        )">
-                <i class="fa-solid fa-pen"></i>
-            </a>
+<td class="text-end">
 
-            <!-- ẨN / HIỆN -->
-            <a href="index.php?page=products_list&toggle=<?= $p['id'] ?>" class="btn btn-sm btn-info">
-                <?php if ($p['trang_thai'] == 1): ?>
-                    <i class="fa-solid fa-eye"></i>
-                <?php else: ?>
-                    <i class="fa-solid fa-eye-slash"></i>
-                <?php endif; ?>
-            </a>
+    <!-- Nút SỬA -->
+    <a href="#"
+       class="action-btn edit-btn"
+       onclick="openEditModal(
+                <?= $p['id'] ?>,
+                '<?= htmlspecialchars($p['ten'], ENT_QUOTES) ?>',
+                '<?= $p['gia'] ?>',
+                '<?= $p['so_luong'] ?>',
+                '<?= htmlspecialchars($p['hinh_anh'], ENT_QUOTES) ?>',
+                '<?= htmlspecialchars($p['mo_ta'], ENT_QUOTES) ?>',
+                '<?= $p['danh_muc_id'] ?>'
+            )">
+        <i class="fa-solid fa-pen"></i> Sửa
+    </a>
 
-        </td>
-    </tr>
+    <!-- Nút ẨN / HIỆN -->
+    <a href="index.php?page=products_list&toggle=<?= $p['id'] ?>"
+       class="action-btn status-btn <?= ($p['trang_thai'] == 1 ? 'show' : 'hide') ?>">
+        <?php if ($p['trang_thai'] == 1): ?>
+            <i class="fa-solid fa-eye"></i> Hiện
+        <?php else: ?>
+            <i class="fa-solid fa-eye-slash"></i> Ẩn
+        <?php endif; ?>
+    </a>
+
+</td>
+
 
     <!-- LẤY BIẾN THỂ -->
     <?php  
@@ -260,7 +269,7 @@ $categories = $pdo->query("SELECT * FROM danh_muc ORDER BY ten ASC")->fetchAll()
 
     <!-- HIỂN THỊ BIẾN THỂ -->
     <?php foreach ($variants as $v): ?>
-        <tr class="variant-row">
+        <tr class="variant-row variant-of-<?= $p['id'] ?>" style="display:none;">
             <td></td>
             <td><img src="/HiShop/assets/img/products/<?= $v['hinh_anh'] ?>" width="45"></td>
             <td>
@@ -473,9 +482,6 @@ function saveVariantsJSON() {
             <label>Tên sản phẩm:</label>
             <input type="text" name="edit_ten" id="edit_ten" required>
 
-            <label>Giá:</label>
-            <input type="number" name="edit_gia" id="edit_gia" required>
-
             <label>Hình ảnh mới (nếu muốn đổi):</label>
             <input type="file" name="edit_hinh_anh" accept="image/*">
             <input type="hidden" name="old_hinh_anh" id="edit_hinh_anh">
@@ -536,6 +542,19 @@ function openVariantModal(id, mau, ssd, gia, ton, hinh) {
 
 function closeVariantModal() {
     document.getElementById('modalVariant').style.display = 'none';
+}
+</script>
+<script>
+function toggleVariants(id) {
+    let rows = document.querySelectorAll(".variant-of-" + id);
+    let arrow = document.querySelector(
+        ".toggle-arrow[onclick='toggleVariants(" + id + ")']"
+    );
+
+    let isHidden = rows[0].style.display === "none";
+
+    rows.forEach(r => r.style.display = isHidden ? "table-row" : "none");
+    arrow.textContent = isHidden ? "▼" : "▶";
 }
 </script>
 

@@ -168,6 +168,15 @@ $discountProducts = getDiscountProducts($pdo);
                 <div class="option-box" id="modal-ssd-options">
                     </div>
             </div>
+            <div class="option-group" id="modal-qty-group">
+    <h4>Số lượng</h4>
+    <div class="qty-box">
+        <button class="qty-btn" id="qty-minus">−</button>
+        <input type="number" id="qty-input" value="1" min="1">
+        <button class="qty-btn" id="qty-plus">+</button>
+    </div>
+</div>
+
         </div>
             <div class="variant-modal-footer">
                 <button class="btn btn-outline" id="modal-cancel-btn">Hủy</button>
@@ -297,11 +306,16 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedColor = null;
     let selectedSSD = null;
     let currentSelectedVariant = null; // {id, gia, ...}
+    let selectedQty = 1;
+
 
     // === HÀM 1: MỞ VÀ ĐIỀN DỮ LIỆU VÀO MODAL ===
     function openQuickAddModal(e) {
         e.preventDefault();
         const btn = e.currentTarget;
+        selectedQty = 1;
+        document.getElementById("qty-input").value = 1;
+
 
         // Lấy dữ liệu từ nút
         currentProductId = btn.dataset.productId;
@@ -498,7 +512,7 @@ if (variant.hinh_anh && variant.hinh_anh !== "") {
             action: 'add',
             id: currentProductId, // ID sản phẩm gốc
             variant_id: currentSelectedVariant.id, // ID biến thể
-            quantity: 1
+            quantity: selectedQty
         };
         
         const data = await sendCartRequest('add', bodyData);

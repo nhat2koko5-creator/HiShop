@@ -79,11 +79,15 @@ if (isset($_SESSION['promo']) && is_array($_SESSION['promo'])) {
     $promo_message = "Đã áp dụng mã: " . htmlspecialchars($promo_code);
     $promo_status_class = 'text-success'; 
 
-    if ($coupon['type'] == 'percent') {
+    // LOGIC ĐÃ SỬA: Kiểm tra 'phan_tram' thay vì 'percent' để khớp với database
+    if ($coupon['type'] == 'phan_tram') {
            $discount = ($subtotal * $coupon['value']) / 100;
-    } else {
+    } elseif ($coupon['type'] == 'tien_mat') { 
            $discount = $coupon['value'];
+    } else {
+           $discount = 0;
     }
+    
     if ($discount > $subtotal) $discount = $subtotal;
 }
 
@@ -279,7 +283,7 @@ $total = $subtotal + $shipping - $discount;
                         <div class="coupon-info">
                             <strong style="color: var(--color-primary); font-size: 16px;"><?= htmlspecialchars($cp['ten']) ?></strong>
                             <p style="margin: 4px 0; font-size: 13px; color: #555;">
-                                Giảm: <?= ($cp['loai_khuyen_mai'] == 'percent') ? $cp['gia_tri'] . '%' : number_format($cp['gia_tri']) . '₫' ?>
+                                Giảm: <?= ($cp['loai_khuyen_mai'] == 'phan_tram') ? $cp['gia_tri'] . '%' : number_format($cp['gia_tri']) . '₫' ?>
                             </p>
                         </div>
                         <button type="button" class="btn-apply-from-modal" data-code="<?= htmlspecialchars($cp['ten']) ?>">
