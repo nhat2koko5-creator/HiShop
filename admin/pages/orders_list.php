@@ -138,8 +138,8 @@ function getPageUrl($page) {
                     <th width="10%">PTTT</th>
                     <th width="12%">Thanh Toán</th>
                     <th width="13%">Tổng Tiền</th>
-                    <th width="12%">Trạng Thái</th>
-                    <th width="8%" style="text-align: right;">Hành động</th>
+                    <th width="11%">Trạng Thái</th>
+                    <th width="11%" style="text-align:center;">Hành động</th>
                 </tr>
             </thead>
             <tbody>

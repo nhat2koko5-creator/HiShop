@@ -5,44 +5,6 @@ $discountProducts = getDiscountProducts($pdo);
 <link rel="stylesheet" href="assets/css/client/home.css">
 <link rel="stylesheet" href="assets/css/client/product-list.css
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
-<style>
-    .product-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); /* mỗi dòng 4 sản phẩm */
-    gap: 20px;
-    margin-top: 20px;}
-
-    /* CSS mới cho tùy chọn gộp trong Modal */
-    .variant-combo-box {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 10px;
-    }
-    .option-combo {
-        padding: 8px 15px;
-        border: 2px solid #ccc;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 14px;
-        white-space: nowrap;
-        transition: all 0.2s;
-    }
-    .option-combo:hover:not(.active):not(.disabled) {
-        border-color: #a0a0a0;
-    }
-    .option-combo.active {
-        border-color: #0f62fe;
-        background-color: #0f62fe;
-        color: white;
-        font-weight: bold;
-    }
-    .option-combo.disabled {
-        cursor: not-allowed;
-        opacity: 0.5;
-        text-decoration: line-through;
-    }
-</style>
 <section class="hero">
     <div class="container">
         <div class="hero-content">
@@ -127,33 +89,50 @@ $discountProducts = getDiscountProducts($pdo);
                     </div>
 
                     <div class="card-content">
-                        <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
+    <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
 
-                        <div class="card-price">
-                            <span class="card-price-new"><?= number_format($sp['gia']); ?>₫</span>
-                        </div>
+    <div class="product-specs single-line">
+        <span class="spec-data">
+            <span class="spec-label-sm">CPU:</span> <?= htmlspecialchars($sp['cpu'] ?? 'N/A'); ?>
+        </span>
+        <span class="spec-separator">|</span>
+        <span class="spec-data">
+            <span class="spec-label-sm">RAM:</span> <?= htmlspecialchars($sp['ram'] ?? 'N/A'); ?>
+        </span>
+    </div>
+    <div class="card-price">
+        <?php 
+        $is_discount = isset($sp['gia_da_giam']) && $sp['gia_da_giam'] !== $sp['gia']; 
+        ?>
+        <?php if ($is_discount): ?>
+            <span class="card-price-old"><?= number_format($sp['gia']); ?>₫</span>
+            <span class="card-price-new"><?= number_format($sp['gia_da_giam']); ?>₫</span>
+        <?php else: ?>
+            <span class="card-price-new"><?= number_format($sp['gia']); ?>₫</span>
+        <?php endif; ?>
+    </div>
 
-                        <div class="btn-group-vertical">
-                            <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">
-                                🔍 Xem chi tiết
-                            </a>
+    <div class="btn-group-vertical">
+        <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">
+            🔍 Xem chi tiết
+        </a>
 
-                            <?php if (!empty($sp['variants'])): ?>
-                                <a href="javascript:void(0);"
-                                   class="btn-cart btn-quick-add"
-                                   data-product-id="<?= $sp['id']; ?>"
-                                   data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
-                                   data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
-                                   data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'>
-                                    🛒 Thêm vào giỏ
-                                </a>
-                            <?php else: ?>
-                                <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">
-                                    🛒 Thêm vào giỏ
-                                </a>
-                            <?php endif; ?>
-                        </div>
-                    </div>
+        <?php if (!empty($sp['variants'])): ?>
+            <a href="javascript:void(0);"
+               class="btn-cart btn-quick-add"
+               data-product-id="<?= $sp['id']; ?>"
+               data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
+               data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
+               data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'>
+                🛒 Thêm vào giỏ
+            </a>
+        <?php else: ?>
+            <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">
+                🛒 Thêm vào giỏ
+            </a>
+        <?php endif; ?>
+    </div>
+</div>
 
                 </div>
 
@@ -246,6 +225,17 @@ $origPrice = isset($sp['gia']) ? $sp['gia'] : null;
 <div class="card-content">
     <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
 
+    <!-- ⭐ THÔNG SỐ GIỐNG KHỐI NỔI BẬT -->
+    <div class="product-specs single-line">
+        <span class="spec-data">
+            <span class="spec-label-sm">CPU:</span> <?= htmlspecialchars($sp['cpu'] ?? 'N/A'); ?>
+        </span>
+        <span class="spec-separator">|</span>
+        <span class="spec-data">
+            <span class="spec-label-sm">RAM:</span> <?= htmlspecialchars($sp['ram'] ?? 'N/A'); ?>
+        </span>
+    </div>
+
     <div class="card-price">
         <?php if ($newPrice !== null): ?>
             <span class="card-price-old"><?= number_format($origPrice); ?>₫</span>
@@ -255,31 +245,27 @@ $origPrice = isset($sp['gia']) ? $sp['gia'] : null;
         <?php endif; ?>
     </div>
 
-<div class="btn-group-vertical">
-    <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">
-        🔍 Xem chi tiết
-    </a>
-
-    <?php if (!empty($sp['variants']) && count($sp['variants']) > 0): ?>
-        <a href="javascript:void(0);"
-           class="btn-cart btn-quick-add"
-           data-product-id="<?= $sp['id']; ?>"
-           data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
-           data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
-           data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'
-        >
-            🛒 Thêm vào giỏ
+    <div class="btn-group-vertical">
+        <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">
+            🔍 Xem chi tiết
         </a>
 
-    <?php else: ?>
-        <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">
-            🛒 Thêm vào giỏ
-        </a>
-    <?php endif; ?>
+        <?php if (!empty($sp['variants']) && count($sp['variants']) > 0): ?>
+            <a href="javascript:void(0);"
+               class="btn-cart btn-quick-add"
+               data-product-id="<?= $sp['id']; ?>"
+               data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
+               data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
+               data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'>
+                🛒 Thêm vào giỏ
+            </a>
+        <?php else: ?>
+            <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">
+                🛒 Thêm vào giỏ
+            </a>
+        <?php endif; ?>
+    </div>
 </div>
-
-</div>
-
     </div>
     </div>
     <?php endforeach; ?>
