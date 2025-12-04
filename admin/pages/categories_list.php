@@ -104,7 +104,7 @@ $categories = $stmt->fetchAll();
 <div class="card">
     <div class="card-body p-0">
         <table class="table table-hover mb-0">
-            <thead class="table-light">
+            <thead class="table-light" style="background-color: #0676e5ff; color: white;">
                 <tr>
                     <th width="60">ID</th>
                     <th class="text-center">Tên danh mục</th>

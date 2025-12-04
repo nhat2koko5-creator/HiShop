@@ -1,4 +1,3 @@
-
 <?php
 // FILE: admin/index.php
 
@@ -69,10 +68,7 @@ switch ($page) {
         $page_file = 'pages/dashboard.php';
         break;
 }
-
-
 ?>
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>

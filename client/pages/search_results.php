@@ -1,6 +1,6 @@
 <?php
 // Tải header
-require_once 'client/layouts/header.php';
+
 
 // 1. Lấy từ khóa tìm kiếm từ URL (thường là 'q')
 $search_query = trim($_GET['query'] ?? '');
@@ -9,7 +9,7 @@ $search_query = trim($_GET['query'] ?? '');
 $products = [];
 $page_title = "Kết quả tìm kiếm"; // Tiêu đề mặc định
 $no_product_message = "Không tìm thấy sản phẩm nào phù hợp.";
-
+require_once 'client/layouts/header.php';
 // 3. Định nghĩa hàm format giá (giống hệt file product_list.php)
 function format_price($price) {
     return number_format($price, 0, ',', '.') . "₫";

@@ -2,6 +2,30 @@
 require_once '../src/config.php';
 require_once '../src/functions.php';
 
+// ================================
+// 1. XỬ LÝ HÀNH ĐỘNG (toggle)
+// ================================
+if (isset($_GET['toggle'])) {
+    $id = intval($_GET['toggle']);
+
+    $stmt = $pdo->prepare("SELECT trang_thai FROM san_pham WHERE id = ?");
+    $stmt->execute([$id]);
+    $status = $stmt->fetchColumn();
+
+    $newStatus = ($status == 1 ? 0 : 1);
+
+    $pdo->prepare("UPDATE san_pham SET trang_thai = ? WHERE id = ?")
+        ->execute([$newStatus, $id]);
+    header("Location: index.php?page=products_list&toggled=1");
+    exit;
+}
+// ================================
+// 2. CHỈ INCLUDE HEADER SAU KHI
+//    TOÀN BỘ LOGIC PHP ĐÃ XONG
+// ================================
+require_once 'layouts/header.php';
+?>
+<?php
 /* ==========================
     THÊM SẢN PHẨM (CÓ BIẾN THỂ)
 ========================== */
@@ -64,8 +88,6 @@ foreach ($variants as $v) {
         $imgName
     ]);
 }
-
-
     header("Location: index.php?page=products_list&added=1");
     exit;
 }
@@ -102,33 +124,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['variant_id'])) {
         WHERE id = (SELECT san_pham_id FROM bien_the_san_pham WHERE id=?)
     ");
     $stmt2->execute([$id, $id]);
-
     // KHÔNG ĐƯỢC OUTPUT TRƯỚC HEADER
-    ob_clean(); 
     header("Location: index.php?page=products_list&variant_updated=1");
     exit;
 }
-
-
-/* ==========================
-    ẨN / HIỆN SẢN PHẨM
-========================== */
-if (isset($_GET['toggle'])) {
-    $id = intval($_GET['toggle']);
-
-    $stmt = $pdo->prepare("SELECT trang_thai FROM san_pham WHERE id = ?");
-    $stmt->execute([$id]);
-    $status = $stmt->fetchColumn();
-
-    $newStatus = ($status == 1 ? 0 : 1);
-
-    $update = $pdo->prepare("UPDATE san_pham SET trang_thai = ? WHERE id = ?");
-    $update->execute([$newStatus, $id]);
-
-    header("Location: index.php?page=products_list&toggled=1");
-    exit;
-}
-
 /* ==========================
     LOAD SẢN PHẨM
 ========================== */
@@ -153,7 +152,7 @@ $products = $stmt->fetchAll();
 ========================== */
 $categories = $pdo->query("SELECT * FROM danh_muc ORDER BY ten ASC")->fetchAll();
 ?>
-<?php require_once 'layouts/header.php'; ?>
+
 
 <style>
 
@@ -523,4 +522,21 @@ function closeEditModal(){
     document.getElementById('modalEdit').style.display = 'none';
 }
 </script>
+<script>
+function openVariantModal(id, mau, ssd, gia, ton, hinh) {
+    document.getElementById('variant_id').value = id;
+    document.getElementById('variant_mau').value = mau;
+    document.getElementById('variant_ssd').value = ssd;
+    document.getElementById('variant_gia').value = gia;
+    document.getElementById('variant_ton').value = ton;
+    document.getElementById('variant_hinh').value = hinh;
+
+    document.getElementById('modalVariant').style.display = 'flex';
+}
+
+function closeVariantModal() {
+    document.getElementById('modalVariant').style.display = 'none';
+}
+</script>
+
 <link rel="stylesheet" href="/HiShop/assets/css/admin/product_list.css">
