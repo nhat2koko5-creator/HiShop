@@ -1,5 +1,4 @@
 <?php
-
 // FILE: product_detail.php (ĐÃ NÂNG CẤP LÊN BIẾN THỂ ĐỘNG)
 require_once 'client/layouts/header.php';
 
@@ -143,29 +142,33 @@ if (!file_exists($img_path)) $img_path = $default_img;
         <div class="short-desc"><?= nl2br(htmlspecialchars($product['mo_ta'])) ?></div>
       <?php endif; ?>
 
-      <?php if (!empty($variants)): ?>
-        
+<?php if (!empty($variants)): ?>
         <div class="option-group">
-          <h4>Màu sắc</h4>
-          <div class="option-box" id="colorOptions">
-            <?php foreach ($available_colors as $color): ?>
-              <div class="option" data-group="color" data-value="<?= htmlspecialchars($color) ?>"><?= htmlspecialchars($color) ?></div>
-            <?php endforeach; ?>
-          </div>
-        </div>
+          <h4>Lựa chọn cấu hình</h4>
+  <div class="option-box variant-combo-box" id="variantOptions">
+    <?php
+ // Lặp qua tất cả biến thể đã lấy được
+foreach ($variants as $variant): 
+  $variant_label = htmlspecialchars($variant['mau_sac'] . ' / ' . $variant['dung_luong_ssd']);
+$variant_key = htmlspecialchars($variant['mau_sac'] . '|' . $variant['dung_luong_ssd']);
+$variant_price_diff = $variant['gia'] - $base_price;
+$price_suffix = ($variant_price_diff > 0) ? '+ ' . price_format($variant_price_diff) : '';
+?>
+<div
+class="option option-combo" 
+data-key="<?= $variant_key ?>">
+<strong><?= $variant_label ?></strong>
+<?php if ($variant_price_diff != 0): ?>
+<span class="price-diff"><?= $price_suffix ?></span>
+<?php endif; ?>
+</div>
+<?php endforeach; ?>
+</div>
+</div>
 
-        <div class="option-group">
-          <h4>SSD</h4>
-          <div class="option-box" id="ssdOptions">
-             <?php foreach ($available_ssds as $ssd): ?>
-              <div class="option" data-group="ssd" data-value="<?= htmlspecialchars($ssd) ?>"><?= htmlspecialchars($ssd) ?></div>
-            <?php endforeach; ?>
-          </div>
-        </div>
-
-      <?php else: ?>
-        <p><em>Sản phẩm này hiện chưa có tùy chọn cụ thể.</em></p>
-      <?php endif; ?>
+<?php else: ?>
+<p><em>Sản phẩm này hiện chưa có tùy chọn cụ thể.</em></p>
+<?php endif; ?>
 
       <div class="actions">
         <button class="btn btn-primary" id="addCartBtn" data-id="<?= $product['id'] ?>" disabled>🛒 Thêm vào giỏ</button>
@@ -262,8 +265,7 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 });
 
 // (MỚI) Logic chọn biến thể
-let selectedColor = null;
-let selectedSSD = null;
+let selectedVariantKey = null; // Lưu key gộp (ví dụ: "Đen|128GB")
 let currentSelectedVariant = null; // Sẽ lưu trữ {id, gia, ...}
 
 const buyNowBtn = document.getElementById("buyNowBtn");
@@ -295,14 +297,18 @@ function checkSelections() {
   // (MỚI) Hiển thị lại "Giá từ" nếu nó tồn tại
   if (priceNoteEl) priceNoteEl.style.display = 'inline';
 
-  // 2. Chỉ tiếp tục nếu đã chọn đủ
-  if (!selectedColor || !selectedSSD) {
-    return;
-  }
+// ...
+ // 2. Chỉ tiếp tục nếu đã có key biến thể được chọn
+if (!selectedVariantKey) {
+    // Nếu chưa chọn, hiển thị giá cơ bản (do PHP đã thiết lập)
+    stockEl.textContent = 'Vui lòng chọn tùy chọn';
+    stockEl.className = 'stock-info';
+return;
+}
 
-  // 3. Tạo key và tìm biến thể
-  const variantKey = selectedColor + '|' + selectedSSD;
-  const variant = variantsData[variantKey];
+// 3. Sử dụng key gộp và tìm biến thể
+const variant = variantsData[selectedVariantKey]; // selectedVariantKey là key đã được gán trực tiếp
+// ...
 
   if (variant) {
     // 4. TÌM THẤY -> Cập nhật giao diện
@@ -340,22 +346,16 @@ function checkSelections() {
 }
 
 // (MỚI) Gán sự kiện cho các .option
-document.querySelectorAll("#colorOptions .option").forEach(opt => {
-  opt.addEventListener("click", () => {
-    document.querySelectorAll("#colorOptions .option").forEach(o => o.classList.remove("active"));
-    opt.classList.add("active");
-    selectedColor = opt.dataset.value;
-    checkSelections();
-  });
+// (MỚI) Gán sự kiện cho các .option-combo trong khối gộp
+document.querySelectorAll("#variantOptions .option-combo").forEach(opt => {
+opt.addEventListener("click", () => {
+ // Bỏ chọn tất cả các option-combo khác
+document.querySelectorAll("#variantOptions .option-combo").forEach(o => o.classList.remove("active"));// Chọn option hiện tại
+opt.classList.add("active");
+// Lưu key gộp từ data-key của HTML
+selectedVariantKey = opt.dataset.key;
+checkSelections();
 });
-
-document.querySelectorAll("#ssdOptions .option").forEach(opt => {
-  opt.addEventListener("click", () => {
-    document.querySelectorAll("#ssdOptions .option").forEach(o => o.classList.remove("active"));
-    opt.classList.add("active");
-    selectedSSD = opt.dataset.value;
-    checkSelections();
-  });
 });
 
 // (SỬA LẠI) Nút Mua ngay

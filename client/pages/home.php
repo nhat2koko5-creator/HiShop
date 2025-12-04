@@ -11,6 +11,37 @@ $discountProducts = getDiscountProducts($pdo);
     grid-template-columns: repeat(4, 1fr); /* mỗi dòng 4 sản phẩm */
     gap: 20px;
     margin-top: 20px;}
+
+    /* CSS mới cho tùy chọn gộp trong Modal */
+    .variant-combo-box {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    .option-combo {
+        padding: 8px 15px;
+        border: 2px solid #ccc;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        white-space: nowrap;
+        transition: all 0.2s;
+    }
+    .option-combo:hover:not(.active):not(.disabled) {
+        border-color: #a0a0a0;
+    }
+    .option-combo.active {
+        border-color: #0f62fe;
+        background-color: #0f62fe;
+        color: white;
+        font-weight: bold;
+    }
+    .option-combo.disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+        text-decoration: line-through;
+    }
 </style>
 <section class="hero">
     <div class="container">
@@ -85,7 +116,6 @@ $discountProducts = getDiscountProducts($pdo);
 
                 <div class="product-card">
 
-                    <!-- Hình ảnh sản phẩm -->
                     <div class="product-image">
                         <?php
                         $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
@@ -99,12 +129,10 @@ $discountProducts = getDiscountProducts($pdo);
                     <div class="card-content">
                         <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
 
-                        <!-- Giá sản phẩm -->
                         <div class="card-price">
                             <span class="card-price-new"><?= number_format($sp['gia']); ?>₫</span>
                         </div>
 
-                        <!-- Nút -->
                         <div class="btn-group-vertical">
                             <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">
                                 🔍 Xem chi tiết
@@ -158,14 +186,9 @@ $discountProducts = getDiscountProducts($pdo);
 
             <hr style="margin: 20px 0;">
 
-            <div class="option-group" id="modal-color-group">
-                <h4>Màu sắc</h4>
-                <div class="option-box" id="modal-color-options">
-                    </div>
-            </div>
-            <div class="option-group" id="modal-ssd-group">
-                <h4>SSD</h4>
-                <div class="option-box" id="modal-ssd-options">
+            <div class="option-group" id="modal-variant-group">
+                <h4>Tùy chọn biến thể</h4>
+                <div class="option-box variant-combo-box" id="modal-variant-options">
                     </div>
             </div>
             <div class="option-group" id="modal-qty-group">
@@ -206,7 +229,6 @@ $newPrice = isset($sp['gia_da_giam']) ? $sp['gia_da_giam'] : null;
 $origPrice = isset($sp['gia']) ? $sp['gia'] : null;
 ?>
 
-<!-- SALE TAG (BONG BÓNG GIẢM GIÁ) -->
 <?php if ($percent > 0): ?>
     <div class="product-sale-tag">-<?= htmlspecialchars($percent); ?>%</div>
 <?php endif; ?>
@@ -239,7 +261,6 @@ $origPrice = isset($sp['gia']) ? $sp['gia'] : null;
     </a>
 
     <?php if (!empty($sp['variants']) && count($sp['variants']) > 0): ?>
-        <!-- Giảm giá nhưng có biến thể → Quick Add -->
         <a href="javascript:void(0);"
            class="btn-cart btn-quick-add"
            data-product-id="<?= $sp['id']; ?>"
@@ -251,7 +272,6 @@ $origPrice = isset($sp['gia']) ? $sp['gia'] : null;
         </a>
 
     <?php else: ?>
-        <!-- Không có biến thể → add thẳng -->
         <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">
             🛒 Thêm vào giỏ
         </a>
@@ -260,7 +280,7 @@ $origPrice = isset($sp['gia']) ? $sp['gia'] : null;
 
 </div>
 
-        </div>
+    </div>
     </div>
     <?php endforeach; ?>
 <?php else: ?>
@@ -295,18 +315,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalProductName = document.getElementById('modal-product-name');
     const modalPrice = document.getElementById('modal-product-price');
     const modalStock = document.getElementById('modal-stock-status');
-    const modalColorBox = document.getElementById('modal-color-options');
-    const modalSsdBox = document.getElementById('modal-ssd-options');
+    const modalVariantBox = document.getElementById('modal-variant-options'); // (ĐÃ SỬA) Biến cho combo options
     const modalAddBtn = document.getElementById('modal-add-btn');
     const modalMainImage = document.getElementById('modal-product-main-image');
     
     // --- Biến Trạng Thái (sẽ được reset) ---
     let currentVariants = []; // Dữ liệu JSON từ data-variants
     let currentProductId = null;
-    let selectedColor = null;
-    let selectedSSD = null;
+    let selectedVariantKey = null; // (MỚI) Lưu key gộp: "Màu|SSD"
     let currentSelectedVariant = null; // {id, gia, ...}
     let selectedQty = 1;
+
+    let originalProductImage = ''; // Lưu ảnh gốc khi mở modal
 
 
     // === HÀM 1: MỞ VÀ ĐIỀN DỮ LIỆU VÀO MODAL ===
@@ -315,13 +335,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const btn = e.currentTarget;
         selectedQty = 1;
         document.getElementById("qty-input").value = 1;
+        selectedVariantKey = null; // Reset key
 
 
         // Lấy dữ liệu từ nút
         currentProductId = btn.dataset.productId;
         modalProductName.textContent = btn.dataset.productName;
-        const productImage = btn.dataset.productImage;
-modalMainImage.src = productImage || 'assets/img/no-image.png';
+        originalProductImage = btn.dataset.productImage; // Lưu lại ảnh gốc
+        modalMainImage.src = originalProductImage || 'assets/img/no-image.png';
 
         
         try {
@@ -331,30 +352,27 @@ modalMainImage.src = productImage || 'assets/img/no-image.png';
             return;
         }
 
-        // --- (MỚI) Tự động xây dựng các tùy chọn ---
-        const colors = [...new Set(currentVariants.map(v => v.mau_sac))];
-        const ssds = [...new Set(currentVariants.map(v => v.dung_luong_ssd))];
+        // --- Xây dựng các tùy chọn GỘP ---
+        modalVariantBox.innerHTML = ''; // Xóa sạch
 
-        // Tạo HTML cho Màu
-        modalColorBox.innerHTML = ''; // Xóa sạch
-        colors.forEach(color => {
+        currentVariants.forEach(variant => {
             const opt = document.createElement('div');
-            opt.className = 'option';
-            opt.dataset.group = 'color';
-            opt.dataset.value = color;
-            opt.textContent = color;
-            modalColorBox.appendChild(opt);
-        });
+            opt.className = 'option-combo';
+            
+            // Tạo key gộp: Mau|SSD
+            const variantKey = variant.mau_sac + '|' + variant.dung_luong_ssd; 
+            opt.dataset.key = variantKey; 
+            
+            // Hiển thị text: Màu (SSD)
+            opt.textContent = `${variant.mau_sac} (${variant.dung_luong_ssd})`;
+            
+            // Thêm class 'disabled' nếu hết hàng
+            if (variant.so_luong_ton <= 0) {
+                opt.classList.add('disabled');
+                opt.title = 'Hết hàng';
+            }
 
-        // Tạo HTML cho SSD
-        modalSsdBox.innerHTML = ''; // Xóa sạch
-        ssds.forEach(ssd => {
-            const opt = document.createElement('div');
-            opt.className = 'option';
-            opt.dataset.group = 'ssd';
-            opt.dataset.value = ssd;
-            opt.textContent = ssd;
-            modalSsdBox.appendChild(opt);
+            modalVariantBox.appendChild(opt);
         });
         
         // Reset giá và hiển thị modal
@@ -370,8 +388,7 @@ modalMainImage.src = productImage || 'assets/img/no-image.png';
         // Reset tất cả
         currentVariants = [];
         currentProductId = null;
-        selectedColor = null;
-        selectedSSD = null;
+        selectedVariantKey = null; // (ĐÃ SỬA)
         currentSelectedVariant = null;
         modalAddBtn.disabled = true;
     }
@@ -381,29 +398,36 @@ modalMainImage.src = productImage || 'assets/img/no-image.png';
         // 1. Reset
         modalAddBtn.disabled = true;
         currentSelectedVariant = null;
+        modalMainImage.src = originalProductImage; // Reset ảnh về ảnh gốc
 
-        // 2. Chỉ tiếp tục nếu đã chọn đủ
-        if (!selectedColor || !selectedSSD) {
+        // 2. Chỉ tiếp tục nếu đã chọn biến thể
+        if (!selectedVariantKey) {
+            modalPrice.textContent = '--';
+            modalStock.textContent = 'Vui lòng chọn tùy chọn';
+            modalStock.className = 'stock-info';
             return;
         }
 
-        // 3. Tìm biến thể
-        // (MỚI) Dùng hàm find() để tìm trong mảng JSON
-        const variant = currentVariants.find(v => (v.mau_sac === selectedColor && v.dung_luong_ssd === selectedSSD));
+        // 3. Tìm biến thể (dùng key gộp)
+        const variant = currentVariants.find(v => {
+            const variantKey = v.mau_sac + '|' + v.dung_luong_ssd;
+            return variantKey === selectedVariantKey;
+        });
+
 
         if (variant) {
-            // 4. TÌM THẤY
+            // 4. TÌM THẤY -> Cập nhật giao diện
             if (variant.gia_giam && variant.gia_giam < variant.gia) {
-    modalPrice.innerHTML =
-        `<span class="old-price" style="text-decoration:line-through;color:#999;margin-right:6px;">
-            ${formatPrice(variant.gia)}
-        </span>
-        <span class="new-price" style="color:#e60000;font-weight:bold;">
-            ${formatPrice(variant.gia_giam)}
-        </span>`;
-} else {
-    modalPrice.innerHTML = `<span class="new-price">${formatPrice(variant.gia)}</span>`;
-}
+                modalPrice.innerHTML =
+                    `<span class="old-price" style="text-decoration:line-through;color:#999;margin-right:6px;">
+                        ${formatPrice(variant.gia)}
+                    </span>
+                    <span class="new-price" style="color:#e60000;font-weight:bold;">
+                        ${formatPrice(variant.gia_giam)}
+                    </span>`;
+            } else {
+                modalPrice.innerHTML = `<span class="new-price">${formatPrice(variant.gia)}</span>`;
+            }
 
             
             if (variant.so_luong_ton > 0) {
@@ -415,14 +439,18 @@ modalMainImage.src = productImage || 'assets/img/no-image.png';
                 modalStock.textContent = "Hết hàng";
                 modalStock.className = 'stock-info out';
             }
-if (variant.hinh_anh && variant.hinh_anh !== "") {
-    modalMainImage.src = `assets/img/products/${variant.hinh_anh}`;
-} else {
-    modalMainImage.src = originalProductImage;
-}
+            // Cập nhật ảnh (nếu có)
+            if (variant.hinh_anh && variant.hinh_anh !== "") {
+                modalMainImage.src = `assets/img/products/${variant.hinh_anh}`;
+            } else {
+                modalMainImage.src = originalProductImage;
+            }
+             // Cập nhật số lượng tối đa
+            document.getElementById('qty-input').max = variant.so_luong_ton;
+
 
         } else {
-            // 5. KHÔNG TÌM THẤY (Kết hợp không tồn tại)
+            // 5. KHÔNG TÌM THẤY
             modalPrice.textContent = '--';
             modalStock.textContent = "Tùy chọn không có sẵn";
             modalStock.className = 'stock-info out';
@@ -477,31 +505,32 @@ if (variant.hinh_anh && variant.hinh_anh !== "") {
         if (e.target === modal) closeQuickAddModal();
     });
 
-    // 3. (MỚI) Dùng "Event Delegation" để xử lý các nút .option được tạo động
+    // 3. (MỚI) Xử lý các nút .option-combo
     modal.addEventListener('click', function(e) {
-        // Chỉ xử lý nếu nhấn vào .option
-        if (!e.target.classList.contains('option') || e.target.classList.contains('disabled')) {
+        // Chỉ xử lý nếu nhấn vào .option-combo và không bị disabled
+        if (!e.target.classList.contains('option-combo') || e.target.classList.contains('disabled')) {
             return;
         }
 
-        const group = e.target.dataset.group;
-        const value = e.target.dataset.value;
+        const key = e.target.dataset.key; // Lấy key gộp
 
-        if (group === 'color') {
-            selectedColor = value;
-            // Xóa active cũ
-            modalColorBox.querySelectorAll('.option').forEach(o => o.classList.remove('active'));
-        } else if (group === 'ssd') {
-            selectedSSD = value;
-            // Xóa active cũ
-            modalSsdBox.querySelectorAll('.option').forEach(o => o.classList.remove('active'));
-        }
-        
-        // Thêm active mới
+        // Xóa active cho tất cả các nút trong modal variant box
+        document.querySelectorAll('.option-combo').forEach(o => o.classList.remove('active'));
+
+        // Lưu key và thêm active mới
+        selectedVariantKey = key;
         e.target.classList.add('active');
         
-        // Kiểm tra
+        // Kiểm tra và cập nhật giao diện
         checkModalSelections();
+        
+        // Đảm bảo số lượng không vượt quá tồn kho
+        const qtyInput = document.getElementById('qty-input');
+        let currentVal = parseInt(qtyInput.value);
+        if (currentSelectedVariant && currentVal > currentSelectedVariant.so_luong_ton) {
+             qtyInput.value = currentSelectedVariant.so_luong_ton;
+             selectedQty = currentSelectedVariant.so_luong_ton;
+        }
     });
 
     // 4. Gán sự kiện cho nút "Thêm vào giỏ" TRONG MODAL
@@ -526,7 +555,6 @@ if (variant.hinh_anh && variant.hinh_anh !== "") {
         } else {
             // Xử lý lỗi (ví dụ: chưa đăng nhập)
             if (data.message.includes('Bạn cần đăng nhập')) {
-                // (ĐÃ SỬA LỖI CÚ PHÁP TẠI ĐÂY)
                 showPopup("Lỗi: " + data.message);
                 setTimeout(() => { window.location.href = 'index.php?page=login'; }, 1500);
             } else {
@@ -534,6 +562,46 @@ if (variant.hinh_anh && variant.hinh_anh !== "") {
             }
         }
     });
+    
+    // Logic nút tăng/giảm số lượng
+    const qtyInput = document.getElementById('qty-input');
+    document.getElementById('qty-minus').addEventListener('click', function() {
+        let currentVal = parseInt(qtyInput.value);
+        if (currentVal > 1) {
+            qtyInput.value = currentVal - 1;
+            selectedQty = currentVal - 1;
+        }
+    });
+
+    document.getElementById('qty-plus').addEventListener('click', function() {
+        let currentVal = parseInt(qtyInput.value);
+        let maxQty = currentSelectedVariant ? currentSelectedVariant.so_luong_ton : 999;
+        
+        if (currentSelectedVariant && currentVal < maxQty) {
+            qtyInput.value = currentVal + 1;
+            selectedQty = currentVal + 1;
+        } else if (!currentSelectedVariant) {
+            // Nếu chưa chọn biến thể, giới hạn tạm thời
+            qtyInput.value = currentVal + 1;
+            selectedQty = currentVal + 1;
+        }
+    });
+
+    qtyInput.addEventListener('change', function() {
+        let currentVal = parseInt(qtyInput.value);
+        let maxQty = currentSelectedVariant ? currentSelectedVariant.so_luong_ton : 999;
+        
+        if (isNaN(currentVal) || currentVal < 1) {
+            currentVal = 1;
+        } else if (currentSelectedVariant && currentVal > maxQty) {
+            currentVal = maxQty;
+            showPopup(`Chỉ còn tối đa ${maxQty} sản phẩm`);
+        }
+        
+        qtyInput.value = currentVal;
+        selectedQty = currentVal;
+    });
+
 });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
