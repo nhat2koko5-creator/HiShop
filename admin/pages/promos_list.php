@@ -73,20 +73,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_id'])) {
 ========================== */
 if (isset($_GET['toggle'])) {
     $id = intval($_GET['toggle']);
-
     $stmt = $pdo->prepare("SELECT trang_thai FROM ma_khuyen_mai WHERE id = ?");
     $stmt->execute([$id]);
-    $status = $stmt->fetchColumn();
+    $current = $stmt->fetchColumn();
 
-    $newStatus = ($status == 1 ? 0 : 1);
-
+    $newStatus = ($current == 1) ? 0 : 1;
     $update = $pdo->prepare("UPDATE ma_khuyen_mai SET trang_thai = ? WHERE id = ?");
     $update->execute([$newStatus, $id]);
 
-    header("Location: index.php?page=discount_list&toggled=1");
+    $msg = ($newStatus == 1) ? 'Đã hiển thị mã khuyến mãi.' : 'Đã ẩn mã khuyến mãi.';
+    $_SESSION['toast'] = ['type' => 'success', 'message' => $msg];
+    
+    echo "<script>window.location.href='index.php?page=categories_list';</script>";
     exit;
 }
-
 /* ==========================
     LOAD KHUYẾN MÃI (ĐÃ CHỈNH SỬA LỌC TRẠNG THÁI)
 ========================== */
@@ -130,6 +130,21 @@ $sql_final = "SELECT * $sql_base ORDER BY id DESC";
 $stmt = $pdo->prepare($sql_final);
 $stmt->execute($params);
 $discounts = $stmt->fetchAll();
+
+
+/* ==========================
+    THỐNG KÊ (Stats Grid)
+========================== */
+$stats = $pdo->query("SELECT 
+    COUNT(*) as total,
+    SUM(CASE WHEN trang_thai = 1 THEN 1 ELSE 0 END) as active,
+    SUM(CASE WHEN trang_thai = 0 THEN 1 ELSE 0 END) as hidden
+FROM ma_khuyen_mai")->fetch();
+
+$stat_total = $stats['total'] ?? 0;
+$stat_active = $stats['active'] ?? 0;
+$stat_hidden = $stats['hidden'] ?? 0;
+
 
 // Helper function để hiển thị trạng thái theo thời gian
 function getDiscountStatus($discount) {
@@ -179,152 +194,177 @@ function getPageUrl($page) {
 <?php require_once 'layouts/header.php'; ?>
 
 <div class="admin-page discount-list-page">
-<h1 class="title">QUẢN LÝ KHUYẾN MÃI</h1>
 
-<div class="filter-toolbar">
-    <div class="add-action-wrapper">
-        <button class="btn-add" onclick="openModal()">+ Thêm mã khuyến mãi</button>
+    <div class="stats-grid-container">
+        <div class="stat-card stat-blue">
+            <div class="stat-icon-wrapper"><i class="fa-solid fa-tags"></i></div>
+            <div class="stat-content">
+                <h3><?= $stat_total ?></h3>
+                <p>Tổng Mã Khuyến Mãi</p>
+            </div>
+        </div>
+        <div class="stat-card stat-green">
+            <div class="stat-icon-wrapper"><i class="fa-solid fa-eye"></i></div>
+            <div class="stat-content">
+                <h3><?= $stat_active ?></h3>
+                <p>Đang Hoạt Động (Admin)</p>
+            </div>
+        </div>
+        <div class="stat-card stat-gray">
+            <div class="stat-icon-wrapper"><i class="fa-solid fa-eye-slash"></i></div>
+            <div class="stat-content">
+                <h3><?= $stat_hidden ?></h3>
+                <p>Đang Ẩn (Admin)</p>
+            </div>
+        </div>
     </div>
+    
+    <div class="filter-toolbar">
+        <div class="add-action-wrapper">
+            <button class="btn-add" onclick="openModal()">+ Thêm mã khuyến mãi</button>
+        </div>
 
-    <div class="status-tabs-wrapper">
-        <div class="status-tabs">
-            <a href="<?= getStatusUrl('all', $keyword) ?>" class="tab-btn <?= $current_tab=='all'?'active':'' ?>">Tất cả</a>
-            <a href="<?= getStatusUrl('active', $keyword) ?>" class="tab-btn <?= $current_tab=='active'?'active':'' ?>">Đang hoạt động</a>
-            <a href="<?= getStatusUrl('upcoming', $keyword) ?>" class="tab-btn <?= $current_tab=='upcoming'?'active':'' ?>">Sắp hoạt động</a>
-            <a href="<?= getStatusUrl('expired', $keyword) ?>" class="tab-btn <?= $current_tab=='expired'?'active':'' ?>">Đã hết hạn</a>
-            <a href="<?= getStatusUrl('inactive', $keyword) ?>" class="tab-btn <?= $current_tab=='inactive'?'active':'' ?>">Đã ẩn (Admin)</a>
+        <div class="status-tabs-wrapper">
+            <div class="status-tabs">
+                <a href="<?= getStatusUrl('all', $keyword) ?>" class="tab-btn <?= $current_tab=='all'?'active':'' ?>">Tất cả</a>
+                <a href="<?= getStatusUrl('active', $keyword) ?>" class="tab-btn <?= $current_tab=='active'?'active':'' ?>">Đang hoạt động</a>
+                <a href="<?= getStatusUrl('upcoming', $keyword) ?>" class="tab-btn <?= $current_tab=='upcoming'?'active':'' ?>">Sắp hoạt động</a>
+                <a href="<?= getStatusUrl('expired', $keyword) ?>" class="tab-btn <?= $current_tab=='expired'?'active':'' ?>">Đã hết hạn</a>
+                <a href="<?= getStatusUrl('inactive', $keyword) ?>" class="tab-btn <?= $current_tab=='inactive'?'active':'' ?>">Đã ẩn (Admin)</a>
+            </div>
+        </div>
+
+        <div class="search-wrapper">
+            <form method="GET" class="search-form-flex" action="index.php">
+                <input type="hidden" name="page" value="discount_list">
+                <input type="hidden" name="status" value="<?= $current_tab ?>">
+                <input type="text" 
+                       class="search-input" 
+                       name="keyword"
+                       placeholder="Tìm kiếm theo Tên hoặc Mã code..."
+                       value="<?= htmlspecialchars($keyword) ?>">
+                <button class="search-btn">
+                    <i class="fa-solid fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+    <?php if (!empty($_GET['added'])): ?>
+        <div class="alert alert-success">Đã thêm mã khuyến mãi thành công.</div>
+    <?php endif; ?>
+
+    <?php if (!empty($_GET['updated'])): ?>
+        <div class="alert alert-success">Đã cập nhật mã khuyến mãi thành công.</div>
+    <?php endif; ?>
+
+    <?php if (!empty($_GET['toggled'])): ?>
+        <div class="alert alert-success">Đã thay đổi trạng thái mã khuyến mãi.</div>
+    <?php endif; ?>
+
+    <?php if (!empty($_GET['error'])): ?>
+        <div class="alert alert-danger"><?= htmlspecialchars($_GET['error']) ?></div>
+    <?php endif; ?>
+
+    <div class="card responsive-table-container">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0 table-list">
+                <thead class="table-header">
+                    <tr>
+                        <th width="4%">ID</th>
+                        <th width="15%">Tên</th>
+                        <th width="7%">Mã Code</th>
+                        <th width="10%">Giá trị</th>
+                        <th width="10%">Ngày Bắt Đầu</th> 
+                        <th width="10%">Ngày Kết Thúc</th>
+                        <th width="15%">Điều kiện</th>
+                        <th width="10%">Trạng thái</th>
+                        <th width="12%" class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <?php if (count($discounts) == 0): ?>
+                        <tr>
+                            <td colspan="9" class="text-center p-4 text-muted">Không có mã khuyến mãi nào.</td>
+                        </tr>
+                    <?php endif; ?>
+
+                    <?php foreach ($discounts as $d): 
+                        // Định dạng giá trị
+                        $value_display = number_format($d['gia_tri']);
+                        if (strpos(strtolower($d['loai_khuyen_mai']), 'phan_tram') !== false) {
+                            $value_display .= '%';
+                        } else {
+                             $value_display .= '₫';
+                        }
+
+                        // LẤY TRẠNG THÁI MỚI (theo logic thời gian thực)
+                        $status_info = getDiscountStatus($d);
+                        
+                        // Lô-gic hiển thị Trạng thái (quay lại hiển thị theo thời gian như yêu cầu)
+                        $display_status_text = $status_info['text'];
+                        $display_status_class = $status_info['class']; 
+                    ?>
+
+        <tr class="table-row-data">
+            <td data-label="ID" class="text-center"><?= $d['id'] ?></td>
+            <td data-label="Tên khuyến mãi" class="col-name"><?= htmlspecialchars($d['ten']) ?></td>
+            <td data-label="Mã Code"><b><?= htmlspecialchars($d['ma_code']) ?></b></td>
+            <td data-label="Giá trị" class="col-value"><?= $value_display ?></td>
+            
+            <td data-label="Ngày Bắt Đầu" class="col-date">
+                <?= date('d/m/Y H:i', strtotime($d['ngay_bat_dau'])) ?>
+            </td>
+            
+            <td data-label="Ngày Kết Thúc" class="col-date">
+                <?= date('d/m/Y H:i', strtotime($d['ngay_ket_thuc'])) ?>
+            </td>
+            
+            <td data-label="Điều kiện" class="col-condition"><?= htmlspecialchars($d['dieu_kien'] ?? 'Không') ?></td>
+            
+            <td data-label="Trạng thái">
+                <span class="badge status-badge <?= $display_status_class ?>">
+                    <?= $display_status_text ?>
+                </span>
+            </td>
+
+            <td class="text-end col-actions" data-label="Thao tác">
+                <a href="#"
+                   class="action-btn edit-btn-new"
+                   onclick="openEditModal(
+                                    <?= $d['id'] ?>,
+                                    '<?= htmlspecialchars($d['ten'], ENT_QUOTES) ?>',
+                                    '<?= htmlspecialchars($d['ma_code'], ENT_QUOTES) ?>',
+                                    '<?= htmlspecialchars($d['mo_ta'], ENT_QUOTES) ?>',
+                                    '<?= $d['loai_khuyen_mai'] ?>',
+                                    '<?= $d['gia_tri'] ?>',
+                                    '<?= date('Y-m-d\TH:i', strtotime($d['ngay_bat_dau'])) ?>',
+                                    '<?= date('Y-m-d\TH:i', strtotime($d['ngay_ket_thuc'])) ?>',
+                                    '<?= htmlspecialchars($d['dieu_kien'], ENT_QUOTES) ?>'
+                                )">
+                    <i class="fa-solid fa-pencil"></i> Sửa
+                </a>
+
+                <a href="index.php?page=discount_list&toggle=<?= $d['id'] ?>" class="action-btn toggle-btn-new <?= $d['trang_thai'] == 1 ? 'btn-hide' : 'btn-show' ?>">
+                    <?php if ($d['trang_thai'] == 1): ?>
+                        <i class="fa-solid fa-eye-slash"></i> Ẩn
+                    <?php else: ?>
+                        <i class="fa-solid fa-eye"></i> Hiện
+                    <?php endif; ?>
+                </a>
+
+            </td>
+        </tr>
+
+    <?php endforeach; ?>
+
+                </tbody>
+
+            </table>
         </div>
     </div>
 
-    <div class="search-wrapper">
-        <form method="GET" class="search-form-flex" action="index.php">
-            <input type="hidden" name="page" value="discount_list">
-            <input type="hidden" name="status" value="<?= $current_tab ?>">
-            <input type="text" 
-                   class="search-input" 
-                   name="keyword"
-                   placeholder="Tìm kiếm theo Tên hoặc Mã code..."
-                   value="<?= htmlspecialchars($keyword) ?>">
-            <button class="search-btn">
-                <i class="fa-solid fa-search"></i>
-            </button>
-        </form>
     </div>
-</div>
-<?php if (!empty($_GET['added'])): ?>
-    <div class="alert alert-success">Đã thêm mã khuyến mãi thành công.</div>
-<?php endif; ?>
-
-<?php if (!empty($_GET['updated'])): ?>
-    <div class="alert alert-success">Đã cập nhật mã khuyến mãi thành công.</div>
-<?php endif; ?>
-
-<?php if (!empty($_GET['toggled'])): ?>
-    <div class="alert alert-success">Đã thay đổi trạng thái mã khuyến mãi.</div>
-<?php endif; ?>
-
-<?php if (!empty($_GET['error'])): ?>
-    <div class="alert alert-danger"><?= htmlspecialchars($_GET['error']) ?></div>
-<?php endif; ?>
-
-<div class="card responsive-table-container">
-    <div class="card-body p-0">
-        <table class="table table-hover mb-0 table-list">
-            <thead class="table-header">
-                <tr>
-                    <th width="4%">ID</th>
-                    <th width="15%">Tên</th>
-                    <th width="7%">Mã Code</th>
-                    <th width="10%">Giá trị</th>
-                    <th width="10%">Ngày Bắt Đầu</th> 
-                    <th width="10%">Ngày Kết Thúc</th>
-                    <th width="15%">Điều kiện</th>
-                    <th width="10%">Trạng thái</th>
-                    <th width="12%" class="text-end">Thao tác</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                <?php if (count($discounts) == 0): ?>
-                    <tr>
-                        <td colspan="9" class="text-center p-4 text-muted">Không có mã khuyến mãi nào.</td>
-                    </tr>
-                <?php endif; ?>
-
-                <?php foreach ($discounts as $d): 
-                    // Định dạng giá trị
-                    $value_display = number_format($d['gia_tri']);
-                    if (strpos(strtolower($d['loai_khuyen_mai']), 'phan_tram') !== false) {
-                        $value_display .= '%';
-                    } else {
-                         $value_display .= '₫';
-                    }
-
-                    // LẤY TRẠNG THÁI MỚI (theo logic thời gian thực)
-                    $status_info = getDiscountStatus($d);
-                    
-                    // Lô-gic hiển thị Trạng thái (quay lại hiển thị theo thời gian như yêu cầu)
-                    $display_status_text = $status_info['text'];
-                    $display_status_class = $status_info['class']; 
-                ?>
-
-    <tr class="table-row-data">
-        <td data-label="ID" class="text-center"><?= $d['id'] ?></td>
-        <td data-label="Tên khuyến mãi" class="col-name"><?= htmlspecialchars($d['ten']) ?></td>
-        <td data-label="Mã Code"><b><?= htmlspecialchars($d['ma_code']) ?></b></td>
-        <td data-label="Giá trị" class="col-value"><?= $value_display ?></td>
-        
-        <td data-label="Ngày Bắt Đầu" class="col-date">
-            <?= date('d/m/Y H:i', strtotime($d['ngay_bat_dau'])) ?>
-        </td>
-        
-        <td data-label="Ngày Kết Thúc" class="col-date">
-            <?= date('d/m/Y H:i', strtotime($d['ngay_ket_thuc'])) ?>
-        </td>
-        
-        <td data-label="Điều kiện" class="col-condition"><?= htmlspecialchars($d['dieu_kien'] ?? 'Không') ?></td>
-        
-        <td data-label="Trạng thái">
-            <span class="badge status-badge <?= $display_status_class ?>">
-                <?= $display_status_text ?>
-            </span>
-        </td>
-
-        <td class="text-end col-actions" data-label="Thao tác">
-            <a href="#"
-               class="action-btn edit-btn-new"
-               onclick="openEditModal(
-                                <?= $d['id'] ?>,
-                                '<?= htmlspecialchars($d['ten'], ENT_QUOTES) ?>',
-                                '<?= htmlspecialchars($d['ma_code'], ENT_QUOTES) ?>',
-                                '<?= htmlspecialchars($d['mo_ta'], ENT_QUOTES) ?>',
-                                '<?= $d['loai_khuyen_mai'] ?>',
-                                '<?= $d['gia_tri'] ?>',
-                                '<?= date('Y-m-d\TH:i', strtotime($d['ngay_bat_dau'])) ?>',
-                                '<?= date('Y-m-d\TH:i', strtotime($d['ngay_ket_thuc'])) ?>',
-                                '<?= htmlspecialchars($d['dieu_kien'], ENT_QUOTES) ?>'
-                            )">
-                <i class="fa-solid fa-pencil"></i> Sửa
-            </a>
-
-            <a href="index.php?page=discount_list&toggle=<?= $d['id'] ?>" class="action-btn toggle-btn-new <?= $d['trang_thai'] == 1 ? 'btn-hide' : 'btn-show' ?>">
-                <?php if ($d['trang_thai'] == 1): ?>
-                    <i class="fa-solid fa-eye-slash"></i> Ẩn
-                <?php else: ?>
-                    <i class="fa-solid fa-eye"></i> Hiện
-                <?php endif; ?>
-            </a>
-
-        </td>
-    </tr>
-
-<?php endforeach; ?>
-
-            </tbody>
-
-        </table>
-    </div>
-</div>
 
 <div id="modalAdd" class="modal-overlay" style="display:none;">
     <div class="modal-box">
@@ -456,6 +496,72 @@ function closeEditModal(){
     margin-bottom: 25px;
     border-bottom: 1px solid #eee;
     padding-bottom: 10px;
+}
+
+/* --- STATS GRID (THỐNG KÊ) --- */
+.stats-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-left: 5px solid; 
+}
+
+.stat-card.stat-blue {
+    border-left-color: #0676e5ff;
+}
+.stat-card.stat-green {
+    border-left-color: #2ab672;
+}
+.stat-card.stat-gray {
+    border-left-color: #9da1aa;
+}
+
+.stat-icon-wrapper {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+}
+
+.stat-card.stat-blue .stat-icon-wrapper {
+    background: #e0f2ff;
+    color: #0676e5ff;
+}
+.stat-card.stat-green .stat-icon-wrapper {
+    background: #e4f9f2;
+    color: #2ab672;
+}
+.stat-card.stat-gray .stat-icon-wrapper {
+    background: #f0f0f0;
+    color: #9da1aa;
+}
+
+
+.stat-content h3 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.stat-content p {
+    margin: 0;
+    font-size: 13px;
+    color: #64748b;
 }
 
 /* --- TOOLBAR & SEARCH (Sử dụng Flexbox để sắp xếp lại) --- */
