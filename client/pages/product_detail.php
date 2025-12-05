@@ -32,17 +32,17 @@ $stmt_variants->execute([$product_id]);
 $variants = $stmt_variants->fetchAll(PDO::FETCH_ASSOC);
 
 // 4. (MỚI) XỬ LÝ DỮ LIỆU BIẾN THỂ CHO PHP VÀ JS
+// 4. XỬ LÝ DỮ LIỆU BIẾN THỂ VÀ GIẢM GIÁ
 $available_colors = [];
 $available_ssds = [];
-$variants_js_data = []; // Dữ liệu để truyền cho JavaScript
+$variants_js_data = [];
 $base_price = 0;
 $total_stock = 0;
 
+$today = date('Y-m-d H:i:s');
+
 if (!empty($variants)) {
-    // Lấy giá thấp nhất làm giá "khởi điểm"
-    $base_price = $variants[0]['gia']; 
-    
-    foreach ($variants as $variant) {
+    foreach ($variants as &$variant) {
         // Lấy danh sách tùy chọn duy nhất
         $available_colors[$variant['mau_sac']] = $variant['mau_sac'];
         $available_ssds[$variant['dung_luong_ssd']] = $variant['dung_luong_ssd'];
@@ -50,19 +50,45 @@ if (!empty($variants)) {
         // Tính tổng tồn kho
         $total_stock += $variant['so_luong_ton'];
 
-        // (MỚI) Tạo một "key" để JS có thể tra cứu
-        // Ví dụ: "Đen|512GB" -> { id: 5, gia: 26000000, ... }
+        // --- Lấy giá giảm từ bảng giam_gia nếu có ---
+        $variant['gia_hien_tai'] = $variant['gia']; // mặc định = giá gốc
+        $stmt_discount = $pdo->prepare("
+            SELECT gg.loai_giam_gia, gg.gia_tri
+            FROM san_pham_giam_gia spgg
+            JOIN giam_gia gg ON spgg.giam_gia_id = gg.id
+            WHERE spgg.san_pham_id = ?
+              AND gg.ngay_bat_dau <= ?
+              AND (gg.ngay_ket_thuc IS NULL OR gg.ngay_ket_thuc >= ?)
+            ORDER BY gg.id DESC
+            LIMIT 1
+        ");
+        $stmt_discount->execute([$variant['san_pham_id'], $today, $today]);
+        $discount = $stmt_discount->fetch(PDO::FETCH_ASSOC);
+
+        if ($discount) {
+            if ($discount['loai_giam_gia'] === 'percent') {
+                $variant['gia_hien_tai'] = $variant['gia'] * (1 - $discount['gia_tri']/100);
+            } elseif ($discount['loai_giam_gia'] === 'amount') {
+                $variant['gia_hien_tai'] = max(0, $variant['gia'] - $discount['gia_tri']);
+            }
+        }
+
+        // Tạo key cho JS
         $key = $variant['mau_sac'] . '|' . $variant['dung_luong_ssd'];
         $variants_js_data[$key] = [
-            'id' => $variant['id'], // Đây là ID của biến thể
-            'gia' => $variant['gia'],
+            'id' => $variant['id'],
+            'gia' => $variant['gia_hien_tai'], // ✅ Giá đã giảm
             'so_luong_ton' => $variant['so_luong_ton'],
-            'hinh_anh' => $variant['hinh_anh'] // (Tùy chọn)
+            'hinh_anh' => $variant['hinh_anh']
         ];
     }
+    unset($variant);
+
+    // Giá thấp nhất sau giảm
+    $base_price = min(array_column($variants, 'gia_hien_tai'));
 } else {
-    // (Dự phòng nếu sản phẩm chưa có biến thể)
-    $base_price = $product['gia'] ?? 0; // Lấy giá cũ nếu có
+    // Dự phòng nếu sản phẩm chưa có biến thể
+    $base_price = $product['gia'] ?? 0;
 }
 
 // 5. (GIỮ NGUYÊN) Lấy tên danh mục
