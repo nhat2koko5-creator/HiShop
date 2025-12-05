@@ -3,7 +3,7 @@ $featuredProducts = getFeaturedProducts($pdo);
 $discountProducts = getDiscountProducts($pdo);
 ?>
 <link rel="stylesheet" href="assets/css/client/home.css">
-<link rel="stylesheet" href="assets/css/client/product-list.css
+<link rel="stylesheet" href="assets/css/client/product-list.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <section class="hero">
     <div class="container">
@@ -76,65 +76,88 @@ $discountProducts = getDiscountProducts($pdo);
         <?php if (!empty($featuredProducts)): ?>
             <?php foreach ($featuredProducts as $sp): ?>
 
-                <div class="product-card">
+<?php
+// trong vòng lặp foreach ($featuredProducts as $sp):
+// đảm bảo $is_discount được khai báo trước khi dùng
+$is_discount = isset($sp['gia_da_giam']) && $sp['gia_da_giam'] !== $sp['gia'];
+?>
+<div class="product-card">
 
-                    <div class="product-image">
-                        <?php
-                        $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
-                        if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
-                            $img_path = 'assets/img/no-image.png';
-                        }
-                        ?>
-                        <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
-                    </div>
-
-                    <div class="card-content">
-    <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
-
-    <div class="product-specs single-line">
-        <span class="spec-data">
-            <span class="spec-label-sm">CPU:</span> <?= htmlspecialchars($sp['cpu'] ?? 'N/A'); ?>
-        </span>
-        <span class="spec-separator">|</span>
-        <span class="spec-data">
-            <span class="spec-label-sm">RAM:</span> <?= htmlspecialchars($sp['ram'] ?? 'N/A'); ?>
-        </span>
-    </div>
-    <div class="card-price">
-        <?php 
-        $is_discount = isset($sp['gia_da_giam']) && $sp['gia_da_giam'] !== $sp['gia']; 
-        ?>
-        <?php if ($is_discount): ?>
-            <span class="card-price-old"><?= number_format($sp['gia']); ?>₫</span>
-            <span class="card-price-new"><?= number_format($sp['gia_da_giam']); ?>₫</span>
-        <?php else: ?>
-            <span class="card-price-new"><?= number_format($sp['gia']); ?>₫</span>
-        <?php endif; ?>
-    </div>
-
-    <div class="btn-group-vertical">
-        <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">
-            🔍 Xem chi tiết
+    <div class="product-image">
+            <?php
+    $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
+    if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
+        $img_path = 'assets/img/no-image.png';
+    }
+    ?>
+        <!-- Click ảnh -> sang trang chi tiết -->
+        <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>">
+            <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
         </a>
+    </div>
 
-        <?php if (!empty($sp['variants'])): ?>
-            <a href="javascript:void(0);"
-               class="btn-cart btn-quick-add"
-               data-product-id="<?= $sp['id']; ?>"
-               data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
-               data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
-               data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'>
-                🛒 Thêm vào giỏ
-            </a>
-        <?php else: ?>
-            <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">
-                🛒 Thêm vào giỏ
-            </a>
-        <?php endif; ?>
+    <div class="card-content">
+        <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
+
+        <div class="product-specs single-line">
+            <span class="spec-data">
+                <span class="spec-label-sm">CPU:</span> <?= htmlspecialchars($sp['cpu'] ?? 'N/A'); ?>
+            </span>
+            <span class="spec-separator">|</span>
+            <span class="spec-data">
+                <span class="spec-label-sm">RAM:</span> <?= htmlspecialchars($sp['ram'] ?? 'N/A'); ?>
+            </span>
+        </div>
+
+        <div class="card-price">
+            <?php if ($is_discount): ?>
+                <span class="card-price-old"><?= number_format($sp['gia']); ?>₫</span>
+                <span class="card-price-new"><?= number_format($sp['gia_da_giam']); ?>₫</span>
+            <?php else: ?>
+                <span class="card-price-new"><?= number_format($sp['gia']); ?>₫</span>
+            <?php endif; ?>
+        </div>
+
+        <div class="btn-group-vertical">
+
+            <!-- MUA NGAY: nếu có variants -> mở modal (data-action='buy'); nếu không -> chuyển thẳng checkout -->
+            <?php if (!empty($sp['variants']) && count($sp['variants']) > 0): ?>
+                <a href="javascript:void(0);"
+                   class="btn-view btn-quick-add btn-buy-now"
+                   data-product-id="<?= $sp['id']; ?>"
+                   data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
+                   data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
+                   data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'
+                   data-action="buy">
+                    ⚡ Mua ngay
+                </a>
+            <?php else: ?>
+                <a href="index.php?page=checkout&action=buy_now&variant_id=<?= $sp['id']; ?>&quantity=1" class="btn-view">
+                    ⚡ Mua ngay
+                </a>
+            <?php endif; ?>
+
+            <!-- Thêm vào giỏ: nếu có variants -> mở modal add; nếu không -> link add trực tiếp -->
+            <?php if (!empty($sp['variants']) && count($sp['variants']) > 0): ?>
+                <a href="javascript:void(0);"
+                   class="btn-cart btn-quick-add"
+                   data-product-id="<?= $sp['id']; ?>"
+                   data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
+                   data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
+                   data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'
+                   data-action="add">
+                    🛒 Thêm vào giỏ
+                </a>
+            <?php else: ?>
+                <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">
+                    🛒 Thêm vào giỏ
+                </a>
+            <?php endif; ?>
+
+        </div>
     </div>
 </div>
 
-                </div>
 
             <?php endforeach; ?>
         <?php else: ?>
@@ -196,97 +219,120 @@ $discountProducts = getDiscountProducts($pdo);
     <div class="product-carousel-wrapper">
         <div class="swiper product-carousel discount-carousel">
             <div class="swiper-wrapper">
-<?php if (!empty($discountProducts)): ?>
-    <?php foreach ($discountProducts as $sp): ?>
-    <div class="swiper-slide">
-        <div class="product-card">
 
-<?php 
-// an toàn: nếu không có key thì lấy giá trị mặc định
-$percent = isset($sp['giam_phan_tram']) ? (int)$sp['giam_phan_tram'] : 0;
-$newPrice = isset($sp['gia_da_giam']) ? $sp['gia_da_giam'] : null;
-$origPrice = isset($sp['gia']) ? $sp['gia'] : null;
-?>
+                <?php if (!empty($discountProducts)): ?>
+                    <?php foreach ($discountProducts as $sp): ?>
 
-<?php if ($percent > 0): ?>
-    <div class="product-sale-tag">-<?= htmlspecialchars($percent); ?>%</div>
-<?php endif; ?>
+                        <?php
+                        $percent   = isset($sp['giam_phan_tram']) ? (int)$sp['giam_phan_tram'] : 0;
+                        $newPrice  = $sp['gia_da_giam'] ?? null;
+                        $origPrice = $sp['gia'] ?? null;
 
-<div class="product-image">
-    <?php
-    $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
-    if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
-        $img_path = 'assets/img/no-image.png';
-    }
-    ?>
-    <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
-</div>
+                        $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
+                        if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
+                            $img_path = 'assets/img/no-image.png';
+                        }
+                        ?>
 
-<div class="card-content">
-    <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
+                        <div class="swiper-slide">
+                            <div class="product-card">
 
-    <!-- ⭐ THÔNG SỐ GIỐNG KHỐI NỔI BẬT -->
-    <div class="product-specs single-line">
-        <span class="spec-data">
-            <span class="spec-label-sm">CPU:</span> <?= htmlspecialchars($sp['cpu'] ?? 'N/A'); ?>
-        </span>
-        <span class="spec-separator">|</span>
-        <span class="spec-data">
-            <span class="spec-label-sm">RAM:</span> <?= htmlspecialchars($sp['ram'] ?? 'N/A'); ?>
-        </span>
-    </div>
+                                <?php if ($percent > 0): ?>
+                                    <div class="product-sale-tag">-<?= htmlspecialchars($percent) ?>%</div>
+                                <?php endif; ?>
 
-    <div class="card-price">
-        <?php if ($newPrice !== null): ?>
-            <span class="card-price-old"><?= number_format($origPrice); ?>₫</span>
-            <span class="card-price-new"><?= number_format($newPrice); ?>₫</span>
-        <?php else: ?>
-            <span class="card-price-new"><?= number_format($origPrice); ?>₫</span>
-        <?php endif; ?>
-    </div>
+                                <a href="index.php?page=product_detail&id=<?= $sp['id'] ?>" class="product-image">
+                                    <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']) ?>">
+                                </a>
 
-    <div class="btn-group-vertical">
-        <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>" class="btn-view">
-            🔍 Xem chi tiết
-        </a>
+                                <div class="card-content">
+                                    <h3 class="card-title"><?= htmlspecialchars($sp['ten']) ?></h3>
 
-        <?php if (!empty($sp['variants']) && count($sp['variants']) > 0): ?>
-            <a href="javascript:void(0);"
-               class="btn-cart btn-quick-add"
-               data-product-id="<?= $sp['id']; ?>"
-               data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
-               data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
-               data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'>
-                🛒 Thêm vào giỏ
-            </a>
-        <?php else: ?>
-            <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart">
-                🛒 Thêm vào giỏ
-            </a>
-        <?php endif; ?>
-    </div>
-</div>
-    </div>
-    </div>
-    <?php endforeach; ?>
-<?php else: ?>
-    <p style="text-align:center;width:100%;">Không có sản phẩm giảm giá.</p>
-<?php endif; ?>
+                                    <div class="product-specs single-line">
+                                        <span class="spec-data">
+                                            <span class="spec-label-sm">CPU:</span>
+                                            <?= htmlspecialchars($sp['cpu'] ?? 'N/A') ?>
+                                        </span>
 
+                                        <span class="spec-separator">|</span>
+
+                                        <span class="spec-data">
+                                            <span class="spec-label-sm">RAM:</span>
+                                            <?= htmlspecialchars($sp['ram'] ?? 'N/A') ?>
+                                        </span>
+                                    </div>
+
+                                    <div class="card-price">
+                                        <?php if ($newPrice !== null): ?>
+                                            <span class="card-price-old"><?= number_format($origPrice) ?>₫</span>
+                                            <span class="card-price-new"><?= number_format($newPrice) ?>₫</span>
+                                        <?php else: ?>
+                                            <span class="card-price-new"><?= number_format($origPrice) ?>₫</span>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <div class="btn-group-vertical">
+
+                                        <?php if (!empty($sp['variants'])): ?>
+
+                                            <a href="javascript:void(0);"
+                                               class="btn-view btn-quick-add btn-buy-now"
+                                               data-product-id="<?= $sp['id'] ?>"
+                                               data-product-name="<?= htmlspecialchars($sp['ten']) ?>"
+                                               data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']) ?>"
+                                               data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8") ?>'
+                                               data-action="buy">
+                                                ⚡ Mua ngay
+                                            </a>
+
+                                            <a href="javascript:void(0);"
+                                               class="btn-cart btn-quick-add"
+                                               data-product-id="<?= $sp['id'] ?>"
+                                               data-product-name="<?= htmlspecialchars($sp['ten']) ?>"
+                                               data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']) ?>"
+                                               data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8") ?>'
+                                               data-action="add">
+                                                🛒 Thêm vào giỏ
+                                            </a>
+
+                                        <?php else: ?>
+
+                                            <a href="index.php?page=checkout&action=buy_now&id=<?= $sp['id'] ?>" class="btn-view">
+                                                ⚡ Mua ngay
+                                            </a>
+
+                                            <a href="index.php?page=cart&action=add&id=<?= $sp['id'] ?>" class="btn-cart">
+                                                🛒 Thêm vào giỏ
+                                            </a>
+
+                                        <?php endif; ?>
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    <?php endforeach; ?>
+                <?php else: ?>
+
+                    <p style="text-align:center;width:100%;">Không có sản phẩm giảm giá.</p>
+
+                <?php endif; ?>
 
             </div>
         </div>
 
         <div class="swiper-button-prev discount-prev"></div>
         <div class="swiper-button-next discount-next"></div>
-
     </div>
 </section>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script>
 var swiperDiscount = new Swiper(".discount-carousel", {
     slidesPerView: 4,
     spaceBetween: 20,
-    loop: true,
+    loop:false,
     navigation: {
         nextEl: ".discount-next",
         prevEl: ".discount-prev"
@@ -311,62 +357,59 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedVariantKey = null; // (MỚI) Lưu key gộp: "Màu|SSD"
     let currentSelectedVariant = null; // {id, gia, ...}
     let selectedQty = 1;
-
+    let currentAction = 'add';
     let originalProductImage = ''; // Lưu ảnh gốc khi mở modal
 
 
     // === HÀM 1: MỞ VÀ ĐIỀN DỮ LIỆU VÀO MODAL ===
-    function openQuickAddModal(e) {
-        e.preventDefault();
-        const btn = e.currentTarget;
-        selectedQty = 1;
-        document.getElementById("qty-input").value = 1;
-        selectedVariantKey = null; // Reset key
+function openQuickAddModal(btn) {
 
+    selectedQty = 1;
+    document.getElementById("qty-input").value = 1;
+    selectedVariantKey = null;
 
-        // Lấy dữ liệu từ nút
-        currentProductId = btn.dataset.productId;
-        modalProductName.textContent = btn.dataset.productName;
-        originalProductImage = btn.dataset.productImage; // Lưu lại ảnh gốc
-        modalMainImage.src = originalProductImage || 'assets/img/no-image.png';
+    currentAction = btn.dataset.action || 'add';
 
-        
-        try {
-            currentVariants = JSON.parse(btn.dataset.variants);
-        } catch(e) {
-            alert('Lỗi dữ liệu biến thể. Vui lòng thử lại.');
-            return;
+    if (currentAction === 'buy') {
+        modalAddBtn.textContent = "Mua ngay";
+    } else {
+        modalAddBtn.textContent = "Thêm vào giỏ";
+    }
+
+    currentProductId = btn.dataset.productId;
+    modalProductName.textContent = btn.dataset.productName;
+
+    originalProductImage = btn.dataset.productImage;
+    modalMainImage.src = originalProductImage || 'assets/img/no-image.png';
+
+    try{
+        currentVariants = JSON.parse(btn.dataset.variants);
+    }catch(e){
+        alert('Lỗi biến thể');
+        return;
+    }
+
+    modalVariantBox.innerHTML = '';
+
+    currentVariants.forEach(v=>{
+        const opt = document.createElement('div');
+        opt.className = 'option-combo';
+
+        opt.dataset.key = v.mau_sac + "|" + v.dung_luong_ssd;
+        opt.textContent = `${v.mau_sac} (${v.dung_luong_ssd})`;
+
+        if (v.so_luong_ton <= 0) {
+            opt.classList.add('disabled');
         }
 
-        // --- Xây dựng các tùy chọn GỘP ---
-        modalVariantBox.innerHTML = ''; // Xóa sạch
+        modalVariantBox.appendChild(opt);
+    });
 
-        currentVariants.forEach(variant => {
-            const opt = document.createElement('div');
-            opt.className = 'option-combo';
-            
-            // Tạo key gộp: Mau|SSD
-            const variantKey = variant.mau_sac + '|' + variant.dung_luong_ssd; 
-            opt.dataset.key = variantKey; 
-            
-            // Hiển thị text: Màu (SSD)
-            opt.textContent = `${variant.mau_sac} (${variant.dung_luong_ssd})`;
-            
-            // Thêm class 'disabled' nếu hết hàng
-            if (variant.so_luong_ton <= 0) {
-                opt.classList.add('disabled');
-                opt.title = 'Hết hàng';
-            }
+    modalPrice.textContent = '--';
+    modalStock.textContent = 'Vui lòng chọn tùy chọn';
+    modal.style.display = 'flex';
+}
 
-            modalVariantBox.appendChild(opt);
-        });
-        
-        // Reset giá và hiển thị modal
-        modalPrice.textContent = '--';
-        modalStock.textContent = 'Vui lòng chọn tùy chọn';
-        modalStock.className = 'stock-info';
-        modal.style.display = 'flex';
-    }
 
     // === HÀM 2: ĐÓNG VÀ RESET MODAL ===
     function closeQuickAddModal() {
@@ -480,9 +523,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // === GÁN SỰ KIỆN ===
 
     // 1. Gán sự kiện cho tất cả nút "Thêm vào giỏ"
-    document.querySelectorAll('.btn-quick-add').forEach(button => {
-        button.addEventListener('click', openQuickAddModal);
-    });
+// BẮT SỰ KIỆN CHÍNH XÁC - ĐỘC LẬP SWIPER
+document.addEventListener("click", function(e) {
+
+    const btn = e.target.closest(".btn-quick-add");
+    if (!btn) return;
+
+    // CHẶN THẺ A KHÔNG CHUYỂN HƯỚNG
+    e.preventDefault();
+    e.stopPropagation();
+
+    openQuickAddModal(btn);
+});
+
+
+
 
     // 2. Gán sự kiện cho các nút đóng modal
     document.getElementById('modal-close-btn').addEventListener('click', closeQuickAddModal);
@@ -520,34 +575,48 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // 4. Gán sự kiện cho nút "Thêm vào giỏ" TRONG MODAL
-    modalAddBtn.addEventListener('click', async function() {
-        if (!currentSelectedVariant) return;
+modalAddBtn.addEventListener('click', async function () {
+    if (!currentSelectedVariant) return;
 
-        const bodyData = {
-            action: 'add',
-            id: currentProductId, // ID sản phẩm gốc
-            variant_id: currentSelectedVariant.id, // ID biến thể
-            quantity: selectedQty
-        };
-        
-        const data = await sendCartRequest('add', bodyData);
-        closeQuickAddModal(); // Đóng modal ngay
+    const bodyData = {
+        id: currentProductId,
+        variant_id: currentSelectedVariant.id,
+        quantity: selectedQty
+    };
 
-        if (data.status === "success") {
-            showPopup('🛒 Sản phẩm đã được thêm vào giỏ hàng!');
-            if (typeof updateCartIconCount === "function") {
-               updateCartIconCount(data.cart_count);
-            }
-        } else {
-            // Xử lý lỗi (ví dụ: chưa đăng nhập)
-            if (data.message.includes('Bạn cần đăng nhập')) {
-                showPopup("Lỗi: " + data.message);
-                setTimeout(() => { window.location.href = 'index.php?page=login'; }, 1500);
-            } else {
-                showPopup("Lỗi: " + data.message);
-            }
+    const data = await sendCartRequest(currentAction, bodyData);
+
+    // -------------------
+    // Xử lý MUA NGAY
+    // -------------------
+if (currentAction === "buy") {
+    if (data && data.status === "success") {
+
+        // Lấy ID biến thể được chọn
+        const vid = currentSelectedVariant.id;
+
+        // CHUYỂN HƯỚNG ĐÚNG LINK BẠN CẦN
+        window.location.href = `index.php?page=checkout&action=buy_now&variant_id=${vid}&quantity=${selectedQty}`;
+
+    } else {
+        showPopup(data?.message || "Không thể mua ngay");
+    }
+    return;
+}
+    // -------------------
+    // Xử lý THÊM VÀO GIỎ
+    // -------------------
+    closeQuickAddModal();   
+    if (data.status === "success") {
+        showPopup("🛒 Sản phẩm đã được thêm vào giỏ hàng!");
+        if (typeof updateCartIconCount === "function") {
+            updateCartIconCount(data.cart_count);
         }
-    });
+    } else {
+        showPopup("Lỗi: " + data.message);
+    }
+});
+
     
     // Logic nút tăng/giảm số lượng
     const qtyInput = document.getElementById('qty-input');
@@ -590,4 +659,3 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>

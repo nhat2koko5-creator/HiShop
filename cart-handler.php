@@ -35,6 +35,9 @@ if (!function_exists('getCouponByCode')) {
         }
     }
 }
+if ($_POST['action'] === 'buy') {
+    $_POST['action'] = 'add';
+}
 
 
 if (!isset($_SESSION['user_id'])) {
