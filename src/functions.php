@@ -127,8 +127,15 @@ function getDiscountProducts($pdo) {
     $stmt->execute();
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    foreach ($products as &$p) {
-        // ... (Logic xử lý biến thể)
+ foreach ($products as &$p) {
+        // Lấy biến thể
+        $stmtVar = $pdo->prepare("
+            SELECT id, mau_sac, dung_luong_ssd, gia, gia, so_luong_ton, hinh_anh
+            FROM bien_the_san_pham
+            WHERE san_pham_id = ?
+        ");
+        $stmtVar->execute([$p['id']]);
+        $p['variants'] = $stmtVar->fetchAll(PDO::FETCH_ASSOC);
     }
     return $products;
 }

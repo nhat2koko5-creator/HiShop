@@ -225,9 +225,12 @@ function format_price($p) {
                 <div class="product-sale-tag">-<?= $discount_percent ?>%</div>
             <?php endif; ?>
 
-            <div class="product-image">
-                <img src="<?= htmlspecialchars($img_path) ?>" alt="<?= htmlspecialchars($p['ten']) ?>">
-            </div>
+<div class="product-image">
+    <a href="index.php?page=product_detail&id=<?= $p['id'] ?>">
+        <img src="<?= htmlspecialchars($img_path) ?>" alt="<?= htmlspecialchars($p['ten']) ?>">
+    </a>
+</div>
+
 <div class="card-content">
 <div class="card-title"><?= htmlspecialchars($p['ten']) ?></div>
 
@@ -246,7 +249,7 @@ function format_price($p) {
                 
                 $spec_line = '';
                 if ($cpu_display && $ram_display) {
-                    $spec_line = $cpu_display . '||' . $ram_display; 
+                    $spec_line = $cpu_display . ' || ' . $ram_display; 
                 } elseif ($cpu_display) {
                     $spec_line = $cpu_display;
                 } elseif ($ram_display) {
@@ -259,24 +262,36 @@ function format_price($p) {
                     <?= $spec_line ?>
                 </div>
                 <?php endif; ?>
-                <div class="btn-group-vertical">
-                    <a href="index.php?page=product_detail&id=<?= $p['id'] ?>" class="btn-view">🔍 Xem chi tiết</a>
-                    
-                    <?php if (!empty($p['variants'])): ?>
-                        <a href="javascript:void(0);" 
-                           class="btn-cart btn-quick-buy"
-                           data-product-id="<?= $p['id'] ?>"
-                           data-product-name="<?= htmlspecialchars($p['ten']) ?>"
-                           data-product-image="<?= htmlspecialchars($p['hinh_anh']) ?>"
-                           data-variants='<?= htmlspecialchars(json_encode($p['variants']), ENT_QUOTES) ?>'>
-                            🛒 Mua ngay
-                        </a>
-                    <?php else: ?>
-                        <a href="index.php?page=cart&action=add&id=<?= $p['id'] ?>" class="btn-cart">
-                            🛒 Thêm vào giỏ
-                        </a>
-                    <?php endif; ?>
-                </div>
+<div class="btn-group-vertical">
+    <?php if (!empty($p['variants'])): ?>
+        <!-- Nút Thêm vào giỏ (mở modal) -->
+        <a href="javascript:void(0);" 
+           class="btn-cart btn-quick-add"
+           data-product-id="<?= $p['id'] ?>"
+           data-product-name="<?= htmlspecialchars($p['ten']) ?>"
+           data-product-image="<?= htmlspecialchars($p['hinh_anh']) ?>"
+           data-variants='<?= htmlspecialchars(json_encode($p['variants']), ENT_QUOTES) ?>'>
+            🛒 Thêm vào giỏ
+        </a>
+
+        <!-- Nút Mua ngay -->
+        <a href="javascript:void(0);"
+           class="btn-cart btn-quick-buy"
+           data-product-id="<?= $p['id'] ?>"
+           data-product-name="<?= htmlspecialchars($p['ten']) ?>"
+           data-product-image="<?= htmlspecialchars($p['hinh_anh']) ?>"
+           data-variants='<?= htmlspecialchars(json_encode($p['variants']), ENT_QUOTES) ?>'>
+            🔥 Mua ngay
+        </a>
+    <?php else: ?>
+        <!-- Sản phẩm không có biến thể: Thêm trực tiếp vào giỏ -->
+        <a href="index.php?page=cart&action=add&id=<?= $p['id'] ?>" class="btn-cart">
+            🛒 Thêm vào giỏ
+        </a>
+    <?php endif; ?>
+</div>
+
+
             </div>
         </div>
     <?php endforeach; ?>
@@ -326,7 +341,6 @@ function format_price($p) {
             <button class="close-variant-modal" id="modal-close-btn">&times;</button>
         </div>
         <div class="variant-modal-body">
-            
             <div class="modal-product-info">
                 <div class="modal-product-image">
                     <img id="modal-product-main-image" src="assets/img/no-image.png" alt="Product Image">
@@ -341,195 +355,208 @@ function format_price($p) {
 
             <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
 
-            <div class="option-group" id="modal-color-group">
-                <h4 style="margin-bottom: 8px;">Màu sắc</h4>
-                <div class="option-box" id="modal-color-options"></div>
+            <div class="option-group" id="modal-option-group">
+                <h4 style="margin-bottom: 8px;">Tùy chọn</h4>
+                <div class="option-box" id="modal-option-box"></div>
             </div>
-            <div class="option-group" id="modal-ssd-group" style="margin-top: 15px;">
-                <h4 style="margin-bottom: 8px;">SSD</h4>
-                <div class="option-box" id="modal-ssd-options"></div>
+
+            <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+            <div class="quantity-group" style="margin-top: 15px;">
+                <h4 style="margin-bottom: 8px;">Số lượng</h4>
+                <div class="quantity-control" style="display: flex; align-items: center; width: 120px; border: 1px solid #ccc; border-radius: 4px;">
+                    <button id="qty-minus" style="padding: 5px 10px; border: none; background: none; cursor: pointer; font-size: 16px;">-</button>
+                    <input type="number" id="qty-input" value="1" min="1" readonly 
+                        style="width: 40px; text-align: center; border: none; padding: 5px 0; -moz-appearance: textfield;">
+                    <button id="qty-plus" style="padding: 5px 10px; border: none; background: none; cursor: pointer; font-size: 16px;">+</button>
+                </div>
             </div>
         </div>
-        <div class="variant-modal-footer">
-            <button class="btn btn-outline" id="modal-cancel-btn">Hủy</button>
-            <button class="btn btn-primary" id="modal-action-btn" disabled>Mua ngay</button>
-        </div>
+<div class="variant-modal-footer" style="display: flex; justify-content: flex-end; padding-top: 20px;">
+    <button class="btn btn-outline" id="modal-cancel-btn">Hủy</button>
+    <div class="action-buttons-group">
+        <button class="btn btn-outline" id="modal-add-to-cart-btn" style="display:none;" disabled>🛒 Thêm vào giỏ</button>
+        <button class="btn btn-primary" id="modal-buy-now-btn" style="display:none;" disabled>🔥 Mua ngay</button>
     </div>
 </div>
+
+    </div>
+</div>
+
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // --- Biến DOM ---
     const modal = document.getElementById('quick-add-modal');
     const modalProductName = document.getElementById('modal-product-name');
     const modalPrice = document.getElementById('modal-product-price');
     const modalStock = document.getElementById('modal-stock-status');
-    const modalColorBox = document.getElementById('modal-color-options');
-    const modalSsdBox = document.getElementById('modal-ssd-options');
-    const modalActionBtn = document.getElementById('modal-action-btn'); 
+    const modalOptionBox = document.getElementById('modal-option-box');
+    const modalBuyNowBtn = document.getElementById('modal-buy-now-btn');
+    const modalAddToCartBtn = document.getElementById('modal-add-to-cart-btn');
     const modalMainImage = document.getElementById('modal-product-main-image');
-    
-    // --- Biến Trạng Thái ---
-    let currentVariants = []; 
-    let currentProductId = null;
-    let selectedColor = null;
-    let selectedSSD = null;
-    let currentSelectedVariant = null; 
-    let defaultProductImage = 'assets/img/no-image.png'; 
+    const qtyInput = document.getElementById('qty-input');
+    const qtyMinusBtn = document.getElementById('qty-minus');
+    const qtyPlusBtn = document.getElementById('qty-plus');
 
-    // === 1. MỞ MODAL ===
-    function openQuickModal(e) {
-        e.preventDefault();
-        const btn = e.currentTarget;
+    let currentVariants = [];
+    let currentSelectedVariant = null;
+    let defaultProductImage = 'assets/img/no-image.png';
+    let maxQuantity = 0;
 
-        currentProductId = btn.dataset.productId;
-        modalProductName.textContent = btn.dataset.productName;
-        
-        const productImage = btn.dataset.productImage;
-        defaultProductImage = productImage ? `assets/img/products/${productImage}` : 'assets/img/no-image.png';
-        modalMainImage.src = defaultProductImage;
-        
-        try {
-            // Parse dữ liệu biến thể từ nút bấm
-            currentVariants = JSON.parse(btn.dataset.variants);
-        } catch(e) {
-            alert('Lỗi dữ liệu biến thể. Vui lòng thử lại.');
-            return;
-        }
+function openQuickModal(e) {
+    e.preventDefault();
+    const btn = e.currentTarget;
+    modalProductName.textContent = btn.dataset.productName;
+    const productImage = btn.dataset.productImage;
+    defaultProductImage = productImage ? `assets/img/products/${productImage}` : 'assets/img/no-image.png';
+    modalMainImage.src = defaultProductImage;
 
-        // Lấy danh sách màu và SSD duy nhất
-        const colors = [...new Set(currentVariants.map(v => v.mau_sac))];
-        const ssds = [...new Set(currentVariants.map(v => v.dung_luong_ssd))];
+    try { currentVariants = JSON.parse(btn.dataset.variants); } 
+    catch(e) { alert('Lỗi dữ liệu biến thể. Vui lòng thử lại.'); return; }
+    currentProductId = btn.dataset.productId;
+    currentSelectedVariant = null;
+    maxQuantity = 0;
+    qtyInput.value = 1;
+    modalPrice.textContent = '--';
+    modalStock.textContent = 'Vui lòng chọn tùy chọn';
+    modalStock.className = 'stock-info';
+    qtyMinusBtn.disabled = true;
+    qtyPlusBtn.disabled = true;
 
-        // Vẽ nút chọn Màu
-        modalColorBox.innerHTML = ''; 
-        colors.forEach(color => {
-            const opt = document.createElement('div');
-            opt.className = 'option';
-            opt.dataset.group = 'color';
-            opt.dataset.value = color;
-            opt.textContent = color;
-            modalColorBox.appendChild(opt);
-        });
-
-        // Vẽ nút chọn SSD
-        modalSsdBox.innerHTML = ''; 
-        ssds.forEach(ssd => {
-            const opt = document.createElement('div');
-            opt.className = 'option';
-            opt.dataset.group = 'ssd';
-            opt.dataset.value = ssd;
-            opt.textContent = ssd;
-            modalSsdBox.appendChild(opt);
-        });
-        
-        // Reset trạng thái
-        selectedColor = null;
-        selectedSSD = null;
-        currentSelectedVariant = null;
-        modalPrice.textContent = '--';
-        modalStock.textContent = 'Vui lòng chọn tùy chọn';
-        modalStock.className = 'stock-info';
-        modalActionBtn.disabled = true; 
-        
-        // Hiển thị modal
-        modal.style.display = 'flex';
+    // Kiểm tra loại nút: Thêm vào giỏ hay Mua ngay
+    if (btn.classList.contains('btn-quick-add')) {
+        modalAddToCartBtn.style.display = 'inline-block';
+        modalAddToCartBtn.disabled = true;
+        modalBuyNowBtn.style.display = 'none';
+    } else if (btn.classList.contains('btn-quick-buy')) {
+        modalBuyNowBtn.style.display = 'inline-block';
+        modalBuyNowBtn.disabled = true;
+        modalAddToCartBtn.style.display = 'none';
     }
 
-    // === 2. ĐÓNG MODAL ===
+    // Hiển thị tùy chọn gộp
+    modalOptionBox.innerHTML = '';
+    currentVariants.forEach(v => {
+        let displayText = (v.dung_luong_ssd ? v.dung_luong_ssd+' ' : '') + (v.mau_sac ? v.mau_sac : '');
+        const opt = document.createElement('div');
+        opt.className = 'option';
+        opt.dataset.variantId = v.id;
+        opt.textContent = displayText || 'Không xác định';
+        if (parseInt(v.so_luong_ton) === 0) { opt.classList.add('disabled'); opt.title='Hết hàng'; }
+        modalOptionBox.appendChild(opt);
+    });
+
+    modal.style.display = 'flex';
+}
+
+
     function closeQuickModal() {
         modal.style.display = 'none';
+        modalOptionBox.querySelectorAll('.option').forEach(o => o.classList.remove('active'));
     }
 
-    // === 3. KIỂM TRA LỰA CHỌN ===
-    function checkModalSelections() {
-        modalActionBtn.disabled = true; 
-        currentSelectedVariant = null;
+function updateQuantityControls() {
+    let currentQty = parseInt(qtyInput.value);
+    if (currentQty < 1) currentQty = 1;
+    if (currentQty > maxQuantity) currentQty = maxQuantity;
+    qtyInput.value = currentQty;
+    qtyMinusBtn.disabled = currentQty <= 1 || maxQuantity === 0;
+    qtyPlusBtn.disabled = currentQty >= maxQuantity || maxQuantity === 0;
 
-        // Chỉ kiểm tra khi đã chọn cả 2
-        if (!selectedColor || !selectedSSD) {
+    if (currentSelectedVariant && currentQty > 0 && currentQty <= maxQuantity) {
+        if (modalAddToCartBtn.style.display !== 'none') modalAddToCartBtn.disabled = false;
+        if (modalBuyNowBtn.style.display !== 'none') modalBuyNowBtn.disabled = false;
+    } else {
+        if (modalAddToCartBtn.style.display !== 'none') modalAddToCartBtn.disabled = true;
+        if (modalBuyNowBtn.style.display !== 'none') modalBuyNowBtn.disabled = true;
+    }
+}
+
+
+    function selectVariant(variantId) {
+        currentSelectedVariant = currentVariants.find(v => String(v.id) === String(variantId));
+        if (!currentSelectedVariant) {
+            modalPrice.textContent = '--';
+            modalStock.textContent = 'Tùy chọn không hợp lệ';
+            modalStock.className = 'stock-info out';
+            modalMainImage.src = defaultProductImage;
             return;
         }
 
-        // Tìm biến thể khớp với lựa chọn
-        const variant = currentVariants.find(v => (v.mau_sac === selectedColor && v.dung_luong_ssd === selectedSSD));
-
-        if (variant) {
-            // Tìm thấy biến thể
-            modalPrice.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(variant.gia);
-            
-            if (variant.so_luong_ton > 0) {
-                modalStock.textContent = "Còn " + variant.so_luong_ton + " sản phẩm";
-                modalStock.className = 'stock-info';
-                modalActionBtn.disabled = false; // Bật nút Mua ngay
-                currentSelectedVariant = variant; 
-            } else {
-                modalStock.textContent = "Hết hàng";
-                modalStock.className = 'stock-info out';
-            }
-            
-            // Đổi ảnh nếu biến thể có ảnh riêng
-            if (variant.hinh_anh) {
-                modalMainImage.src = `assets/img/products/${variant.hinh_anh}`;
-            } else {
-                modalMainImage.src = defaultProductImage; 
-            }
-            
-        } else {
-            // Không tìm thấy biến thể
-            modalPrice.textContent = '--';
-            modalStock.textContent = "Tùy chọn không có sẵn";
-            modalStock.className = 'stock-info out';
-            modalMainImage.src = defaultProductImage; 
-        }
+        maxQuantity = parseInt(currentSelectedVariant.so_luong_ton);
+        modalPrice.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(currentSelectedVariant.gia);
+        modalStock.textContent = maxQuantity > 0 ? `Còn hàng (${maxQuantity} sản phẩm)` : 'Hết hàng';
+        modalStock.className = maxQuantity > 0 ? 'stock-info' : 'stock-info out';
+        qtyInput.value = 1;
+        updateQuantityControls();
+        modalMainImage.src = currentSelectedVariant.hinh_anh ? `assets/img/products/${currentSelectedVariant.hinh_anh}` : defaultProductImage;
     }
 
-    // === GÁN SỰ KIỆN ===
-
-    // Sự kiện click nút "Mua ngay" ở danh sách sản phẩm
-    document.querySelectorAll('.btn-quick-buy').forEach(button => {
-        button.addEventListener('click', openQuickModal);
-    });
-
-    // Sự kiện đóng modal
+    document.querySelectorAll('.btn-quick-buy').forEach(btn => btn.addEventListener('click', openQuickModal));
+    document.querySelectorAll('.btn-quick-add').forEach(btn => btn.addEventListener('click', openQuickModal));
     document.getElementById('modal-close-btn').addEventListener('click', closeQuickModal);
     document.getElementById('modal-cancel-btn').addEventListener('click', closeQuickModal);
-    modal.addEventListener('click', e => {
-        if (e.target === modal) closeQuickModal();
-    });
-
-    // Sự kiện chọn Option (Màu / SSD) - Dùng Event Delegation
-    modal.addEventListener('click', function(e) {
-        if (!e.target.classList.contains('option') || e.target.classList.contains('disabled')) {
-            return;
-        }
-        const group = e.target.dataset.group;
-        const value = e.target.dataset.value;
-
-        // Xử lý active class
-        if (group === 'color') {
-            selectedColor = value;
-            modalColorBox.querySelectorAll('.option').forEach(o => o.classList.remove('active'));
-        } else if (group === 'ssd') {
-            selectedSSD = value;
-            modalSsdBox.querySelectorAll('.option').forEach(o => o.classList.remove('active'));
-        }
+    modal.addEventListener('click', e => { if (e.target === modal) closeQuickModal(); });
+    modalOptionBox.addEventListener('click', e => {
+        if (!e.target.classList.contains('option') || e.target.classList.contains('disabled')) return;
+        modalOptionBox.querySelectorAll('.option').forEach(o => o.classList.remove('active'));
         e.target.classList.add('active');
-        
-        // Kiểm tra kết quả
-        checkModalSelections();
+        selectVariant(e.target.dataset.variantId);
     });
+async function sendCartRequest(action, data) {
+    const formData = new URLSearchParams();
+    formData.append('action', action);
+    for (const key in data) formData.append(key, data[key]);
+    try {
+        const response = await fetch('cart-handler.php', { method: 'POST', body: formData });
+        return await response.json();
+    } catch (err) {
+        return { status: 'error', message: 'Lỗi kết nối.' };
+    }
+}
 
-    // === XỬ LÝ NÚT MUA NGAY TRONG MODAL ===
-    modalActionBtn.addEventListener('click', function() {
-        if (!currentSelectedVariant) return;
-
-        // Lấy ID biến thể
-        const variantId = currentSelectedVariant.id;
-        
-        // Chuyển hướng thẳng đến trang thanh toán với thông tin biến thể
-        window.location.href = `index.php?page=checkout&action=buy_now&variant_id=${variantId}`;
+    qtyMinusBtn.addEventListener('click', () => { qtyInput.value = parseInt(qtyInput.value)-1; updateQuantityControls(); });
+    qtyPlusBtn.addEventListener('click', () => { qtyInput.value = parseInt(qtyInput.value)+1; updateQuantityControls(); });
+modalAddToCartBtn.addEventListener('click', async () => {
+    if (!currentSelectedVariant) return;
+    const data = await sendCartRequest('add', {
+        id: currentProductId,
+        variant_id: currentSelectedVariant.id,
+        quantity: parseInt(qtyInput.value)
     });
+    if(data.status==='success') {
+        showPopup('🛒 Sản phẩm đã được thêm vào giỏ!');
+        closeQuickModal();
+        if(typeof updateCartIconCount==='function') updateCartIconCount(data.cart_count);
+    } else {
+        showPopup('Lỗi: '+data.message);
+    }
 });
+
+function showPopup(msg) {
+    const el = document.createElement('div');
+    el.textContent = msg;
+    Object.assign(el.style, {
+        position:'fixed',
+        bottom:'30px',
+        right:'30px',
+        background:'#0f62fe',
+        color:'#fff',
+        padding:'12px 20px',
+        borderRadius:'12px',
+        boxShadow:'0 4px 10px rgba(0,0,0,0.2)',
+        zIndex:'9999',
+        transition:'opacity 0.5s'
+    });
+    document.body.appendChild(el);
+    setTimeout(()=>el.style.opacity='0', 2000);
+    setTimeout(()=>el.remove(), 2500);
+}
+modalBuyNowBtn.addEventListener('click', () => {
+    if (!currentSelectedVariant) return;
+    window.location.href = `index.php?page=checkout&action=buy_now&variant_id=${currentSelectedVariant.id}&qty=${parseInt(qtyInput.value)}`;
+});
+
+});
+
 </script>
 <?php require_once 'client/layouts/footer.php'; ?>

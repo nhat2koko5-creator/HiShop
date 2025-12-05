@@ -268,58 +268,47 @@ $is_discount = isset($sp['gia_da_giam']) && $sp['gia_da_giam'] !== $sp['gia'];
                                             <span class="card-price-new"><?= number_format($newPrice) ?>₫</span>
                                         <?php else: ?>
                                             <span class="card-price-new"><?= number_format($origPrice) ?>₫</span>
+                                            
                                         <?php endif; ?>
                                     </div>
-
                                     <div class="btn-group-vertical">
+    <!-- Nút Mua ngay -->
+<?php if (!empty($sp['variants']) && count($sp['variants']) > 0): ?>
+    <a href="javascript:void(0);"
+       class="btn-view btn-quick-add btn-buy-now"
+       data-product-id="<?= $sp['id']; ?>"
+       data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
+       data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
+       data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'
+       data-action="buy">
+        ⚡ Mua ngay
+    </a>
+<?php else: ?>
+    <!-- Không có biến thể → chuyển thẳng checkout -->
+    <a href="index.php?page=checkout&action=buy_now&variant_id=<?= $sp['id']; ?>&quantity=1"
+       class="btn-view btn-buy-now">
+        ⚡ Mua ngay
+    </a>
+<?php endif; ?>
 
-                                        <?php if (!empty($sp['variants'])): ?>
-
-                                            <a href="javascript:void(0);"
-                                               class="btn-view btn-quick-add btn-buy-now"
-                                               data-product-id="<?= $sp['id'] ?>"
-                                               data-product-name="<?= htmlspecialchars($sp['ten']) ?>"
-                                               data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']) ?>"
-                                               data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8") ?>'
-                                               data-action="buy">
-                                                ⚡ Mua ngay
-                                            </a>
-
-                                            <a href="javascript:void(0);"
-                                               class="btn-cart btn-quick-add"
-                                               data-product-id="<?= $sp['id'] ?>"
-                                               data-product-name="<?= htmlspecialchars($sp['ten']) ?>"
-                                               data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']) ?>"
-                                               data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8") ?>'
-                                               data-action="add">
-                                                🛒 Thêm vào giỏ
-                                            </a>
-
-                                        <?php else: ?>
-
-                                            <a href="index.php?page=checkout&action=buy_now&id=<?= $sp['id'] ?>" class="btn-view">
-                                                ⚡ Mua ngay
-                                            </a>
-
-                                            <a href="index.php?page=cart&action=add&id=<?= $sp['id'] ?>" class="btn-cart">
-                                                🛒 Thêm vào giỏ
-                                            </a>
-
-                                        <?php endif; ?>
-
-                                    </div>
+    <!-- Nút Thêm vào giỏ -->
+    <a href="javascript:void(0);"
+       class="btn-cart btn-quick-add"
+       data-product-id="<?= $sp['id']; ?>"
+       data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
+       data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
+       data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'
+       data-action="add">
+        🛒 Thêm vào giỏ
+    </a>
+</div>
                                 </div>
-
                             </div>
                         </div>
-
                     <?php endforeach; ?>
                 <?php else: ?>
-
                     <p style="text-align:center;width:100%;">Không có sản phẩm giảm giá.</p>
-
                 <?php endif; ?>
-
             </div>
         </div>
 
@@ -525,19 +514,12 @@ function openQuickAddModal(btn) {
     // 1. Gán sự kiện cho tất cả nút "Thêm vào giỏ"
 // BẮT SỰ KIỆN CHÍNH XÁC - ĐỘC LẬP SWIPER
 document.addEventListener("click", function(e) {
-
     const btn = e.target.closest(".btn-quick-add");
-    if (!btn) return;
-
-    // CHẶN THẺ A KHÔNG CHUYỂN HƯỚNG
+    if (!btn || !btn.dataset.variants) return; // nếu không có variants → bỏ qua
     e.preventDefault();
     e.stopPropagation();
-
     openQuickAddModal(btn);
 });
-
-
-
 
     // 2. Gán sự kiện cho các nút đóng modal
     document.getElementById('modal-close-btn').addEventListener('click', closeQuickAddModal);
@@ -616,7 +598,6 @@ if (currentAction === "buy") {
         showPopup("Lỗi: " + data.message);
     }
 });
-
     
     // Logic nút tăng/giảm số lượng
     const qtyInput = document.getElementById('qty-input');
