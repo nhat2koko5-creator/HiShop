@@ -21,6 +21,10 @@ $page = $_GET['page'] ?? 'dashboard';
 
 // 4. Xác định tiêu đề và file nội dung (cho switch)
 switch ($page) {
+    case 'product_form':
+    $page_title = 'Thêm Sản Phẩm';
+    $page_file = 'pages/product_form.php';
+    break;
 
     case 'products_list':
         $page_title = 'Quản lý Sản Phẩm';

@@ -1,0 +1,125 @@
+   .admin-page {
+    display: flex;
+    justify-content: center;
+    padding: 50px;
+    min-height: 90vh;
+    background-color: #f5f6fa;
+}
+
+.form-container {
+    width: 65%;            /* khoảng 2/3 màn hình */
+    max-width: 1000px;     /* giới hạn max */
+    background-color: #fff;
+    border-radius: 14px;
+    padding: 40px 45px;    /* padding lớn hơn */
+    box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+}
+
+.title {
+    text-align: center;
+    color: #0676e5;
+    font-size: 32px;       /* to hơn */
+    margin-bottom: 30px;
+}
+
+.form-block {
+    background-color: #f9f9f9;
+    padding: 25px 30px;    /* padding rộng hơn */
+    border-radius: 14px;
+    margin-bottom: 25px;
+    border: 1px solid #ddd;
+}
+
+.form-block h3 {
+    margin-bottom: 15px;
+    color: #0676e5;
+    font-size: 22px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 6px;
+}
+
+.form-block.small-block {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+    font-size: 17px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 17px;
+}
+
+.variant-item {
+    border: 1px solid #ccc;
+    padding: 18px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    position: relative;
+    background: #fff;
+}
+
+.variant-item .btn-delete {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.btn {
+    padding: 14px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    font-weight: 600;
+    transition: 0.2s;
+    font-size: 17px;
+}
+
+.btn-add {
+    background-color: #0676e5;
+    color: #fff;
+    margin-top: 14px;
+}
+
+.btn-save {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+.modal-actions {
+    margin-top: 25px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 14px;
+}
+
+input[readonly] {
+    background-color: #eee;
+    font-weight: 600;
+}

@@ -152,15 +152,10 @@ $products = $stmt->fetchAll();
 ========================== */
 $categories = $pdo->query("SELECT * FROM danh_muc ORDER BY ten ASC")->fetchAll();
 ?>
-
-
-<style>
-
-</style>
 <div class="admin-page">
-<h1 class="title">QUẢN LÝ SẢN PHẨM</h1>
+
 <div class="action-bar">
-    <button class="btn-add" onclick="openModal()">+ Thêm sản phẩm</button>
+<a href="index.php?page=product_form" class="btn-add">+ Thêm sản phẩm</a>
 <form method="GET" class="search-wrapper" action="index.php">
     <input type="hidden" name="page" value="products_list">
 
@@ -233,19 +228,10 @@ $categories = $pdo->query("SELECT * FROM danh_muc ORDER BY ten ASC")->fetchAll()
 <td class="text-end">
 
     <!-- Nút SỬA -->
-    <a href="#"
-       class="action-btn edit-btn"
-       onclick="openEditModal(
-                <?= $p['id'] ?>,
-                '<?= htmlspecialchars($p['ten'], ENT_QUOTES) ?>',
-                '<?= $p['gia'] ?>',
-                '<?= $p['so_luong'] ?>',
-                '<?= htmlspecialchars($p['hinh_anh'], ENT_QUOTES) ?>',
-                '<?= htmlspecialchars($p['mo_ta'], ENT_QUOTES) ?>',
-                '<?= $p['danh_muc_id'] ?>'
-            )">
-        <i class="fa-solid fa-pen"></i> Sửa
-    </a>
+<a href="index.php?page=product_form&id=<?= $p['id'] ?>" class="action-btn edit-btn">
+    <i class="fa-solid fa-pen"></i> Sửa
+</a>
+
 
     <!-- Nút ẨN / HIỆN -->
     <a href="index.php?page=products_list&toggle=<?= $p['id'] ?>"
@@ -330,58 +316,6 @@ $categories = $pdo->query("SELECT * FROM danh_muc ORDER BY ten ASC")->fetchAll()
             <div class="modal-actions">
                 <button type="button" class="btn-cancel" onclick="closeVariantModal()">Hủy</button>
                 <button type="submit" class="btn-save">Lưu</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- MODAL THÊM -->
-<div id="modalAdd" class="modal-overlay" style="display:none;">
-    <div class="modal-box">
-        <h3>Thêm sản phẩm</h3>
-
-        <form method="post" enctype="multipart/form-data">
-
-            <!-- THÔNG TIN SẢN PHẨM -->
-            <label>Tên sản phẩm:</label>
-            <input type="text" name="ten" required>
-
-            <label>Hình ảnh chính:</label>
-            <input type="file" name="hinh_anh" accept="image/*" required>
-
-            <label>Mô tả:</label>
-            <input type="text" name="mo_ta">
-
-            <label>Danh mục:</label>
-            <select name="danh_muc" required>
-                <?php foreach ($categories as $c): ?>
-                    <option value="<?= $c['id'] ?>"><?= $c['ten'] ?></option>
-                <?php endforeach; ?>
-            </select>
-
-            <hr>
-            <br>
-            <!-- BIẾN THỂ -->
-            <h3>Biến thể sản phẩm</h3>
-
-            <div id="variantList"></div>
-
-            <button type="button" class="btn-add" onclick="addVariant()">+ Thêm biến thể</button>
-
-            <br><br>
-
-            <!-- AUTO SUM -->
-            <label>Tổng số lượng:</label>
-            <input type="number" id="tong_sl" readonly style="background:#eee">
-
-            <label>Giá hiển thị (giá thấp nhất trong biến thể):</label>
-            <input type="number" id="gia_min" readonly style="background:#eee">
-
-            <input type="hidden" name="variants_json" id="variants_json">
-
-            <div class="modal-actions">
-                <button type="button" class="btn-cancel" onclick="closeModal()">Hủy</button>
-                <button type="submit" class="btn-save">Lưu sản phẩm</button>
             </div>
         </form>
     </div>
