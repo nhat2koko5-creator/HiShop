@@ -24,8 +24,17 @@ $today = date('Y-m-d H:i:s');
 if (!empty($variants)) {
     foreach ($variants as &$variant) {
         $variant['gia_hien_tai'] = $variant['gia']; 
-        $stmt_discount = $pdo->prepare("SELECT gg.loai_giam_gia, gg.gia_tri FROM san_pham_giam_gia spgg JOIN giam_gia gg ON spgg.giam_gia_id = gg.id WHERE spgg.san_pham_id = ? AND gg.ngay_bat_dau <= ? AND (gg.ngay_ket_thuc IS NULL OR gg.ngay_ket_thuc >= ?) ORDER BY gg.id DESC LIMIT 1");
-        $stmt_discount->execute([$variant['san_pham_id'], $today, $today]);
+        $stmt_discount = $pdo->prepare("SELECT gg.loai_giam_gia, gg.gia_tri 
+FROM san_pham_giam_gia spgg 
+JOIN giam_gia gg ON spgg.giam_gia_id = gg.id 
+WHERE spgg.san_pham_id = ? 
+AND gg.ngay_bat_dau <= ? 
+AND (gg.ngay_ket_thuc IS NULL OR gg.ngay_ket_thuc >= ?) 
+ORDER BY gg.id DESC LIMIT 1");
+
+$stmt_discount->execute([$product_id, $today, $today]);
+
+        $stmt_discount->execute([$product_id, $today, $today]);
         $discount = $stmt_discount->fetch(PDO::FETCH_ASSOC);
 
         if ($discount) {
