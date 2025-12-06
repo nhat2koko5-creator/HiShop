@@ -78,67 +78,73 @@ function getDiscountProducts($pdo) {
             sp.ten,
             sp.hinh_anh,
             sp.gia,
+            
+            gg.loai_giam_gia,
+            gg.gia_tri,
 
-            -- Sử dụng MAX() để chọn ra giá trị giảm giá cao nhất (giả sử bạn muốn ưu tiên giảm giá cao)
-            -- Hoặc chỉ cần MIN/MAX trên các cột không phải ID để đảm bảo GROUP BY hoạt động
-            MAX(gg.loai_giam_gia) AS loai_giam_gia,
-            MAX(gg.gia_tri) AS gia_tri,
-
-            MAX(gg.ngay_bat_dau) AS ngay_bat_dau,
-            MAX(gg.ngay_ket_thuc) AS ngay_ket_thuc,
-
-            -- Lấy CPU và RAM (sử dụng MAX() để chọn 1 giá trị duy nhất)
             MAX(ts.cpu) AS cpu,
             MAX(ts.ram) AS ram,
 
-            -- Tính toán dựa trên giá trị giảm giá (MAX(gg.gia_tri))
             CASE 
-                WHEN MAX(gg.loai_giam_gia) = 'percent' THEN MAX(gg.gia_tri)
-                WHEN MAX(gg.loai_giam_gia) = 'amount' THEN ROUND(MAX(gg.gia_tri) / sp.gia * 100)
+                WHEN gg.loai_giam_gia = 'percent' THEN gg.gia_tri
+                WHEN gg.loai_giam_gia = 'amount' THEN ROUND(gg.gia_tri / sp.gia * 100)
                 ELSE 0
             END AS giam_phan_tram,
 
             CASE 
-                WHEN MAX(gg.loai_giam_gia) = 'percent' THEN sp.gia - (sp.gia * MAX(gg.gia_tri) / 100)
-                WHEN MAX(gg.loai_giam_gia) = 'amount' THEN sp.gia - MAX(gg.gia_tri)
+                WHEN gg.loai_giam_gia = 'percent' THEN sp.gia - (sp.gia * gg.gia_tri / 100)
+                WHEN gg.loai_giam_gia = 'amount' THEN sp.gia - gg.gia_tri
                 ELSE sp.gia
             END AS gia_da_giam
 
         FROM san_pham sp
-        -- Lấy thông tin giảm giá
         JOIN san_pham_giam_gia spgg ON spgg.san_pham_id = sp.id
         JOIN giam_gia gg ON gg.id = spgg.giam_gia_id
-        
-        -- JOIN Thông số
+
         LEFT JOIN san_pham_thong_so spts ON spts.san_pham_id = sp.id
         LEFT JOIN thong_so ts ON ts.id = spts.thong_so_id
 
         WHERE 
             (gg.ngay_bat_dau IS NULL OR gg.ngay_bat_dau <= NOW())
             AND (gg.ngay_ket_thuc IS NULL OR gg.ngay_ket_thuc >= NOW())
-            
-        -- Chỉ GROUP BY các cột không phải hàm tổng hợp (Aggregate Function)
-        GROUP BY sp.id, sp.ten, sp.hinh_anh, sp.gia;
+
+        GROUP BY sp.id
     ";
 
-    // ... Phần còn lại của hàm PHP giữ nguyên ...
-    // Phần xử lý biến thể:
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
- foreach ($products as &$p) {
-        // Lấy biến thể
+    // Lấy biến thể + áp dụng giảm giá
+    foreach ($products as &$p) {
+
+        // Lấy biến thể đúng chuẩn
         $stmtVar = $pdo->prepare("
-            SELECT id, mau_sac, dung_luong_ssd, gia, gia, so_luong_ton, hinh_anh
+            SELECT id, mau_sac, dung_luong_ssd, gia, so_luong_ton, hinh_anh
             FROM bien_the_san_pham
             WHERE san_pham_id = ?
         ");
         $stmtVar->execute([$p['id']]);
-        $p['variants'] = $stmtVar->fetchAll(PDO::FETCH_ASSOC);
+        $variants = $stmtVar->fetchAll(PDO::FETCH_ASSOC);
+
+        // Áp dụng giảm giá vào từng biến thể
+        foreach ($variants as &$v) {
+
+            if ($p['loai_giam_gia'] === 'percent') {
+                $v['gia_giam'] = $v['gia'] - ($v['gia'] * $p['gia_tri'] / 100);
+            } elseif ($p['loai_giam_gia'] === 'amount') {
+                $v['gia_giam'] = $v['gia'] - $p['gia_tri'];
+            } else {
+                $v['gia_giam'] = $v['gia'];
+            }
+        }
+
+        $p['variants'] = $variants;
     }
+
     return $products;
 }
+
 /* =============================
    TÍNH GIÁ SAU KHI GIẢM
    ============================= */
