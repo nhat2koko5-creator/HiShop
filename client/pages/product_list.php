@@ -266,21 +266,23 @@ function format_price($p) {
     <?php if (!empty($p['variants'])): ?>
         <!-- Nút Thêm vào giỏ (mở modal) -->
         <a href="javascript:void(0);" 
-           class="btn-cart btn-quick-add"
-           data-product-id="<?= $p['id'] ?>"
-           data-product-name="<?= htmlspecialchars($p['ten']) ?>"
-           data-product-image="<?= htmlspecialchars($p['hinh_anh']) ?>"
-           data-variants='<?= htmlspecialchars(json_encode($p['variants']), ENT_QUOTES) ?>'>
+   class="btn-cart btn-quick-add"
+   data-product-id="<?= $p['id'] ?>"
+   data-product-name="<?= htmlspecialchars($p['ten']) ?>"
+   data-product-image="<?= htmlspecialchars($p['hinh_anh']) ?>"
+   data-discount='<?= json_encode($discount) ?>'
+   data-variants='<?= htmlspecialchars(json_encode($p['variants']), ENT_QUOTES) ?>'>
             🛒 Thêm vào giỏ
         </a>
 
         <!-- Nút Mua ngay -->
         <a href="javascript:void(0);"
-           class="btn-cart btn-quick-buy"
-           data-product-id="<?= $p['id'] ?>"
-           data-product-name="<?= htmlspecialchars($p['ten']) ?>"
-           data-product-image="<?= htmlspecialchars($p['hinh_anh']) ?>"
-           data-variants='<?= htmlspecialchars(json_encode($p['variants']), ENT_QUOTES) ?>'>
+   class="btn-cart btn-quick-buy"
+   data-product-id="<?= $p['id'] ?>"
+   data-product-name="<?= htmlspecialchars($p['ten']) ?>"
+   data-product-image="<?= htmlspecialchars($p['hinh_anh']) ?>"
+   data-discount='<?= json_encode($discount) ?>'
+   data-variants='<?= htmlspecialchars(json_encode($p['variants']), ENT_QUOTES) ?>'>
             🔥 Mua ngay
         </a>
     <?php else: ?>
@@ -412,6 +414,13 @@ function openQuickModal(e) {
 
     try { currentVariants = JSON.parse(btn.dataset.variants); } 
     catch(e) { alert('Lỗi dữ liệu biến thể. Vui lòng thử lại.'); return; }
+    // Lấy giảm giá
+try { 
+    currentDiscount = JSON.parse(btn.dataset.discount ?? "null"); 
+} catch(e) { 
+    currentDiscount = null; 
+}
+
     currentProductId = btn.dataset.productId;
     currentSelectedVariant = null;
     maxQuantity = 0;
@@ -483,7 +492,22 @@ function updateQuantityControls() {
         }
 
         maxQuantity = parseInt(currentSelectedVariant.so_luong_ton);
-        modalPrice.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(currentSelectedVariant.gia);
+        // --- TÍNH GIÁ SAU GIẢM ---
+let price = parseFloat(currentSelectedVariant.gia);
+
+if (currentDiscount) {
+    if (currentDiscount.loai_giam_gia === "percent") {
+        price = price * (1 - currentDiscount.gia_tri / 100);
+    } else {
+        price = Math.max(0, price - currentDiscount.gia_tri);
+    }
+}
+
+modalPrice.textContent = new Intl.NumberFormat('vi-VN', { 
+    style: 'currency', 
+    currency: 'VND' 
+}).format(price);
+
         modalStock.textContent = maxQuantity > 0 ? `Còn hàng (${maxQuantity} sản phẩm)` : 'Hết hàng';
         modalStock.className = maxQuantity > 0 ? 'stock-info' : 'stock-info out';
         qtyInput.value = 1;
