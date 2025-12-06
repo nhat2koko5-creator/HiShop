@@ -15,6 +15,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ten'])) {
     $ngay_bat_dau = $_POST['ngay_bat_dau'];
     $ngay_ket_thuc = $_POST['ngay_ket_thuc'];
     $dieu_kien = $_POST['dieu_kien'];
+    
+    // KIỂM TRA LỖI NGÀY BẰNG PHP (Server-side check)
+    if (strtotime($ngay_bat_dau) > strtotime($ngay_ket_thuc)) {
+        header("Location: index.php?page=discount_list&error=" . urlencode("Lỗi: Ngày Bắt Đầu không được lớn hơn Ngày Kết Thúc."));
+        exit;
+    }
 
     try {
         /* ---- LƯU KHUYẾN MÃI ---- */
@@ -24,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ten'])) {
         ");
         $stmt->execute([$ten, $ma_code, $mo_ta, $loai_khuyen_mai, $gia_tri, $ngay_bat_dau, $ngay_ket_thuc, $dieu_kien]);
 
+        // TỰ ĐỘNG RELOAD SAU KHI LƯU
         header("Location: index.php?page=discount_list&added=1");
         exit;
     } catch (PDOException $e) {
@@ -48,6 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_id'])) {
     $ngay_ket_thuc = $_POST['edit_ngay_ket_thuc'];
     $dieu_kien = $_POST['edit_dieu_kien'];
     
+    // KIỂM TRA LỖI NGÀY BẰNG PHP (Server-side check)
+    if (strtotime($ngay_bat_dau) > strtotime($ngay_ket_thuc)) {
+        header("Location: index.php?page=discount_list&error=" . urlencode("Lỗi: Ngày Bắt Đầu không được lớn hơn Ngày Kết Thúc khi sửa."));
+        exit;
+    }
+    
     try {
         // UPDATE KHUYẾN MÃI
         $stmt = $pdo->prepare("
@@ -58,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_id'])) {
         $stmt->execute([$ten, $ma_code, $mo_ta, $loai_khuyen_mai, $gia_tri, $ngay_bat_dau, $ngay_ket_thuc, $dieu_kien, $id]);
 
         ob_clean(); 
+        // TỰ ĐỘNG RELOAD SAU KHI SỬA
         header("Location: index.php?page=discount_list&updated=1");
         exit;
 
@@ -69,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_id'])) {
 
 
 /* ==========================
-    ẨN / HIỆN KHUYẾN MÃI
+    ẨN / HIỆN KHUYẾN MÃI (ĐÃ SỬA CHỮA RELOAD VÀ THÔNG BÁO)
 ========================== */
 if (isset($_GET['toggle'])) {
     $id = intval($_GET['toggle']);
@@ -81,10 +95,8 @@ if (isset($_GET['toggle'])) {
     $update = $pdo->prepare("UPDATE ma_khuyen_mai SET trang_thai = ? WHERE id = ?");
     $update->execute([$newStatus, $id]);
 
-    $msg = ($newStatus == 1) ? 'Đã hiển thị mã khuyến mãi.' : 'Đã ẩn mã khuyến mãi.';
-    $_SESSION['toast'] = ['type' => 'success', 'message' => $msg];
-    
-    echo "<script>window.location.href='index.php?page=categories_list';</script>";
+    // 🔑 ĐÃ SỬA: Bỏ $_SESSION['toast'] và dùng tham số URL để đảm bảo reload và thông báo hoạt động
+    header("Location: index.php?page=discount_list&toggled=1&status_changed=" . $newStatus);
     exit;
 }
 /* ==========================
@@ -257,8 +269,15 @@ function getPageUrl($page) {
         <div class="alert alert-success">Đã cập nhật mã khuyến mãi thành công.</div>
     <?php endif; ?>
 
-    <?php if (!empty($_GET['toggled'])): ?>
-        <div class="alert alert-success">Đã thay đổi trạng thái mã khuyến mãi.</div>
+    <?php 
+    // 🔑 ĐÃ SỬA: Hiển thị thông báo chi tiết cho chức năng Ẩn/Hiện sau khi reload
+    if (!empty($_GET['toggled'])): 
+        // Lấy trạng thái mới từ URL để hiển thị thông báo chi tiết
+        $status_changed = intval($_GET['status_changed'] ?? 0);
+        $status_text = ($status_changed == 1) ? 'hiển thị' : 'ẩn';
+        $alert_class = ($status_changed == 1) ? 'alert-success' : 'alert-warning';
+    ?>
+        <div class="alert <?= $alert_class ?>">Đã **<?= $status_text ?>** mã khuyến mãi thành công.</div>
     <?php endif; ?>
 
     <?php if (!empty($_GET['error'])): ?>
@@ -370,7 +389,7 @@ function getPageUrl($page) {
     <div class="modal-box">
         <h3>Thêm mã khuyến mãi mới</h3>
 
-        <form method="post">
+        <form method="post" onsubmit="return validateDate('ngay_bat_dau', 'ngay_ket_thuc')">
 
             <label>Tên khuyến mãi:</label>
             <input type="text" name="ten" required>
@@ -393,10 +412,10 @@ function getPageUrl($page) {
             <input type="number" name="gia_tri" min="0" step="0.01" required>
 
             <label>Ngày bắt đầu:</label>
-            <input type="datetime-local" name="ngay_bat_dau" required>
+            <input type="datetime-local" name="ngay_bat_dau" id="ngay_bat_dau" required>
 
             <label>Ngày kết thúc:</label>
-            <input type="datetime-local" name="ngay_ket_thuc" required>
+            <input type="datetime-local" name="ngay_ket_thuc" id="ngay_ket_thuc" required>
 
             <label>Điều kiện áp dụng:</label>
             <input type="text" name="dieu_kien" placeholder="VD: Đơn hàng từ 500.000đ">
@@ -413,7 +432,7 @@ function getPageUrl($page) {
     <div class="modal-box">
         <h3>Sửa mã khuyến mãi</h3>
 
-        <form method="post">
+        <form method="post" onsubmit="return validateDate('edit_ngay_bat_dau', 'edit_ngay_ket_thuc')">
             <input type="hidden" name="edit_id" id="edit_id">
 
             <label>Tên khuyến mãi:</label>
@@ -478,5 +497,27 @@ function openEditModal(id, ten, ma_code, mo_ta, loai_khuyen_mai, gia_tri, start,
 function closeEditModal(){
     document.getElementById('modalEdit').style.display = 'none';
 }
-</script>   
+
+// HÀM JAVASCRIPT KIỂM TRA LỖI NGÀY
+function validateDate(startId, endId) {
+    var startDateInput = document.getElementById(startId);
+    var endDateInput = document.getElementById(endId);
+    
+    // Lấy giá trị và chuyển thành đối tượng Date để so sánh
+    var dateStart = new Date(startDateInput.value);
+    var dateEnd = new Date(endDateInput.value);
+
+    // Kiểm tra: nếu Ngày Bắt Đầu lớn hơn Ngày Kết Thúc
+    if (dateStart > dateEnd) {
+        // Hiển thị thông báo lỗi trên màn hình
+        alert("LỖI: Ngày Bắt Đầu (" + startDateInput.value + ") không được lớn hơn Ngày Kết Thúc (" + endDateInput.value + "). Vui lòng kiểm tra lại.");
+        
+        // Ngăn form submit
+        return false; 
+    }
+    
+    // Cho phép form submit
+    return true; 
+}
+</script>       
 <link rel="stylesheet" href="/HiShop/assets/css/admin/promos_list.css">
