@@ -477,25 +477,25 @@
   }
 }
 
-    .tag-reason {
-        background: #f1f5f9; 
-        border: 1px solid #cbd5e1; 
-        color: #475569; 
-        padding: 6px 12px; 
-        border-radius: 20px; 
-        font-size: 12px; 
-        cursor: pointer; 
-        transition: all 0.2s;
-    }
-    .tag-reason:hover {
-        background: #e2e8f0;
-        color: #1e293b;
-        border-color: #94a3b8;
-    }
-    /* Khi được chọn (Active) */
-    .tag-reason:focus {
-        background: #eff6ff;
-        color: #2563eb;
-        border-color: #2563eb;
-        outline: none;
-    }
+.tag-reason {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tag-reason:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+  border-color: #94a3b8;
+}
+/* Khi được chọn (Active) */
+.tag-reason:focus {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #2563eb;
+  outline: none;
+}

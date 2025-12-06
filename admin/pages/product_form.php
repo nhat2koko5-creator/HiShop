@@ -1,265 +1,260 @@
 <?php
+// FILE: admin/pages/product_form.php
 require_once '../src/config.php';
 require_once '../src/functions.php';
 
-// Lấy danh mục
+// 1. DATA LOADING CHO DROPDOWN GỢI Ý
 $categories = $pdo->query("SELECT * FROM danh_muc ORDER BY ten ASC")->fetchAll();
+// Lấy danh sách duy nhất để gợi ý (Autocomplete)
+$man_hinhs = $pdo->query("SELECT DISTINCT man_hinh AS ten FROM thong_so WHERE man_hinh IS NOT NULL AND man_hinh != '' ORDER BY man_hinh ASC")->fetchAll();
+$o_cungs   = $pdo->query("SELECT DISTINCT o_cung AS ten FROM thong_so WHERE o_cung IS NOT NULL AND o_cung != '' ORDER BY o_cung ASC")->fetchAll();
+$cpus      = $pdo->query("SELECT DISTINCT cpu AS ten FROM thong_so WHERE cpu IS NOT NULL AND cpu != '' ORDER BY cpu ASC")->fetchAll();
+$gpus      = $pdo->query("SELECT DISTINCT gpu AS ten FROM thong_so WHERE gpu IS NOT NULL AND gpu != '' ORDER BY gpu ASC")->fetchAll();
+$rams      = $pdo->query("SELECT DISTINCT ram AS ten FROM thong_so WHERE ram IS NOT NULL AND ram != '' ORDER BY ram ASC")->fetchAll();
 
-// Lấy các thông số kỹ thuật
-$man_hinhs = $pdo->query("SELECT DISTINCT man_hinh AS ten FROM thong_so WHERE man_hinh IS NOT NULL ORDER BY man_hinh ASC")->fetchAll();
-$o_cungs   = $pdo->query("SELECT DISTINCT o_cung AS ten FROM thong_so WHERE o_cung IS NOT NULL ORDER BY o_cung ASC")->fetchAll();
-$cpus      = $pdo->query("SELECT DISTINCT cpu AS ten FROM thong_so WHERE cpu IS NOT NULL ORDER BY cpu ASC")->fetchAll();
-$gpus      = $pdo->query("SELECT DISTINCT gpu AS ten FROM thong_so WHERE gpu IS NOT NULL ORDER BY gpu ASC")->fetchAll();
-$rams      = $pdo->query("SELECT DISTINCT ram AS ten FROM thong_so WHERE ram IS NOT NULL ORDER BY ram ASC")->fetchAll();
-
-// Nếu có id, load sản phẩm và biến thể
 $product = null;
 $variants = [];
+$current_specs = []; // Mảng chứa thông số hiện tại của SP
+$isEdit = false;
+
 if (isset($_GET['id'])) {
     $id = intval($_GET['id']);
-
+    // Lấy thông tin cơ bản
     $stmt = $pdo->prepare("SELECT * FROM san_pham WHERE id=?");
     $stmt->execute([$id]);
     $product = $stmt->fetch();
+    
+    if($product) {
+        $isEdit = true;
+        // Lấy biến thể
+        $stmt2 = $pdo->prepare("SELECT * FROM bien_the_san_pham WHERE san_pham_id=?");
+        $stmt2->execute([$id]);
+        $variants = $stmt2->fetchAll();
 
-    $stmt2 = $pdo->prepare("SELECT * FROM bien_the_san_pham WHERE san_pham_id=?");
-    $stmt2->execute([$id]);
-    $variants = $stmt2->fetchAll();
-}
-?>
-<?php
-if ($_SERVER['REQUEST_METHOD']==='POST') {
-    $ten = $_POST['ten'];
-    $mo_ta = $_POST['mo_ta'];
-    $danh_muc = $_POST['danh_muc'];
-    $variants = json_decode($_POST['variants_json'], true);
-
-    if (!empty($_POST['product_id'])) {
-        // UPDATE sản phẩm
-        $id = $_POST['product_id'];
-        $stmt = $pdo->prepare("UPDATE san_pham SET ten=?, mo_ta=?, danh_muc_id=? WHERE id=?");
-        $stmt->execute([$ten, $mo_ta, $danh_muc, $id]);
-
-        // Cập nhật biến thể tương tự
-    } else {
-        // Thêm mới
-        // Giữ nguyên logic INSERT cũ
+        // [MỚI] Lấy thông số kỹ thuật hiện tại của sản phẩm
+        // Join bảng san_pham_thong_so với thong_so
+        $stmt3 = $pdo->prepare("
+            SELECT ts.* FROM san_pham_thong_so spts 
+            JOIN thong_so ts ON spts.thong_so_id = ts.id 
+            WHERE spts.san_pham_id = ? 
+            LIMIT 1
+        ");
+        $stmt3->execute([$id]);
+        $current_specs = $stmt3->fetch(PDO::FETCH_ASSOC);
     }
 }
 ?>
 
-<link rel="stylesheet" href="/HiShop/assets/css/admin/product_form.css">
+<link rel="stylesheet" href="../assets/css/admin/product_form.css">
 
-<div class="admin-page">
-    <div class="form-container">
-        <h1 class="title">THÊM SẢN PHẨM MỚI</h1>
+<form action="index.php?page=products_list" method="post" enctype="multipart/form-data" id="productForm">
+    <div class="admin-page">
+        <div class="page-header">
+            <h1 class="page-title"><?= $isEdit ? 'Cập Nhật Sản Phẩm' : 'Thêm Sản Phẩm Mới' ?></h1>
+            <div class="btn-group">
+                <a href="index.php?page=products_list" class="btn btn-secondary">Hủy bỏ</a>
+                <button type="submit" class="btn btn-save">
+                    <i class="fa-solid fa-floppy-disk"></i> Lưu Sản Phẩm
+                </button>
+            </div>
+        </div>
 
-        <form action="index.php?page=products_list" method="post" enctype="multipart/form-data">
-
-            <!-- THÔNG TIN SẢN PHẨM -->
-            <div class="form-block">
-                <h3>Thông tin sản phẩm</h3>
-                <div class="form-group">
-                    <label for="ten">Tên sản phẩm:</label>
-<input type="text" id="ten" name="ten" class="form-control"
-       value="<?= htmlspecialchars($product['ten'] ?? '') ?>" required>
-
-<textarea id="mo_ta" name="mo_ta" class="form-control" rows="3"><?= htmlspecialchars($product['mo_ta'] ?? '') ?></textarea>
-
-<select id="danh_muc" name="danh_muc" class="form-control" required>
-    <?php foreach ($categories as $c): ?>
-        <option value="<?= $c['id'] ?>"
-            <?= isset($product['danh_muc_id']) && $product['danh_muc_id']==$c['id'] ? 'selected' : '' ?>>
-            <?= $c['ten'] ?>
-        </option>
-    <?php endforeach; ?>
-</select>
-
+        <div class="form-grid">
+            
+            <div class="col-left">
+                <div class="card">
+                    <div class="card-header">Thông tin chung</div>
+                    <div class="form-group">
+                        <label class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
+                        <input type="text" name="ten" class="form-control" value="<?= htmlspecialchars($product['ten'] ?? '') ?>" required placeholder="VD: MacBook Air M2 2023">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mô tả chi tiết</label>
+                        <textarea name="mo_ta" class="form-control"><?= htmlspecialchars($product['mo_ta'] ?? '') ?></textarea>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="mo_ta">Mô tả:</label>
-                    <textarea id="mo_ta" name="mo_ta" class="form-control" rows="3"></textarea>
+
+                <div class="card">
+                    <div class="card-header">Biến thể sản phẩm</div>
+                    <div id="variantList" class="variant-list"></div>
+                    <button type="button" class="btn-add-variant" onclick="addVariant()">
+                        <i class="fa-solid fa-plus"></i> Thêm biến thể mới
+                    </button>
                 </div>
             </div>
 
-            <!-- THÔNG SỐ KỸ THUẬT -->
-            <div class="form-block">
-                <h3>Thông số kỹ thuật</h3>
-
-                <div class="form-group">
-                    <label for="man_hinh">Màn hình:</label>
-                    <select id="man_hinh" name="man_hinh" class="form-control">
-                        <option value="">-- Chọn màn hình --</option>
-                        <?php foreach ($man_hinhs as $m): ?>
-                            <option value="<?= $m['ten'] ?>"><?= $m['ten'] ?></option>
-                        <?php endforeach; ?>
-                    </select>
+            <div class="col-right">
+                <div class="card">
+                    <div class="card-header">Danh mục</div>
+                    <div class="form-group">
+                        <label class="form-label">Các danh mục</label>
+                        <select name="danh_muc" class="form-control" required>
+                            <?php foreach ($categories as $c): ?>
+                                <option value="<?= $c['id'] ?>" <?= isset($product['danh_muc_id']) && $product['danh_muc_id']==$c['id'] ? 'selected' : '' ?>>
+                                    <?= $c['ten'] ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="o_cung">Ổ cứng:</label>
-                    <select id="o_cung" name="o_cung" class="form-control">
-                        <option value="">-- Chọn ổ cứng --</option>
-                        <?php foreach ($o_cungs as $o): ?>
-                            <option value="<?= $o['ten'] ?>"><?= $o['ten'] ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                <div class="card">
+                    <div class="card-header">Ảnh đại diện</div>
+                    <div class="main-img-preview" onclick="document.getElementById('main_img_input').click()">
+                        <?php $mainImg = !empty($product['hinh_anh']) ? $product['hinh_anh'] : ''; ?>
+                        <img id="main_preview" src="<?= $mainImg ? '/HiShop/assets/img/products/'.$mainImg : '/HiShop/assets/img/upload-placeholder.png' ?>">
+                        <input type="file" name="hinh_anh" id="main_img_input" style="display:none;" onchange="previewMainImg(this)">
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="cpu">CPU:</label>
-                    <select id="cpu" name="cpu" class="form-control">
-                        <option value="">-- Chọn CPU --</option>
-                        <?php foreach ($cpus as $c): ?>
-                            <option value="<?= $c['ten'] ?>"><?= $c['ten'] ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+                <div class="card">
+                    <div class="card-header">Thông số kỹ thuật</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Màn hình</label>
+                        <input type="text" name="man_hinh" list="list_man_hinh" class="form-control" 
+                               value="<?= htmlspecialchars($current_specs['man_hinh'] ?? '') ?>" placeholder="Nhập hoặc chọn...">
+                        <datalist id="list_man_hinh">
+                            <?php foreach ($man_hinhs as $item): ?><option value="<?= $item['ten'] ?>"><?php endforeach; ?>
+                        </datalist>
+                    </div>
 
-                <div class="form-group">
-                    <label for="gpu">GPU:</label>
-                    <select id="gpu" name="gpu" class="form-control">
-                        <option value="">-- Chọn GPU --</option>
-                        <?php foreach ($gpus as $g): ?>
-                            <option value="<?= $g['ten'] ?>"><?= $g['ten'] ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+                    <div class="form-group">
+                        <label class="form-label">CPU</label>
+                        <input type="text" name="cpu" list="list_cpu" class="form-control" 
+                               value="<?= htmlspecialchars($current_specs['cpu'] ?? '') ?>" placeholder="Nhập hoặc chọn...">
+                        <datalist id="list_cpu">
+                            <?php foreach ($cpus as $item): ?><option value="<?= $item['ten'] ?>"><?php endforeach; ?>
+                        </datalist>
+                    </div>
 
-                <div class="form-group">
-                    <label for="ram">RAM:</label>
-                    <select id="ram" name="ram" class="form-control">
-                        <option value="">-- Chọn RAM --</option>
-                        <?php foreach ($rams as $r): ?>
-                            <option value="<?= $r['ten'] ?>"><?= $r['ten'] ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
+                    <div class="form-group">
+                        <label class="form-label">RAM</label>
+                        <input type="text" name="ram" list="list_ram" class="form-control" 
+                               value="<?= htmlspecialchars($current_specs['ram'] ?? '') ?>" placeholder="Nhập hoặc chọn...">
+                        <datalist id="list_ram">
+                            <?php foreach ($rams as $item): ?><option value="<?= $item['ten'] ?>"><?php endforeach; ?>
+                        </datalist>
+                    </div>
 
-            <!-- BIẾN THỂ -->
-            <div class="form-block">
-                <h3>Biến thể sản phẩm</h3>
-                <div id="variantList">
-<?php foreach ($variants as $v): ?>
-<div class="variant-item">
-    <label>Màu:</label>
-    <input type="text" class="v_mau form-control" value="<?= $v['mau_sac'] ?>" required>
+                    <div class="form-group">
+                        <label class="form-label">GPU (Card đồ họa)</label>
+                        <input type="text" name="gpu" list="list_gpu" class="form-control" 
+                               value="<?= htmlspecialchars($current_specs['gpu'] ?? '') ?>" placeholder="Nhập hoặc chọn...">
+                        <datalist id="list_gpu">
+                            <?php foreach ($gpus as $item): ?><option value="<?= $item['ten'] ?>"><?php endforeach; ?>
+                        </datalist>
+                    </div>
 
-    <label>SSD:</label>
-    <input type="text" class="v_ssd form-control" value="<?= $v['dung_luong_ssd'] ?>" required>
+                    <div class="form-group">
+                        <label class="form-label">Ổ cứng</label>
+                        <input type="text" name="o_cung" list="list_o_cung" class="form-control" 
+                               value="<?= htmlspecialchars($current_specs['o_cung'] ?? '') ?>" placeholder="Nhập hoặc chọn...">
+                        <datalist id="list_o_cung">
+                            <?php foreach ($o_cungs as $item): ?><option value="<?= $item['ten'] ?>"><?php endforeach; ?>
+                        </datalist>
+                    </div>
 
-    <label>Giá:</label>
-    <input type="number" class="v_gia form-control" value="<?= $v['gia'] ?>" required>
-
-    <label>Số lượng:</label>
-    <input type="number" class="v_ton form-control" value="<?= $v['so_luong_ton'] ?>" required>
-
-    <label>Hình ảnh:</label>
-    <input type="file" class="v_img form-control" name="variant_imgs[]" accept="image/*">
-    <input type="hidden" class="v_img_old" value="<?= $v['hinh_anh'] ?>">
-</div>
-<?php endforeach; ?>
-</div>
-
-                <button type="button" class="btn btn-add" onclick="addVariant()">+ Thêm biến thể</button>
-            </div>
-
-            <!-- TỔNG SỐ LƯỢNG & GIÁ -->
-            <div class="form-block small-block">
-                <div class="form-group">
-                    <label>Tổng số lượng:</label>
-                    <input type="number" id="tong_sl" class="form-control" readonly>
-                </div>
-                <div class="form-group">
-                    <label>Giá hiển thị (thấp nhất):</label>
-                    <input type="number" id="gia_min" class="form-control" readonly>
                 </div>
             </div>
+        </div>
 
-            <input type="hidden" name="variants_json" id="variants_json">
+        <input type="hidden" name="action" value="<?= $isEdit ? 'update_product' : 'add_product' ?>">
+        <input type="hidden" name="variants_json" id="variants_json">
+        <?php if($isEdit): ?>
+            <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
+        <?php endif; ?>
 
-            <div class="modal-actions">
-                <a href="index.php?page=products_list" class="btn btn-secondary">Hủy</a>
-                <button type="submit" class="btn btn-save">Lưu sản phẩm</button>
-            </div>
-        </form>
     </div>
-</div>
+</form>
 
 <script>
+// (Giữ nguyên Javascript cũ của file trước)
+const existingVariants = <?= json_encode($variants) ?>;
 let variantIndex = 0;
 
-function addVariant() {
-    let id = variantIndex++;
-    let html = `
+document.addEventListener('DOMContentLoaded', () => {
+    if (existingVariants.length > 0) {
+        existingVariants.forEach(v => addVariant(v));
+    } else {
+        addVariant();
+    }
+});
+
+function addVariant(data = null) {
+    const id = variantIndex++;
+    const container = document.getElementById('variantList');
+    
+    const mau = data ? data.mau_sac : '';
+    const ssd = data ? data.dung_luong_ssd : '';
+    const gia = data ? data.gia : '';
+    const ton = data ? data.so_luong_ton : '';
+    const imgName = data ? data.hinh_anh : ''; 
+    const imgUrl = imgName ? '/HiShop/assets/img/products/' + imgName : '';
+
+    const html = `
     <div class="variant-item" id="v_${id}">
-        <button type="button" onclick="removeVariant(${id})" class="btn-delete">Xóa</button>
-        <div class="form-group">
-            <label>Màu:</label>
-            <input type="text" class="v_mau form-control" required>
+        <button type="button" class="btn-remove" onclick="removeVariant(${id})"><i class="fa-solid fa-xmark"></i></button>
+        <div class="v-col-img">
+            <div class="img-upload-box" onclick="document.getElementById('file_${id}').click()">
+                <img id="preview_${id}" src="${imgUrl}" style="display: ${imgUrl ? 'block' : 'none'}">
+                <i class="fa-solid fa-image icon-upload" style="display: ${imgUrl ? 'none' : 'block'}"></i>
+                <input type="file" id="file_${id}" name="variant_imgs[]" accept="image/*" onchange="previewVariantImg(this, ${id})">
+                <input type="hidden" class="v_img_old" value="${imgName}">
+            </div>
+            <div style="font-size:11px; color:#666; margin-top:4px;">Ảnh</div>
         </div>
-        <div class="form-group">
-            <label>SSD:</label>
-            <input type="text" class="v_ssd form-control" required>
-        </div>
-        <div class="form-group">
-            <label>Giá:</label>
-            <input type="number" class="v_gia form-control" required min="0">
-        </div>
-        <div class="form-group">
-            <label>Số lượng:</label>
-            <input type="number" class="v_ton form-control" required min="0">
-        </div>
-        <div class="form-group">
-            <label>Hình ảnh:</label>
-            <input type="file" class="v_img form-control" name="variant_imgs[]" accept="image/*" required>
+        <div class="v-row">
+            <div class="v-col"><label class="form-label">Màu sắc</label><input type="text" class="form-control v_mau" value="${mau}" required></div>
+            <div class="v-col"><label class="form-label">SSD</label><input type="text" class="form-control v_ssd" value="${ssd}" required></div>
+            <div class="v-col"><label class="form-label">Giá</label><input type="number" class="form-control v_gia" value="${gia}" required></div>
+            <div class="v-col"><label class="form-label">Kho</label><input type="number" class="form-control v_ton" value="${ton}" required></div>
         </div>
     </div>`;
-    document.getElementById("variantList").insertAdjacentHTML("beforeend", html);
-    attachListeners();
+    
+    container.insertAdjacentHTML('beforeend', html);
 }
-
-// Thêm 1 biến thể mặc định
-addVariant();
 
 function removeVariant(id) {
-    document.getElementById("v_" + id).remove();
-    calculateTotals();
+    const item = document.getElementById('v_' + id);
+    if(item) item.remove();
 }
 
-function attachListeners() {
-    document.querySelectorAll(".v_gia, .v_ton").forEach(el => el.oninput = calculateTotals);
-    document.querySelector('form').onsubmit = saveVariantsJSON; 
+function previewMainImg(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) { document.getElementById('main_preview').src = e.target.result; }
+        reader.readAsDataURL(input.files[0]);
+    }
 }
 
-function calculateTotals() {
-    let totalQty = 0;
-    let prices = [];
-    document.querySelectorAll(".variant-item").forEach(v => {
-        let gia = parseInt(v.querySelector(".v_gia").value) || 0;
-        let sl = parseInt(v.querySelector(".v_ton").value) || 0;
-        if(gia > 0) prices.push(gia);
-        totalQty += sl;
-    });
-    document.getElementById("tong_sl").value = totalQty;
-    document.getElementById("gia_min").value = prices.length ? Math.min(...prices) : 0;
+function previewVariantImg(input, id) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.getElementById('preview_' + id);
+            img.src = e.target.result;
+            img.style.display = 'block';
+            input.parentElement.querySelector('.icon-upload').style.display = 'none';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
 }
 
-function saveVariantsJSON() {
+document.getElementById('productForm').onsubmit = function() {
     let arr = [];
-    let index = 0;
-    document.querySelectorAll(".variant-item").forEach(v=>{
+    let domVariants = document.querySelectorAll('.variant-item');
+    domVariants.forEach((v, index) => {
         arr.push({
             mau: v.querySelector(".v_mau").value,
             ssd: v.querySelector(".v_ssd").value,
             gia: v.querySelector(".v_gia").value,
             ton: v.querySelector(".v_ton").value,
+            old_img: v.querySelector(".v_img_old").value, 
             img_index: index
         });
-        index++;
     });
     document.getElementById("variants_json").value = JSON.stringify(arr);
     return true;
-}
+};
 </script>
