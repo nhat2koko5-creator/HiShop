@@ -495,6 +495,7 @@ function getCartItemsAndTotal(PDO $pdo, $user_id) {
             bt.dung_luong_ssd,
             bt.hinh_anh AS hinh_bien_the,
             bt.gia AS gia_bien_the,
+            bt.so_luong_ton,        -- 🟢 THÊM DÒNG NÀY
 
             gg.loai_giam_gia,
             gg.gia_tri
@@ -524,35 +525,39 @@ function getCartItemsAndTotal(PDO $pdo, $user_id) {
 
     $total = 0;
 
-    foreach ($items as &$item) {
+foreach ($items as &$item) {
 
-        // 1. chọn đúng ảnh
-        $item["hinh_anh"] = $item["hinh_bien_the"] ?: $item["hinh_cha"];
+    // 1. Ảnh hiển thị
+    $item["hinh_anh"] = $item["hinh_bien_the"] ?: $item["hinh_cha"];
 
-        // 2. giá gốc = giá biến thể
-        $gia = (float) $item["gia_bien_the"];
+    // 2. Giá gốc
+    $gia = (float) $item["gia_bien_the"];
 
-        // 3. áp dụng giảm giá
-        if ($item["loai_giam_gia"] === "percent") {
-            $gia = $gia - ($gia * ($item["gia_tri"] / 100));
-        } elseif ($item["loai_giam_gia"] === "amount") {
-            $gia = $gia - $item["gia_tri"];
-        }
-
-        if ($gia < 0) $gia = 0;
-
-        $item["gia"] = $gia;
-
-        // 4. tính tổng tiền giỏ hàng
-        $total += $gia * $item["so_luong"];
+    // 3. Giảm giá
+    if ($item["loai_giam_gia"] === "percent") {
+        $gia -= ($gia * ($item["gia_tri"] / 100));
+    } elseif ($item["loai_giam_gia"] === "amount") {
+        $gia -= $item["gia_tri"];
     }
+    if ($gia < 0) $gia = 0;
+
+    $item["gia"] = $gia;
+
+    // 4. Số lượng tồn (ưu tiên biến thể)
+    $item["so_luong_ton"] = isset($item["so_luong_ton"]) && $item["so_luong_ton"] !== null
+        ? (int)$item["so_luong_ton"]
+        : 999999; // sản phẩm không biến thể → coi như không giới hạn
+
+    // 5. Tổng
+    $total += $gia * $item["so_luong"];
+}
+
 
     return [
         "items" => $items,
         "total" => $total
     ];
 }
-
 
 function getAvailableCoupons(PDO $pdo) {
     // Chỉ lấy mã còn hạn và chưa bắt đầu

@@ -93,7 +93,15 @@ $default_img = 'assets/img/no-image.png';
                 </div>
                     <div class="quantity-control">
                         <button class="btn-quantity" data-key="<?php echo $key; ?>" data-change="-1">-</button>
-                        <input type="number" class="input-quantity" id="quantity-<?php echo $key; ?>" value="<?php echo $item['so_luong']; ?>" min="1" data-key="<?php echo $key; ?>">
+                        <input 
+                        type="number" 
+                        class="input-quantity" 
+                        id="quantity-<?php echo $key; ?>" 
+                        value="<?php echo $item['so_luong']; ?>" 
+                        min="1"
+                        max="<?php echo $item['so_luong_ton']; ?>" 
+                        data-max="<?php echo $item['so_luong_ton']; ?>" 
+                        data-key="<?php echo $key; ?>">
                         <button class="btn-quantity" data-key="<?php echo $key; ?>" data-change="1">+</button>
                     </div>
 
@@ -289,26 +297,50 @@ document.addEventListener('DOMContentLoaded', function() {
             const key = e.target.dataset.key;
             const change = parseInt(e.target.dataset.change);
             const input = document.getElementById('quantity-' + key);
-            let newQty = parseInt(input.value) + change;
+            let max = parseInt(input.dataset.max);
+let newQty = parseInt(input.value) + change;
+
+if (newQty > max) {
+    newQty = max;
+    showModalAlert("Chỉ còn " + max + " sản phẩm trong kho.");
+}
+
             if (newQty < 1) newQty = 1;
             input.value = newQty;
             handleUpdateQuantity(key, newQty);
         });
     });
 
-    document.querySelectorAll('.input-quantity').forEach(inp => {
-        inp.addEventListener('change', e => 
-            handleUpdateQuantity(e.target.dataset.key, parseInt(e.target.value))
-        );
+document.querySelectorAll('.input-quantity').forEach(inp => {
+    inp.addEventListener('change', e => {
+        let max = parseInt(e.target.dataset.max);
+        let val = parseInt(e.target.value);
+
+        if (val > max) {
+            val = max;
+            e.target.value = max;
+            showModalAlert("Bạn chỉ có thể mua tối đa " + max + " sản phẩm.");
+        }
+
+        if (val < 1) {
+            val = 1;
+            e.target.value = 1;
+        }
+
+        handleUpdateQuantity(e.target.dataset.key, val);
     });
+});
+
+
 
     // --- 5. LOGIC XÓA ---
-    document.querySelectorAll('.cart-item-remove').forEach(btn => {
-        btn.addEventListener('click', e => {
-            e.preventDefault();
-            showDeletePrompt(e.target.dataset.key);
-        });
+document.querySelectorAll('.cart-item-remove').forEach(btn => {
+    btn.addEventListener('click', e => {
+        e.preventDefault();
+        showDeletePrompt(e.currentTarget.dataset.key);
     });
+});
+
 
      async function handleDeleteItem(key) {
             const data = await sendCartRequest('delete', { key: key });
