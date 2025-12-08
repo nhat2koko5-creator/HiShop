@@ -95,6 +95,45 @@ if (isset($_SESSION['promo'])) {
 }
 $final_total = $subtotal - $discount;
 
+
+// ==============================================================================
+// [MỚI] BẮT BUỘC: KIỂM TRA TỒN KHO LẦN CUỐI TRƯỚC KHI TẠO ĐƠN
+// Lý do: Tránh trường hợp khách hàng treo trang checkout quá lâu, sản phẩm đã bị người khác mua hết.
+// ==============================================================================
+foreach ($order_items as $check_item) {
+    $id_bien_the_check = $check_item['bien_the_id'];
+    $sl_mua = $check_item['so_luong'];
+
+    // Lấy số lượng thực tế trong database
+    $stmtCheckStock = $pdo->prepare("SELECT so_luong_ton, san_pham_id FROM bien_the_san_pham WHERE id = ?");
+    $stmtCheckStock->execute([$id_bien_the_check]);
+    $stock_data = $stmtCheckStock->fetch(PDO::FETCH_ASSOC);
+
+    // Lấy tên sản phẩm để báo lỗi cho thân thiện
+    $stmtName = $pdo->prepare("SELECT ten FROM san_pham WHERE id = ?");
+    $stmtName->execute([$stock_data['san_pham_id']]);
+    $prod_name = $stmtName->fetchColumn();
+
+    // 1. Kiểm tra sản phẩm có tồn tại không
+    if (!$stock_data) {
+        echo "<script>
+            alert('Lỗi: Sản phẩm \"$prod_name\" có thể đã bị xóa hoặc ngừng kinh doanh.');
+            window.location.href = 'index.php?page=cart';
+        </script>";
+        exit; // Dừng ngay lập tức
+    }
+
+    // 2. Kiểm tra số lượng tồn
+    if ($stock_data['so_luong_ton'] < $sl_mua) {
+        $sl_con_lai = $stock_data['so_luong_ton'];
+        echo "<script>
+            alert('Rất tiếc! Sản phẩm \"$prod_name\" vừa hết hàng hoặc không đủ số lượng.\\n(Hiện chỉ còn: $sl_con_lai, Bạn đặt: $sl_mua).\\nVui lòng cập nhật lại giỏ hàng.');
+            window.location.href = 'index.php?page=cart';
+        </script>";
+        exit; // Dừng ngay lập tức
+    }
+}
+// ==============================================================================
 try {
     $pdo->beginTransaction();
     $sql = "INSERT INTO don_hang (nguoi_dung_id, ho_ten_nguoi_nhan, sdt_nguoi_nhan, dia_chi_giao_hang, ghi_chu, tong_tien, trang_thai_don_hang, trang_thai_thanh_toan, ma_khuyen_mai_id, phuong_thuc_thanh_toan, ngay_dat) VALUES (?, ?, ?, ?, ?, ?, 'Chờ xử lý', 'Chưa thanh toán', ?, ?, NOW())";

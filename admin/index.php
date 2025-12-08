@@ -50,16 +50,38 @@ switch ($page) {
         $page_title = 'Quản lý Khuyến Mãi';
         $page_file = 'pages/promos_list.php';
         break;
+    case 'discount_list':  // Tên này phải trùng với tham số ?page=discount_list ở URL
+        $page_title = 'Quản lý Khuyến Mãi';
+        $page_file = 'pages/promos_list.php'; // Trỏ đúng đến file code vừa tạo
+        break;
 
     case 'users_list':
         $page_title = 'Quản lý Người Dùng';
         $page_file = 'pages/users_list.php';
         break;
 
-    case 'warehouse_list':
+   case 'warehouse_list':
         $page_title = 'Quản lý Kho Hàng';
         $page_file = 'pages/warehouse_list.php';
         break;
+
+    case 'warehouse_detail':
+        $page_title = 'Chi tiết Kho Hàng';
+        $page_file = 'pages/warehouse_detail.php';
+        break;
+
+    case 'warehouse_import':
+        $page_title = 'Tạo Phiếu Nhập Kho';
+        $page_file = 'pages/warehouse_import.php';
+        break;
+
+    case 'warehouse_export':
+        $page_title = 'Tạo Phiếu Xuất Kho';
+        $page_file = 'pages/warehouse_export.php';
+        break;
+   case 'warehouse_history':
+    $page_file = 'pages/warehouse_history.php'; // Đúng: Gán đường dẫn vào biến để index xử lý layout sau
+    break;
 
     case 'settings':
         $page_title = 'Cài đặt';
@@ -68,7 +90,7 @@ switch ($page) {
 
     case 'dashboard':
     default:
-        $page_title = 'Dashboard';
+        $page_title = 'Trang chủ';
         $page_file = 'pages/dashboard.php';
         break;
 }
@@ -79,7 +101,6 @@ switch ($page) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - <?php echo htmlspecialchars($page_title); ?></title>
-    
     <link rel="stylesheet" href="../assets/css/style-admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>

@@ -1,0 +1,141 @@
+/* admin/assets/css/admin/warehouse_history.css */
+
+/* --- GENERAL LAYOUT --- */
+.history-container {
+    padding: 30px;
+    font-family: 'Inter', sans-serif;
+}
+
+.page-header-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.page-header-title i { color: #6366f1; }
+
+/* --- MAIN CARD --- */
+.main-card-wrapper {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+/* --- FILTER TOOLBAR --- */
+.filter-toolbar {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+    background: #fff;
+}
+
+.filter-form {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-item {
+    position: relative;
+}
+
+/* Search Box Style */
+.search-box input {
+    padding: 10px 16px 10px 36px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+    width: 220px;
+    background: #f8fafc;
+    transition: 0.2s;
+}
+.search-box i {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    color: #94a3b8;
+}
+.search-box input:focus {
+    background: #fff; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Select Box Style */
+.form-select {
+    padding: 10px 30px 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+    background-color: #f8fafc;
+    cursor: pointer;
+    min-width: 150px;
+}
+.form-select:focus { border-color: #6366f1; background-color: #fff; }
+
+/* Filter Buttons */
+.btn-filter {
+    padding: 10px 16px; border-radius: 8px; font-weight: 600; font-size: 14px;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    text-decoration: none; border: 1px solid transparent; transition: 0.2s;
+}
+.btn-filter.primary { background: #6366f1; color: #fff; }
+.btn-filter.primary:hover { background: #4f46e5; }
+
+.btn-filter.secondary { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+.btn-filter.secondary:hover { background: #e2e8f0; color: #334155; }
+
+/* --- TABLE STYLING --- */
+.table-list { width: 100%; border-collapse: collapse; }
+.table-list th {
+    background: #fff; color: #64748b; font-weight: 700; font-size: 12px;
+    text-transform: uppercase; padding: 16px 24px; text-align: left;
+    border-bottom: 2px solid #f1f5f9;
+}
+.table-list td {
+    padding: 16px 24px; border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle; font-size: 14px; color: #334155;
+}
+.table-list tr:hover { background: #f8fafc; }
+
+/* --- BADGES & COMPONENTS --- */
+.text-center { text-align: center; }
+.text-muted { color: #94a3b8; }
+
+/* Badge Import/Export */
+.badge-type {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;
+}
+.badge-type.import { background: #eff6ff; color: #4f46e5; border: 1px solid #e0e7ff; } /* Xanh dương */
+.badge-type.export { background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; } /* Cam */
+
+/* User Cell */
+.user-cell { display: flex; align-items: center; gap: 8px; }
+.avatar-circle {
+    width: 28px; height: 28px; background: #f1f5f9; color: #64748b;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; border: 1px solid #e2e8f0;
+}
+
+/* Count Pill */
+.count-pill {
+    background: #f1f5f9; padding: 2px 10px; border-radius: 10px;
+    font-size: 12px; font-weight: 600; color: #475569;
+}
+
+/* --- PAGINATION --- */
+.pagination-area {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 24px; border-top: 1px solid #f1f5f9;
+}
+.page-info { font-size: 13px; color: #64748b; }
+.page-list { display: flex; gap: 5px; }
+.page-number {
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    border: 1px solid #e2e8f0; border-radius: 6px; color: #64748b; text-decoration: none; font-size: 13px;
+}
+.page-number.active { background: #6366f1; color: #fff; border-color: #6366f1; }

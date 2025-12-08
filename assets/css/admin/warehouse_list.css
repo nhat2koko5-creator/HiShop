@@ -1,0 +1,185 @@
+/* admin/assets/css/admin/warehouse_list.css */
+
+/* === 1. CONTAINER & HEADER === */
+.warehouse-container {
+    padding: 30px;
+    font-family: 'Inter', sans-serif;
+}
+
+.page-header-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.page-header-title i { color: #f97316; /* Cam cho kho hàng */ }
+
+/* === 2. STATS GRID === */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    border: 1px solid #e2e8f0;
+    transition: transform 0.2s;
+}
+.stat-card:hover { transform: translateY(-3px); }
+
+.stat-icon-box {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #fff;
+    flex-shrink: 0;
+}
+/* Màu riêng cho Kho */
+.bg-orange { background: #f97316; }
+.bg-green { background: #10b981; }
+.bg-red { background: #ef4444; }
+
+.stat-content { display: flex; flex-direction: column; }
+.stat-label {
+    font-size: 12px; font-weight: 600; color: #64748b;
+    text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;
+}
+.stat-value { font-size: 24px; font-weight: 700; color: #0f172a; }
+.text-success { color: #10b981; }
+.text-danger { color: #ef4444; }
+
+/* === 3. MAIN CARD === */
+.main-card-wrapper {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+.toolbar-wrapper {
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.search-box {
+    position: relative;
+    width: 320px;
+}
+.search-input {
+    width: 100%;
+    padding: 10px 16px 10px 42px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+    background: #fff;
+    box-sizing: border-box;
+}
+.search-input:focus { border-color: #f97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1); }
+.search-icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: #94a3b8;
+}
+
+.btn-add {
+    background: #f97316; /* Cam */
+    color: #fff; border: none;
+    padding: 10px 20px; border-radius: 8px; font-weight: 600;
+    font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;
+}
+.btn-add:hover { background: #ea580c; }
+
+/* === 4. TABLE STYLING === */
+.table-list { width: 100%; border-collapse: collapse; }
+.table-list th {
+    background: #fff; color: #64748b; font-weight: 700; font-size: 12px;
+    text-transform: uppercase; padding: 16px 24px; text-align: left;
+    border-bottom: 2px solid #f1f5f9;
+}
+.table-list td {
+    padding: 16px 24px; border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle; font-size: 14px; color: #334155;
+}
+.table-list tr:hover { background: #f8fafc; }
+
+/* Styles riêng trong bảng */
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-muted { color: #94a3b8; }
+.fw-bold { font-weight: 600; color: #1e293b; }
+.info-row { font-size: 13px; color: #475569; margin-bottom: 2px; }
+.info-row i { width: 16px; text-align: center; margin-right: 4px; }
+
+.status-badge { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.status-badge.active { background: #dcfce7; color: #166534; }
+.status-badge.inactive { background: #fee2e2; color: #991b1b; }
+.row-locked td { opacity: 0.6; background: #fafafa; }
+
+/* Actions */
+.action-buttons { display: flex; justify-content: flex-end; gap: 8px; }
+.btn-action {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 6px; font-size: 13px;
+    font-weight: 600; text-decoration: none; cursor: pointer; border: 1px solid transparent;
+}
+
+/* View (Xanh dương nhạt) */
+.btn-view { background: #f0f9ff; color: #0284c7; border-color: #e0f2fe; }
+.btn-view:hover { background: #0284c7; color: #fff; }
+
+/* Edit (Vàng nhạt) */
+.btn-edit { background: #fffbeb; color: #b45309; border-color: #fcd34d; }
+.btn-edit:hover { background: #b45309; color: #fff; }
+
+/* Lock (Đỏ nhạt) */
+.btn-lock { background: #fff1f2; color: #ef4444; border-color: #ffe4e6; }
+.btn-lock:hover { background: #ef4444; color: #fff; }
+
+/* Unlock (Xanh lá nhạt) */
+.btn-unlock { background: #ecfdf5; color: #10b981; border-color: #bbf7d0; }
+.btn-unlock:hover { background: #10b981; color: #fff; }
+
+/* Pagination */
+.pagination-area {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 24px; border-top: 1px solid #f1f5f9;
+}
+.page-info { font-size: 13px; color: #64748b; }
+.page-list { display: flex; gap: 5px; }
+.page-number {
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    border: 1px solid #e2e8f0; border-radius: 6px; color: #64748b; text-decoration: none; font-size: 13px;
+}
+.page-number.active { background: #f97316; color: #fff; border-color: #f97316; }
+
+/* Modal */
+.admin-modal { display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
+.admin-modal.show { display: flex; }
+.admin-modal-content { background: #fff; width: 400px; padding: 24px; border-radius: 12px; }
+.modal-title { margin: 0 0 20px; font-size: 20px; font-weight: 700; text-align: center; }
+.form-label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; color: #475569; }
+.form-control { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; outline: none; background: #f8fafc; box-sizing: border-box; }
+.form-control:focus { border-color: #f97316; background: #fff; }
+.modal-footer { display: flex; gap: 10px; margin-top: 20px; }
+.btn-modal { flex: 1; padding: 10px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; }
+.btn-cancel { background: #f1f5f9; color: #64748b; }
+.btn-submit { background: #f97316; color: #fff; }

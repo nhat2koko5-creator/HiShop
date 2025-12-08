@@ -397,197 +397,268 @@
 /* --- CSS MỚI CHO TRANG KẾT QUẢ VNPAY (Thêm vào cuối file checkout.css) --- */
 
 .payment-result-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 70vh; /* Chiếm phần lớn chiều cao màn hình */
-    padding: 40px 20px;
-    background-color: #f8f9fa; /* Màu nền nhẹ cho cả vùng */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 70vh; /* Chiếm phần lớn chiều cao màn hình */
+  padding: 40px 20px;
+  background-color: #f8f9fa; /* Màu nền nhẹ cho cả vùng */
 }
 
 .payment-result-card {
-    background: #fff;
-    width: 100%;
-    max-width: 500px; /* Giới hạn chiều rộng card */
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Đổ bóng mềm mại hiện đại */
-    padding: 40px;
-    text-align: center;
-    transition: all 0.3s ease;
+  background: #fff;
+  width: 100%;
+  max-width: 500px; /* Giới hạn chiều rộng card */
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Đổ bóng mềm mại hiện đại */
+  padding: 40px;
+  text-align: center;
+  transition: all 0.3s ease;
 }
 
 /* 1. Header Styles */
 .pr-icon-wrapper {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 .pr-svg-icon {
-    width: 80px;
-    height: 80px;
+  width: 80px;
+  height: 80px;
 }
 
 /* Màu sắc dựa trên trạng thái */
-.success-mode .pr-svg-icon { color: #10b981; /* Xanh lá */ }
-.success-mode .pr-title { color: #10b981; }
+.success-mode .pr-svg-icon {
+  color: #10b981; /* Xanh lá */
+}
+.success-mode .pr-title {
+  color: #10b981;
+}
 
-.error-mode .pr-svg-icon { color: #ef4444; /* Đỏ */ }
-.error-mode .pr-title { color: #ef4444; }
+.error-mode .pr-svg-icon {
+  color: #ef4444; /* Đỏ */
+}
+.error-mode .pr-title {
+  color: #ef4444;
+}
 
 .pr-title {
-    font-size: 24px;
-    font-weight: 700;
-    margin-bottom: 10px;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 10px;
 }
 
 .pr-desc {
-    color: #6b7280;
-    font-size: 15px;
-    line-height: 1.5;
-    margin-bottom: 30px;
+  color: #6b7280;
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 30px;
 }
 
 /* 2. Key Info Box Styles */
 .pr-key-info {
-    background-color: #f3f4f6;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 25px;
+  background-color: #f3f4f6;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
 }
 
 .pr-info-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    font-size: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 15px;
 }
 
 .pr-info-item:last-child {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 .pr-label {
-    color: #6b7280;
+  color: #6b7280;
 }
 
 .pr-value {
-    font-weight: 600;
-    color: #111827;
+  font-weight: 600;
+  color: #111827;
 }
 
 .pr-value.highlight {
-    color: #3b82f6; /* Màu xanh dương cho mã đơn */
+  color: #3b82f6; /* Màu xanh dương cho mã đơn */
 }
 
 .pr-value.total-amount {
-    font-size: 18px;
-    color: #ef4444; /* Màu đỏ cho tổng tiền */
+  font-size: 18px;
+  color: #ef4444; /* Màu đỏ cho tổng tiền */
 }
 
 /* 3. Technical Details Toggler Styles */
 .pr-tech-details-wrapper {
-    margin-bottom: 30px;
-    border-top: 1px solid #e5e7eb;
-    padding-top: 20px;
+  margin-bottom: 30px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 20px;
 }
 
 .pr-toggle-btn {
-    background: none;
-    border: none;
-    color: #3b82f6;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin: 0 auto;
-    padding: 8px 12px;
-    border-radius: 6px;
-    transition: background 0.2s;
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 auto;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background 0.2s;
 }
 
 .pr-toggle-btn:hover {
-    background-color: #eff6ff;
+  background-color: #eff6ff;
 }
 
 .pr-tech-details-content {
-    display: none; /* Ẩn mặc định */
-    margin-top: 20px;
-    text-align: left;
-    background: #fff;
-    padding: 15px;
-    border: 1px dashed #d1d5db;
-    border-radius: 8px;
+  display: none; /* Ẩn mặc định */
+  margin-top: 20px;
+  text-align: left;
+  background: #fff;
+  padding: 15px;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
 }
 
 .pr-tech-details-content.show {
-    display: block; /* Hiện khi có class show */
-    animation: fadeIn 0.3s ease-in-out;
+  display: block; /* Hiện khi có class show */
+  animation: fadeIn 0.3s ease-in-out;
 }
 
 /* Tận dụng lại class .detail-row trong checkout.css cũ cho phần nội dung ẩn */
 .pr-tech-details-content .detail-row {
-    margin-bottom: 10px;
-    font-size: 14px;
+  margin-bottom: 10px;
+  font-size: 14px;
 }
 
 /* 4. Action Buttons Styles */
 .pr-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .btn-block {
-    display: block;
-    width: 100%;
-    padding: 12px 20px;
-    font-size: 16px;
-    font-weight: 600;
-    text-align: center;
-    border-radius: 8px;
-    transition: all 0.2s;
+  display: block;
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  border-radius: 8px;
+  transition: all 0.2s;
 }
 
 /* Tinh chỉnh lại nút primary và outline cho đẹp hơn */
 .btn-primary.btn-block {
-    background-color: #3b82f6;
-    border: none;
+  background-color: #3b82f6;
+  border: none;
 }
 .btn-primary.btn-block:hover {
-    background-color: #2563eb;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  background-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-outline.btn-block {
-    border: 2px solid #d1d5db;
-    color: #374151;
+  border: 2px solid #d1d5db;
+  color: #374151;
 }
 .btn-outline.btn-block:hover {
-    background-color: #f9fafb;
-    border-color: #9ca3af;
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+.address-select-link {
+  float: right;
+  font-size: 13px;
+  color: #0f62fe;
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+.address-select-link:hover {
+  text-decoration: underline;
 }
 
+/* Style cho list địa chỉ trong Modal */
+.address-list-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+.address-item-modal {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.address-item-modal:hover {
+  border-color: #0f62fe;
+  background: #f0f7ff;
+}
+.aim-icon {
+  font-size: 18px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+.aim-content {
+  flex: 1;
+}
+.aim-text {
+  font-size: 14px;
+  color: #374151;
+  margin: 0;
+  line-height: 1.4;
+}
+.btn-use-address {
+  background: #0f62fe;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Responsive cho màn hình nhỏ */
 @media (max-width: 576px) {
-    .payment-result-container {
-        padding: 20px 15px;
-    }
-    .payment-result-card {
-        padding: 30px 20px;
-    }
-    .pr-svg-icon {
-        width: 60px;
-        height: 60px;
-    }
-    .pr-title {
-        font-size: 20px;
-    }
+  .payment-result-container {
+    padding: 20px 15px;
+  }
+  .payment-result-card {
+    padding: 30px 20px;
+  }
+  .pr-svg-icon {
+    width: 60px;
+    height: 60px;
+  }
+  .pr-title {
+    font-size: 20px;
+  }
 }
