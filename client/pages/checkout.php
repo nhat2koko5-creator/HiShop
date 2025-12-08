@@ -50,12 +50,31 @@ if ($is_buy_now) {
 } else {
     // --- LUỒNG GIỎ HÀNG BÌNH THƯỜNG ---
     unset($_SESSION['buy_now_item']); 
-    $cartData = getCartItemsAndTotal($pdo, $_SESSION['user_id']); 
+    
+    // [MỚI] 1. Lấy danh sách ID sản phẩm được chọn từ URL
+    $selected_ids_input = $_GET['selected_ids'] ?? '';
+    $selected_ids_arr = [];
+
+    if (!empty($selected_ids_input)) {
+        $parts = explode(',', $selected_ids_input);
+        // Chỉ lấy số để bảo mật
+        $selected_ids_arr = array_filter($parts, 'is_numeric');
+    }
+
+    // [MỚI] 2. Nếu không chọn gì thì đá về giỏ hàng
+    if (empty($selected_ids_arr)) {
+        echo "<script>alert('Vui lòng chọn ít nhất 1 sản phẩm để thanh toán.'); window.location.href='index.php?page=cart';</script>";
+        exit;
+    }
+
+    // [MỚI] 3. Gọi hàm lấy giỏ hàng VỚI BỘ LỌC ID (truyền mảng ID vào tham số thứ 3)
+    $cartData = getCartItemsAndTotal($pdo, $_SESSION['user_id'], $selected_ids_arr); 
+    
     $cart_items = $cartData['items'];
     $subtotal = $cartData['total'];
 
     if (empty($cart_items)) {
-        echo "<script>alert('Giỏ hàng trống.'); window.location.href='index.php?page=cart';</script>";
+        echo "<script>alert('Giỏ hàng không hợp lệ.'); window.location.href='index.php?page=cart';</script>";
         exit; 
     }
 }
@@ -99,7 +118,9 @@ $total = $subtotal + $shipping - $discount;
     <form method="POST" action="index.php?page=process_vnpay" id="checkout-form">
         <input type="hidden" name="shipping_cost" value="0">
         <input type="hidden" name="order_type" value="<?= $is_buy_now ? 'buy_now' : 'cart' ?>">
-        
+        <?php if (!$is_buy_now && isset($selected_ids_input)): ?>
+        <input type="hidden" name="selected_ids" value="<?= htmlspecialchars($selected_ids_input) ?>">
+    <?php endif; ?>
         <div class="checkout-layout">
             
             <div class="checkout-form"> 

@@ -480,78 +480,67 @@ function getRecentOrders(PDO $pdo, $limit = 5) {
  * (MỚI) Lấy tất cả sản phẩm và tổng tiền trong giỏ hàng của người dùng
  * Dựa trên bảng: `gio_hang`, `san_pham`
  */
-function getCartItemsAndTotal(PDO $pdo, $user_id) {
+function getCartItemsAndTotal(PDO $pdo, $user_id, $selected_ids = null) {
 
+    // 1. Chuẩn bị câu SQL cơ bản
     $sql = "
         SELECT 
             gh.id,
             gh.so_luong,
-
             sp.ten AS ten_san_pham,
             sp.hinh_anh AS hinh_cha,
-
             bt.id AS bien_the_id,
             bt.mau_sac,
             bt.dung_luong_ssd,
             bt.hinh_anh AS hinh_bien_the,
             bt.gia AS gia_bien_the,
-            bt.so_luong_ton,        -- 🟢 THÊM DÒNG NÀY
-
+            bt.so_luong_ton,
             gg.loai_giam_gia,
             gg.gia_tri
-
         FROM gio_hang gh
-
-        JOIN san_pham sp 
-            ON gh.san_pham_id = sp.id
-
-        LEFT JOIN bien_the_san_pham bt 
-            ON gh.bien_the_id = bt.id
-
-        LEFT JOIN san_pham_giam_gia spg 
-            ON spg.san_pham_id = sp.id
-
-        LEFT JOIN giam_gia gg 
-            ON gg.id = spg.giam_gia_id
+        JOIN san_pham sp ON gh.san_pham_id = sp.id
+        LEFT JOIN bien_the_san_pham bt ON gh.bien_the_id = bt.id
+        LEFT JOIN san_pham_giam_gia spg ON spg.san_pham_id = sp.id
+        LEFT JOIN giam_gia gg ON gg.id = spg.giam_gia_id
             AND (gg.ngay_bat_dau IS NULL OR gg.ngay_bat_dau <= NOW())
             AND (gg.ngay_ket_thuc IS NULL OR gg.ngay_ket_thuc >= NOW())
-
         WHERE gh.nguoi_dung_id = ?
     ";
 
+    $params = [$user_id];
+
+    // 2. [QUAN TRỌNG] Nếu có danh sách ID được chọn -> Thêm điều kiện lọc
+    if (!empty($selected_ids) && is_array($selected_ids)) {
+        // Tạo chuỗi dấu chấm hỏi (?,?,?) tương ứng số lượng ID
+        $placeholders = implode(',', array_fill(0, count($selected_ids), '?'));
+        $sql .= " AND gh.id IN ($placeholders)";
+        
+        // Gộp mảng params cũ với mảng ID mới
+        $params = array_merge($params, $selected_ids);
+    }
+
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([$user_id]);
+    $stmt->execute($params);
     $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // 3. Tính toán tổng tiền (Logic cũ giữ nguyên)
     $total = 0;
+    foreach ($items as &$item) {
+        $item["hinh_anh"] = $item["hinh_bien_the"] ?: $item["hinh_cha"];
+        $gia = (float) $item["gia_bien_the"];
 
-foreach ($items as &$item) {
+        if ($item["loai_giam_gia"] === "percent") {
+            $gia -= ($gia * ($item["gia_tri"] / 100));
+        } elseif ($item["loai_giam_gia"] === "amount") {
+            $gia -= $item["gia_tri"];
+        }
+        if ($gia < 0) $gia = 0;
 
-    // 1. Ảnh hiển thị
-    $item["hinh_anh"] = $item["hinh_bien_the"] ?: $item["hinh_cha"];
-
-    // 2. Giá gốc
-    $gia = (float) $item["gia_bien_the"];
-
-    // 3. Giảm giá
-    if ($item["loai_giam_gia"] === "percent") {
-        $gia -= ($gia * ($item["gia_tri"] / 100));
-    } elseif ($item["loai_giam_gia"] === "amount") {
-        $gia -= $item["gia_tri"];
+        $item["gia"] = $gia;
+        $item["so_luong_ton"] = isset($item["so_luong_ton"]) ? (int)$item["so_luong_ton"] : 999999;
+        
+        $total += $gia * $item["so_luong"];
     }
-    if ($gia < 0) $gia = 0;
-
-    $item["gia"] = $gia;
-
-    // 4. Số lượng tồn (ưu tiên biến thể)
-    $item["so_luong_ton"] = isset($item["so_luong_ton"]) && $item["so_luong_ton"] !== null
-        ? (int)$item["so_luong_ton"]
-        : 999999; // sản phẩm không biến thể → coi như không giới hạn
-
-    // 5. Tổng
-    $total += $gia * $item["so_luong"];
-}
-
 
     return [
         "items" => $items,
