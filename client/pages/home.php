@@ -152,7 +152,7 @@ $discountProducts = getDiscountProducts($pdo);
                                             <a href="javascript:void(0);" class="btn-view btn-buy-now btn-quick-add"
                                                data-product-id="<?= $sp['id']; ?>"
                                                data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
-                                               data-product-image="<?= htmlspecialchars($sp['hinh_anh']); ?>"
+                                               data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
                                                data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'
                                                data-action="buy">
                                                 🔥 Mua ngay
@@ -161,7 +161,7 @@ $discountProducts = getDiscountProducts($pdo);
                                                title="Thêm vào giỏ"
                                                data-product-id="<?= $sp['id']; ?>"
                                                data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
-                                               data-product-image="<?= htmlspecialchars($sp['hinh_anh']); ?>"
+                                               data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
                                                data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'
                                                data-action="add">
                                                 🛒
@@ -314,7 +314,7 @@ $discountProducts = getDiscountProducts($pdo);
                                 <a href="javascript:void(0);" class="btn-view btn-buy-now btn-quick-add"
                                    data-product-id="<?= $sp['id']; ?>"
                                    data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
-                                   data-product-image="<?= htmlspecialchars($sp['hinh_anh']); ?>"
+                                   data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
                                    data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'
                                    data-action="buy">
                                     🔥 Mua ngay
@@ -330,7 +330,7 @@ $discountProducts = getDiscountProducts($pdo);
                                    title="Thêm vào giỏ"
                                    data-product-id="<?= $sp['id']; ?>"
                                    data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
-                                   data-product-image="<?= htmlspecialchars($sp['hinh_anh']); ?>"
+                                   data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
                                    data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'
                                    data-action="add">
                                     🛒
@@ -438,7 +438,7 @@ function openQuickAddModal(btn) {
     modalProductName.textContent = btn.dataset.productName;
 
     originalProductImage = btn.dataset.productImage;
-    modalMainImage.src = originalProductImage || 'assets/img/no-image.png';
+    modalMainImage.src = originalProductImage || 'assets/img/products/no-image.jpg';
 
     try{
         currentVariants = JSON.parse(btn.dataset.variants);

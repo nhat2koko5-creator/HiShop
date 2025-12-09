@@ -729,5 +729,46 @@
     position: relative;
     padding-bottom: 20px; /* Khoảng đệm nhẹ */
 }
+.qty-box {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: fit-content;
+    overflow: hidden;
+    height: 32px; /* chiều cao giống mẫu */
+}
+
+.qty-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: white;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    border-right: 1px solid #ddd;
+}
+
+.qty-btn:last-child {
+    border-right: none;
+}
+
+#qty-input {
+    width: 40px;
+    height: 32px;
+    border: none;
+    text-align: center;
+    font-size: 16px;
+    outline: none;
+    border-right: 1px solid #ddd;
+}
+
+#qty-input::-webkit-outer-spin-button,
+#qty-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
 /* ... và .spec-item, .spec-label, .spec-value ... */
 /* Hết CSS Variant Combo */
