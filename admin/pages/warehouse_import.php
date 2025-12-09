@@ -25,7 +25,7 @@ $ds_san_pham = $stmtProd->fetchAll();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $kho_id = isset($_POST['kho_id']) ? (int)$_POST['kho_id'] : 0;
     $ghi_chu = isset($_POST['ghi_chu']) ? trim($_POST['ghi_chu']) : '';
-    $nguoi_nhap_id = isset($_SESSION['user']) ? $_SESSION['user']['id'] : 1; // Default ID 1
+    $nguoi_nhap_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : (isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : 10);
 
     $product_ids = isset($_POST['product_variant_id']) ? $_POST['product_variant_id'] : [];
     $quantities = isset($_POST['quantity']) ? $_POST['quantity'] : [];
@@ -38,6 +38,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Check trùng lặp & Logic
     $temp_check = [];
+// [MỚI] 1. Tạo bản đồ giá bán trước khi vào vòng lặp
+    $price_map = [];
+    foreach ($ds_san_pham as $sp) {
+        $price_map[$sp['bien_the_id']] = $sp['gia'];
+    }
+
+    // Check trùng lặp & Logic
+    $temp_check = [];
     foreach ($product_ids as $key => $pid) {
         if (in_array($pid, $temp_check)) {
             $errors[] = "Dòng " . ($key + 1) . ": Sản phẩm bị trùng.";
@@ -46,8 +54,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if ($quantities[$key] <= 0) $errors[] = "Dòng " . ($key + 1) . ": Số lượng phải > 0.";
         if ($import_prices[$key] < 0) $errors[] = "Dòng " . ($key + 1) . ": Giá nhập không được âm.";
-    }
 
+        // [MỚI] 2. Logic kiểm tra nằm GỌN trong vòng lặp
+        if (isset($price_map[$pid])) {
+            $gia_ban_hien_tai = $price_map[$pid];
+            if ($import_prices[$key] > $gia_ban_hien_tai) {
+                $errors[] = "Dòng " . ($key + 1) . ": <b>LỖI NGHIÊM TRỌNG!</b> Giá nhập (" . number_format($import_prices[$key]) . "đ) cao hơn giá bán (" . number_format($gia_ban_hien_tai) . "đ).";
+            }
+        }
+    } 
     if (!empty($errors)) {
         $msg = implode("<br>", $errors);
         $msg_type = "danger";
@@ -181,7 +196,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input type="number" name="quantity[]" class="form-input qty text-center" min="1" value="1" required oninput="calcTotal()">
                                 </td>
                                 <td>
-                                    <input type="number" name="import_price[]" class="form-input price text-end" min="0" value="0" required oninput="calcTotal()">
+                                <input type="number" name="import_price[]" class="form-input price text-end" min="0" value="0" required oninput="calcTotal(); checkProfit(this)">
+                                <div class="profit-warning" style="display:none; color:red; font-size:11px; margin-top:4px;"><i class="fa-solid fa-triangle-exclamation"></i> Giá nhập > Giá bán!</div>
                                 </td>
                                 <td class="text-center">
                                     <button type="button" class="btn-remove" onclick="removeRow(this)"><i class="fa-solid fa-xmark"></i></button>
@@ -247,8 +263,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         document.getElementById('grandTotal').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total);
     }
 
-    function validateForm() {
-        if(document.querySelectorAll('.item-row').length === 0) return false;
-        return confirm('Xác nhận nhập kho?');
+        function validateForm() {
+        // 1. Kiểm tra có dòng sản phẩm nào không
+        if(document.querySelectorAll('.item-row').length === 0) {
+            alert("Vui lòng thêm ít nhất 1 sản phẩm.");
+            return false;
+        }
+
+        // 2. [MỚI] Quét xem có ô nào đang vi phạm giá bán không
+        var hasError = false;
+        var rows = document.querySelectorAll('.item-row');
+        
+        rows.forEach(function(row) {
+            var select = row.querySelector('.product-select');
+            var priceInput = row.querySelector('.price');
+            
+            // Lấy giá bán và giá nhập
+            var sellingPrice = parseFloat(select.options[select.selectedIndex].getAttribute('data-price')) || 0;
+            var importPrice = parseFloat(priceInput.value) || 0;
+
+            if (sellingPrice > 0 && importPrice > sellingPrice) {
+                hasError = true;
+                priceInput.style.backgroundColor = '#ffe6e6'; // Highlight lại cho chắc
+                priceInput.focus(); // Trỏ chuột vào ô lỗi
+            }
+        });
+
+        if (hasError) {
+            alert("CẢNH BÁO: Có sản phẩm giá nhập cao hơn giá bán!\nVui lòng kiểm tra lại các ô màu đỏ.");
+            return false; // Chặn submit form
+        }
+
+        return confirm('Xác nhận nhập kho? Kho sẽ được cập nhật ngay lập tức.');
+    }
+    // [MỚI] Hàm cảnh báo lỗ vốn ngay lập tức
+    function checkProfit(input) {
+        var row = input.closest('tr');
+        var select = row.querySelector('.product-select');
+        
+        // Lấy giá bán từ data-price của option đang chọn
+        var selectedOption = select.options[select.selectedIndex];
+        var sellingPrice = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+        var importPrice = parseFloat(input.value) || 0;
+        
+        // Tìm thẻ cảnh báo (div profit-warning vừa thêm ở trên)
+        var warningMsg = row.querySelector('.profit-warning');
+
+        if (importPrice > sellingPrice && sellingPrice > 0) {
+            input.style.borderColor = 'red';
+            input.style.backgroundColor = '#fff0f0';
+            if(warningMsg) warningMsg.style.display = 'block';
+        } else {
+            input.style.borderColor = ''; // Trả về mặc định
+            input.style.backgroundColor = '';
+            if(warningMsg) warningMsg.style.display = 'none';
+        }
+    }
+
+    // Cập nhật lại hàm updatePriceHint để reset cảnh báo khi đổi sản phẩm
+    function updatePriceHint(select) {
+        var price = select.options[select.selectedIndex].getAttribute('data-price') || 0;
+        var hint = select.parentNode.querySelector('.price-hint span');
+        if(hint) hint.innerText = new Intl.NumberFormat('vi-VN').format(price);
+        
+        // [MỚI] Kiểm tra lại giá khi đổi sản phẩm
+        var row = select.closest('tr');
+        var priceInput = row.querySelector('.price');
+        checkProfit(priceInput);
     }
 </script>
