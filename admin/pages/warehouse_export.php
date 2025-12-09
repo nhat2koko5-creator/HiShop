@@ -25,7 +25,7 @@ $ds_san_pham = $stmtProd->fetchAll();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $kho_id = isset($_POST['kho_id']) ? (int)$_POST['kho_id'] : 0;
     $ghi_chu = isset($_POST['ghi_chu']) ? trim($_POST['ghi_chu']) : '';
-    $nguoi_xuat_id = isset($_SESSION['user']) ? $_SESSION['user']['id'] : 1; 
+    $nguoi_xuat_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : (isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : 10); 
 
     $product_ids = isset($_POST['product_variant_id']) ? $_POST['product_variant_id'] : [];
     $quantities = isset($_POST['quantity']) ? $_POST['quantity'] : [];

@@ -297,7 +297,6 @@ function getStatusLabel($d) {
                     <label>Loại:</label>
                     <select name="loai_khuyen_mai" required>
                         <option value="phan_tram">Phần trăm (%)</option>
-                        <option value="tien_mat">Tiền mặt (VNĐ)</option>
                     </select>
                     <label>Giá trị:</label><input type="number" name="gia_tri" min="0" required>
                 </div>
@@ -332,7 +331,6 @@ function getStatusLabel($d) {
                     <label>Loại:</label>
                     <select name="edit_loai_khuyen_mai" id="edit_loai_khuyen_mai" required>
                         <option value="phan_tram">Phần trăm (%)</option>
-                        <option value="tien_mat">Tiền mặt (VNĐ)</option>
                     </select>
                     <label>Giá trị:</label><input type="number" name="edit_gia_tri" id="edit_gia_tri" min="0" required>
                 </div>
