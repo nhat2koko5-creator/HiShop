@@ -46,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         // Kiểm tra xem người dùng có nhập ngày tương lai không
         if ($dateOfBirth > $today) {
-            $errors[] = 'Bạn phải từ 16 tuổi trở lên mới được đăng ký tài khoản.';
+            $errors[] = 'Ngày sinh không hợp lệ.';
         } else {
             // Tính khoảng cách năm
             $age = $today->diff($dateOfBirth)->y;
@@ -123,75 +123,98 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng Ký - HIShop</title>
-    <link rel="stylesheet" href="./assets/css/style-auth.css">
+    <title>Đăng Ký - HISHOP</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style-auth.css">
 </head>
 <body>
+    
+    <header class="navbar">
+        <div class="logo"><img src="assets/img/logo.png" alt="Hishop" class="brand-logo"></div>
+        <nav class="nav-links">
+            <a href="index.php?page=home">Home</a>
+            <a href="#">Product</a>
+            <a href="#">Services</a>
+            <a href="#">Contact</a>
+        </nav>
+        <a href="index.php?page=login"><button class="login-btn">Đăng nhập</button></a>
+    </header>
 
-    <div class="auth-card">
-        <div class="auth-header">
-            <a href="index.php?page=home" class="logo">HIShop</a>
-            <h1>Tạo Tài Khoản</h1>
-            <p>Tham gia cùng HIShop ngay hôm nay.</p>
-        </div>
+    <div class="background-container">
+        <div class="register-modal-container">
+            <div class="auth-card">
+                <div class="modal-header">
+                    <h2>Tạo Tài Khoản</h2>
+                    </div>
 
-        <?php if (!empty($errors)): ?>
-            <div class="error-message">
-                <ul>
-                    <?php foreach ($errors as $error): ?>
-                        <li><?php echo $error; ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-        <?php endif; ?>
-        
-        <form class="auth-form" method="POST" action="index.php?page=register">
-            
-            <div class="form-group">
-                <label for="ho_ten" class="form-label">Họ và tên</label>
-                <input type="text" id="ho_ten" name="ho_ten" class="form-input" placeholder="Nguyễn Văn A" value="<?= htmlspecialchars($_POST['ho_ten'] ?? '') ?>" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" id="email" name="email" class="form-input" placeholder="ban@email.com" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="so_dien_thoai" maxlength="10" class="form-label">Số điện thoại (Tùy chọn)</label>
-                <input type="tel" id="so_dien_thoai" name="so_dien_thoai" class="form-input" placeholder="0901234567" value="<?= htmlspecialchars($_POST['so_dien_thoai'] ?? '') ?>">
-            </div>
-            
-            <div class="form-grid-2">
-                <div class="form-group">
-                    <label for="ngay_sinh" class="form-label">Ngày sinh</label>
-                    <input type="date" id="ngay_sinh" name="ngay_sinh" class="form-input" value="<?= htmlspecialchars($_POST['ngay_sinh'] ?? '') ?>">
+                <?php if (!empty($errors)): ?>
+                    <div class="error-message">
+                        <ul>
+                            <?php foreach ($errors as $error): ?>
+                                <li><?php echo $error; ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+                
+                <form class="auth-form" method="POST" action="index.php?page=register">
+                    
+                    <div class="input-group">
+                        <span class="material-icons">person_outline</span>
+                        <input type="text" id="ho_ten" name="ho_ten" class="form-input" placeholder="Họ và tên của bạn" value="<?= htmlspecialchars($_POST['ho_ten'] ?? '') ?>" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <span class="material-icons">mail_outline</span>
+                        <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <span class="material-icons">phone_iphone</span>
+                        <input type="tel" id="so_dien_thoai" name="so_dien_thoai" class="form-input" placeholder="Số điện thoại (Tùy chọn)" value="<?= htmlspecialchars($_POST['so_dien_thoai'] ?? '') ?>">
+                    </div>
+                    
+                    <div class="form-grid-2">
+                        <div class="input-group input-group-date">
+                            <span class="material-icons">calendar_today</span>
+                            <input type="date" id="ngay_sinh" name="ngay_sinh" class="form-input" value="<?= htmlspecialchars($_POST['ngay_sinh'] ?? '') ?>">
+                        </div>
+                        <div class="input-group input-group-select">
+                             <span class="material-icons">wc</span>
+                            <select id="gioi_tinh" name="gioi_tinh" class="form-select">
+                                <option value="other" <?= (isset($_POST['gioi_tinh']) && $_POST['gioi_tinh'] == 'other') ? 'selected' : '' ?>>Khác</option>
+                                <option value="male" <?= (isset($_POST['gioi_tinh']) && $_POST['gioi_tinh'] == 'male') ? 'selected' : '' ?>>Nam</option>
+                                <option value="female" <?= (isset($_POST['gioi_tinh']) && $_POST['gioi_tinh'] == 'female') ? 'selected' : '' ?>>Nữ</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <span class="material-icons">lock_open</span>
+                        <input type="password" id="mat_khau" name="mat_khau" class="form-input" placeholder="Tạo mật khẩu (ít nhất 6 ký tự)" required>
+                    </div>
+
+                    <div class="input-group">
+                        <span class="material-icons">lock_open</span>
+                        <input type="password" id="mat_khau_nhap_lai" name="mat_khau_nhap_lai" class="form-input" placeholder="Nhập lại mật khẩu" required>
+                    </div>
+                    
+                    <button type="submit" class="login-now-btn">Đăng Ký</button>
+                </form>
+
+                <div class="signup-link">
+                    Đã có tài khoản? <a href="index.php?page=login">Đăng nhập</a>
                 </div>
-                <div class="form-group">
-                    <label for="gioi_tinh" class="form-label">Giới tính</label>
-                    <select id="gioi_tinh" name="gioi_tinh" class="form-select">
-                        <option value="other" <?= (isset($_POST['gioi_tinh']) && $_POST['gioi_tinh'] == 'other') ? 'selected' : '' ?>>Khác</option>
-                        <option value="male" <?= (isset($_POST['gioi_tinh']) && $_POST['gioi_tinh'] == 'male') ? 'selected' : '' ?>>Nam</option>
-                        <option value="female" <?= (isset($_POST['gioi_tinh']) && $_POST['gioi_tinh'] == 'female') ? 'selected' : '' ?>>Nữ</option>
-                    </select>
+                
+                <div class="auth-header-hidden" style="display: none;">
+                    <a href="index.php?page=home" class="logo-hidden">HIShop</a>
+                    <h1>Tạo Tài Khoản</h1>
+                    <p>Tham gia cùng HIShop ngay hôm nay.</p>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label for="mat_khau" class="form-label">Mật khẩu</label>
-                <input type="password" id="mat_khau" name="mat_khau" class="form-input" placeholder="Tạo mật khẩu (ít nhất 6 ký tự)" required>
-            </div>
-
-            <div class="form-group">
-                <label for="mat_khau_nhap_lai" class="form-label">Nhập lại mật khẩu</label>
-                <input type="password" id="mat_khau_nhap_lai" name="mat_khau_nhap_lai" class="form-input" placeholder="Nhập lại mật khẩu của bạn" required>
-            </div>
-            
-            <button type="submit" class="btn btn-primary">Đăng Ký</button>
-        </form>
-
-        <div class="auth-footer">
-            Đã có tài khoản? <a href="index.php?page=login" class="form-link">Đăng nhập ngay</a>
+                <div class="auth-footer-hidden" style="display: none;">
+                    Đã có tài khoản? <a href="index.php?page=login" class="form-link">Đăng nhập ngay</a>
+                </div>
+                </div>
         </div>
     </div>
     

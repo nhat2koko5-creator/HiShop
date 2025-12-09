@@ -105,61 +105,93 @@ if (empty($errors)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng Nhập - HIShop</title>
+    <title>Đăng Nhập - HISHOP</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style-auth.css">
 </head>
 <body>
+    
+    <header class="navbar">
+        <div class="logo"><img src="assets/img/logo.png" alt="Hishop" class="brand-logo"></div>
+        <nav class="nav-links">
+            <a href="index.php?page=home">Trang chủ</a>
+            <a href="index.php?page=product_list">Sản Phẩm</a>
+            <a href="#"></a>
+            <a href="#">Về chúng tôi</a>
+            <a href="#">Liên hệ</a>
+        </nav>
+        <a href="index.php?page=register"><button class="login-btn">Đăng ký</button></a>
+    </header>
 
-    <div class="auth-card">
-        <div class="auth-header">
-            <a href="index.php?page=home" class="logo">HIShop</a>
-            <h1>Đăng Nhập</h1>
-            <p>Chào mừng bạn quay trở lại.</p>
-        </div>
+    <div class="background-container">
+        <div class="login-modal-container">
+            <div class="login-modal">
+                <div class="modal-header">
+                    <h2>ĐĂNG NHẬP</h2>
+                </div>
 
-        <?php if (isset($_GET['register']) && $_GET['register'] == 'success'): ?>
-            <div class="error-message" style="background-color: #D1FAE5; color: #065F46; border-color: #6EE7B7;">
-                <p>✅ Đăng ký tài khoản thành công! Vui lòng đăng nhập.</p>
-            </div>
-        <?php endif; ?>
-        
-        <?php if (isset($_GET['reset']) && $_GET['reset'] == 'success'): ?>
-            <div class="error-message" style="background-color: #D1FAE5; color: #065F46; border-color: #6EE7B7;">
-                <p>✅ Đặt lại mật khẩu thành công! Vui lòng đăng nhập.</p>
-            </div>
-        <?php endif; ?>
+                <?php if (isset($_GET['register']) && $_GET['register'] == 'success'): ?>
+                    <div class="success-message">
+                        <p>✅ Đăng ký tài khoản thành công! Vui lòng đăng nhập.</p>
+                    </div>
+                <?php endif; ?>
+                
+                <?php if (isset($_GET['reset']) && $_GET['reset'] == 'success'): ?>
+                    <div class="success-message">
+                        <p>✅ Đặt lại mật khẩu thành công! Vui lòng đăng nhập.</p>
+                    </div>
+                <?php endif; ?>
 
-        <?php if (!empty($errors)): ?>
-            <div class="error-message">
-                <ul>
-                    <?php foreach ($errors as $error): ?>
-                        <li><?php echo $error; ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-        <?php endif; ?>
+                <?php if (!empty($errors)): ?>
+                    <div class="error-message">
+                        <ul>
+                            <?php foreach ($errors as $error): ?>
+                                <li><?php echo $error; ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
 
-        <form class="auth-form" method="POST" action="index.php?page=login">
-            
-            <div class="form-group">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" id="email" name="email" class="form-input" placeholder="ban@email.com" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="mat_khau" class="form-label">Mật khẩu</label>
-                <input type="password" id="mat_khau" name="mat_khau" class="form-input" placeholder="Nhập mật khẩu của bạn" required>
-            </div>
-            
-            <a href="index.php?page=forgot_password" class="form-link" style="text-align: right;">Quên mật khẩu?</a>
+                <form class="login-form" method="POST" action="index.php?page=login">
+                    
+                    <div class="input-group">
+                        <span class="material-icons">mail_outline</span>
+                        <input type="email" id="email" name="email" placeholder="Enter your email" required
+                               value="<?php echo htmlspecialchars($email ?? ''); ?>">
+                    </div>
+                    
+                    <div class="input-group">
+                        <span class="material-icons">lock_open</span>
+                        <input type="password" id="mat_khau" name="mat_khau" placeholder="Enter you password" required>
+                    </div>
+                    
+                    <div class="options">
+                        <label>
+                            <input type="checkbox"> Nhớ tài khoản
+                        </label>
+                        <a href="index.php?page=forgot_password" class="forgot-password">Quên mật khẩu?</a>
+                    </div>
 
-            <button type="submit" class="btn btn-primary">Đăng Nhập</button>
-        </form>
+                    <button type="submit" class="login-now-btn">Đăng nhập</button>
+                </form>
 
-        <div class="auth-footer">
-            Chưa có tài khoản? <a href="index.php?page=register" class="form-link">Tạo tài khoản ngay</a>
+                <div class="signup-link">
+                    Chưa có tài khoản? <a href="index.php?page=register">Đăng ký</a>
+                </div>
+                
+                <div class="auth-header-hidden" style="display: none;">
+                    <a href="index.php?page=home" class="logo-hidden">HIShop</a>
+                    <h1>Đăng Nhập</h1>
+                    <p>Chào mừng bạn quay trở lại.</p>
+                </div>
+                <div class="auth-footer-hidden" style="display: none;">
+                    Chưa có tài khoản? <a href="index.php?page=register" class="form-link">Tạo tài khoản ngay</a>
+                </div>
+                </div>
         </div>
     </div>
-    
+    <style>
+
+    </style>
 </body>
 </html>

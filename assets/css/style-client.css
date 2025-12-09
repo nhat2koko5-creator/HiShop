@@ -131,13 +131,14 @@ ul {
 /* === (MỚI) CSS CHO HEADER CỐ ĐỊNH === */
 .site-header-sticky {
   /* (ĐÃ SỬA) Đổi tên class */
+
   position: -webkit-sticky; /* Hỗ trợ Safari cũ */
   position: sticky;
   top: 0;
   z-index: 990; /* Đảm bảo nó luôn ở trên cùng */
 
   /* Thêm nền trắng và bóng mờ để nó che nội dung bên dưới khi cuộn */
-  background-color: var(--color-bg-page);
+  background-color: #1e293b;
   box-shadow: var(--shadow);
 
   /* (MỚI) Đảm bảo nó chiếm 100% chiều rộng */
@@ -436,6 +437,8 @@ ul {
   outline: none; /* Bỏ viền xanh khi focus */
   width: 160px; /* Độ rộng ban đầu */
   transition: width 0.3s ease;
+  background-color:#1e293b;
+  border: 2px soild #fff;
 }
 
 /* Khi focus (bấm) vào ô tìm kiếm */

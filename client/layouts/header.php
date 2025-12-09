@@ -17,7 +17,6 @@ if (!isset($page_title)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($page_title); ?></title>
-    
     <link rel="stylesheet" href="/HiShop/assets/css/style-client.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 </head>
@@ -27,7 +26,7 @@ if (!isset($page_title)) {
         <div class="container">
             <nav class="header-nav">
                 
-                <a href="index.php?page=home" class="logo">HIShop</a>
+                <a href="index.php?page=home" class="logo"><img src="assets/img/logo.png" alt="Hishop" style="width:70px; height:50px;margin-top:10px;"></a>
                 
                 <div class="nav-center-links">
                     <a href="index.php?page=home">Trang Chủ</a>
@@ -89,8 +88,8 @@ if (!isset($page_title)) {
                             </div>
                         </div>
                     <?php else: ?>
-                        <div class="auth-buttons">
-                            <a href="index.php?page=register" class="btn btn-primary">Đăng Ký</a>
+                        <div class="auth-buttons" >
+                            <a href="index.php?page=register" class="btn btn-primary" >Đăng Ký</a>
                             <a href="index.php?page=login" class="btn btn-primary">Đăng Nhập</a>
                         </div>
                     <?php endif; ?>
