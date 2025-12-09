@@ -427,7 +427,7 @@ ul {
   border: 1px solid black;
   border-radius:100px;
   overflow: hidden; 
-  width:300px;
+  width:300px; 
 }
 
 .nav-search-input {
