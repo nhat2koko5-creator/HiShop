@@ -49,6 +49,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['cancel_order_id'])) {
     exit;
 }
 
+// --- 2. XỬ LÝ KHÁCH XÁC NHẬN ĐÃ NHẬN HÀNG ---
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['confirm_received_id'])) {
+    $conf_id = $_POST['confirm_received_id'];
+    
+    // Kiểm tra: Chỉ đơn "Đang giao hàng" mới được xác nhận
+    $stmt_check = $pdo->prepare("SELECT id, phuong_thuc_thanh_toan FROM don_hang WHERE id = ? AND nguoi_dung_id = ? AND trang_thai_don_hang = 'Đang giao hàng'");
+    $stmt_check->execute([$conf_id, $user_id]);
+    $order_info = $stmt_check->fetch();
+
+    if ($order_info) {
+        // Cập nhật trạng thái đơn -> Đã giao hàng
+        // Cập nhật thanh toán -> Đã thanh toán (Nếu là COD thì khách nhận hàng = đã trả tiền)
+       $stmt_update = $pdo->prepare("
+            UPDATE don_hang 
+            SET trang_thai_don_hang = 'Đã giao hàng',
+                trang_thai_thanh_toan = 'Đã thanh toán'
+            WHERE id = ?
+        ");
+        $stmt_update->execute([$conf_id]);
+
+        $_SESSION['notification'] = [
+            'type' => 'success',
+            'title' => 'Cảm ơn bạn!',
+            'message' => 'Bạn đã xác nhận nhận hàng thành công. Đơn hàng hoàn tất.'
+        ];
+    }
+    
+    echo "<script>window.location.href='index.php?page=account&section=orders&status=delivered';</script>";
+    exit;
+}
+
 // --- 2. CÁC PHẦN CÒN LẠI GIỮ NGUYÊN ---
 $keyword = $_GET['q'] ?? '';
 $all_orders = getUserOrders($pdo, $user_id, $keyword); 
@@ -179,7 +210,7 @@ if (!empty($all_orders)) {
                                 <span>Thành tiền:</span>
                                 <strong class="total-price"><?= number_format($order['tong_tien']) ?>₫</strong>
                             </div>
-                           <div class="foc-actions">                               
+                          <div class="foc-actions">                               
                                 <?php if ($status_text == 'Chờ xử lý'): ?>                                
                                     <?php if ($pay_status == 'Chưa thanh toán'): ?>
                                         <button type="button" class="btn btn-outline" style="border-color: #999; color: #666;" 
@@ -193,9 +224,20 @@ if (!empty($all_orders)) {
                                         </button>
                                     <?php endif; ?>
                                 <?php endif; ?>
+
+                                <?php if ($status_text == 'Đang giao hàng'): ?>
+                                    <form method="POST" style="display:inline;" onsubmit="return confirm('Bạn xác nhận đã nhận được hàng và sản phẩm không có vấn đề gì chứ?');">
+                                        <input type="hidden" name="confirm_received_id" value="<?= $order['id'] ?>">
+                                        <button type="submit" class="btn btn-primary" style="background-color: #10b981; border-color: #10b981; color: white;">
+                                            <i class="fa-solid fa-check-circle"></i> Đã nhận được hàng
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+
                                 <?php if ($status_text == 'Đã giao hàng' || $status_text == 'Đã hủy'): ?>
                                     <a href="<?= $buy_again_url ?>" class="btn btn-outline-red">Mua lại</a>
                                 <?php endif; ?>
+
                                 <a href="index.php?page=order_detail&id=<?= $order['id'] ?>" class="btn btn-solid-red">Xem chi tiết</a>
                             </div>
                         </div>

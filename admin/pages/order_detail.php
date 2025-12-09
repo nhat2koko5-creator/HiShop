@@ -72,7 +72,13 @@ if ($order['trang_thai_don_hang'] == 'Chờ xử lý' && $order['trang_thai_than
 
 $items = getOrderItems($pdo, $order_id);
 
-$status_list = ['Chờ xử lý', 'Đã xác nhận', 'Đang giao hàng', 'Đã giao hàng', 'Đã hủy'];
+// Cấu hình danh sách trạng thái Admin được phép chọn
+$status_list = ['Chờ xử lý', 'Đã xác nhận', 'Đang giao hàng', 'Đã hủy'];
+
+// Nếu đơn hàng hiện tại ĐÃ LÀ "Đã giao hàng" (do khách bấm), thì thêm nó vào để hiển thị
+if ($order['trang_thai_don_hang'] == 'Đã giao hàng') {
+    $status_list[] = 'Đã giao hàng';
+}
 
 function getStatusColor($status) {
     switch($status) {
