@@ -193,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="price-hint">Giá bán hiện tại: <span>0</span>đ</div>
                                 </td>
                                 <td>
-                                    <input type="number" name="quantity[]" class="form-input qty text-center" min="1" value="1" required oninput="calcTotal()">
+                                    <input type="number" name="quantity[]"  class="form-input qty text-center" min="1" value="1" required oninput="calcTotal()">
                                 </td>
                                 <td>
                                 <input type="number" name="import_price[]" class="form-input price text-end" min="0" value="0" required oninput="calcTotal(); checkProfit(this)">

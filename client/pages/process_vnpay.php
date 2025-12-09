@@ -6,7 +6,6 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once __DIR__ . '/../../src/config.php';
-// Đảm bảo functions.php đã được include và chứa hàm processCheckout vừa thêm
 require_once __DIR__ . '/../../src/functions.php'; 
 
 date_default_timezone_set('Asia/Ho_Chi_Minh');
@@ -26,7 +25,6 @@ $ghi_chu = $_POST['ghi_chu'] ?? '';
 $order_type = $_POST['order_type'] ?? 'cart';
 $payment_method = $_POST['payment_method'] ?? 'cod';
 
-// Chuẩn bị thông tin khách hàng để truyền vào hàm
 $customer_info = [
     'ho_ten' => $ho_ten,
     'sdt' => $so_dien_thoai,
@@ -34,12 +32,11 @@ $customer_info = [
     'ghi_chu' => $ghi_chu
 ];
 
-// --- 2. CHUẨN BỊ SẢN PHẨM MUA ---
+// --- 2. CHUẨN BỊ SẢN PHẨM MUA & TÍNH TỔNG TIỀN TẠM TÍNH ---
 $order_items = [];
-$subtotal = 0;
+$temp_subtotal = 0; // Biến tính tổng tiền hàng trước khi giảm giá
 
 if ($order_type === 'buy_now') {
-    // Mua ngay
     if (!isset($_SESSION['buy_now_item'])) die("Lỗi: Không tìm thấy sản phẩm mua ngay.");
     $item = $_SESSION['buy_now_item'];
     
@@ -48,25 +45,26 @@ if ($order_type === 'buy_now') {
         'bien_the_id' => $item['variant_id'] ?? $item['bien_the_id'] ?? null,
         'so_luong'    => $item['so_luong'],
         'gia'         => $item['gia'],
-        'ten_san_pham'=> $item['ten'] // Để hiển thị lỗi nếu cần
+        'ten_san_pham'=> $item['ten']
     ];
+    $temp_subtotal += $item['gia'] * $item['so_luong'];
+
 } else {
-    // Mua từ giỏ hàng (Có lọc theo ID đã chọn)
     $selected_ids_input = $_POST['selected_ids'] ?? '';
     $selected_ids = !empty($selected_ids_input) ? explode(',', $selected_ids_input) : null;
 
-    // Gọi hàm lấy giỏ hàng (Hàm này bạn đã có trong functions.php)
     $cartData = getCartItemsAndTotal($pdo, $user_id, $selected_ids);
     $raw_items = $cartData['items'];
 
     foreach ($raw_items as $item) {
         $order_items[] = [
-            'san_pham_id' => $item['id'] ?? $item['san_pham_id'], // id sp trong bảng gio_hang join san_pham
+            'san_pham_id' => $item['id'] ?? $item['san_pham_id'],
             'bien_the_id' => $item['bien_the_id'],
             'so_luong'    => $item['so_luong'],
-            'gia'         => $item['gia'], // Giá này đã được tính giảm giá trong getCartItemsAndTotal
+            'gia'         => $item['gia'],
             'ten_san_pham'=> $item['ten_san_pham']
         ];
+        $temp_subtotal += $item['gia'] * $item['so_luong'];
     }
 }
 
@@ -75,39 +73,57 @@ if (empty($order_items)) {
     exit;
 }
 
-// --- 3. GỌI HÀM TẠO ĐƠN & TRỪ KHO (CORE LOGIC) ---
-// Hàm này sẽ thực hiện Transaction, trừ kho chi tiết, và trả về order_id
-$result = processCheckout($pdo, $user_id, $order_items, $customer_info, $payment_method);
+// --- 3. [QUAN TRỌNG] TÍNH TOÁN GIẢM GIÁ TỪ SESSION ---
+$discount_amount = 0;
+$coupon_code = null;
+
+if (isset($_SESSION['promo']) && is_array($_SESSION['promo'])) {
+    $coupon = $_SESSION['promo'];
+    $coupon_code = $coupon['code']; // Lấy mã code (ví dụ: WELCOME100K)
+
+    // Tính số tiền được giảm dựa trên tổng tiền hàng (temp_subtotal)
+    if ($coupon['type'] == 'phan_tram') {
+        $discount_amount = ($temp_subtotal * $coupon['value']) / 100;
+    } elseif ($coupon['type'] == 'tien_mat') {
+        $discount_amount = $coupon['value'];
+    }
+
+    // Không cho phép giảm giá vượt quá tổng tiền
+    if ($discount_amount > $temp_subtotal) {
+        $discount_amount = $temp_subtotal;
+    }
+}
+
+// --- 4. GỌI HÀM TẠO ĐƠN & TRỪ KHO ---
+// Truyền thêm $discount_amount và $coupon_code vào hàm
+$result = processCheckout($pdo, $user_id, $order_items, $customer_info, $payment_method, $discount_amount, $coupon_code);
 
 if (!$result['success']) {
-    // Nếu lỗi (ví dụ hết hàng), báo lỗi và quay lại
     echo "<script>alert('Lỗi đặt hàng: " . $result['message'] . "'); window.location.href='index.php?page=cart';</script>";
     exit;
 }
 
 $order_id = $result['order_id'];
-$final_total = $result['total'];
+$final_total = $result['total']; // Đây là giá cuối cùng (đã trừ giảm giá)
 
-// Xóa session phụ
+// Xóa session
 if ($order_type === 'buy_now') unset($_SESSION['buy_now_item']);
-unset($_SESSION['promo']);
+unset($_SESSION['promo']); // Xóa mã giảm giá sau khi dùng xong
 
+// --- 5. ĐIỀU HƯỚNG THANH TOÁN ---
 
-// --- 4. ĐIỀU HƯỚNG THANH TOÁN ---
-
-// A. Nếu là COD -> Xong luôn
+// A. COD
 if ($payment_method === 'cod') {
     header("Location: index.php?page=confirmation&id=$order_id");
     exit;
 }
 
-// B. Nếu là VNPAY -> Tạo URL và chuyển hướng
+// B. VNPAY
 if ($payment_method === 'vnpay') {
-    
-    $vnp_TxnRef = $order_id; // Mã đơn hàng
+    $vnp_TxnRef = $order_id;
     $vnp_OrderInfo = "Thanh toan don hang #" . $order_id;
     $vnp_OrderType = "other";
-    $vnp_Amount = (int)$final_total * 100; // VNPAY nhân 100
+    $vnp_Amount = (int)$final_total * 100; // Sử dụng giá đã giảm
     $vnp_Locale = "vn";
     $vnp_IpAddr = $_SERVER['REMOTE_ADDR'];
     $vnp_CreateDate = date('YmdHis');

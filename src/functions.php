@@ -477,16 +477,17 @@ function getRecentOrders(PDO $pdo, $limit = 5) {
  * Xử lý tạo đơn hàng & Trừ kho chi tiết (Admin quản lý)
  * Hàm này dùng cho cả COD và VNPAY
  */
-function processCheckout(PDO $pdo, $user_id, $cart_items, $customer_info, $payment_method) {
+/**
+ * [ĐÃ CẬP NHẬT] Hàm xử lý đơn hàng có hỗ trợ GIẢM GIÁ (Coupon)
+ */
+function processCheckout(PDO $pdo, $user_id, $cart_items, $customer_info, $payment_method, $discount_amount = 0, $coupon_code = null) {
     try {
-        // 1. Bắt đầu Transaction
         $pdo->beginTransaction();
 
         $total_amount = 0;
         
-        // 2. Tính tiền & Kiểm tra tồn kho tổng
+        // 1. Tính tổng tiền hàng (Subtotal) & Check kho
         foreach ($cart_items as $item) {
-            // Lấy thông tin mới nhất để check
             if (!empty($item['bien_the_id'])) {
                 $stmt = $pdo->prepare("SELECT gia, so_luong_ton FROM bien_the_san_pham WHERE id = ? FOR UPDATE");
                 $stmt->execute([$item['bien_the_id']]);
@@ -496,71 +497,73 @@ function processCheckout(PDO $pdo, $user_id, $cart_items, $customer_info, $payme
             }
             $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Chặn nếu hết hàng
             if (!$product || $product['so_luong_ton'] < $item['so_luong']) { 
                  $pdo->rollBack(); 
-                 return ['success' => false, 'message' => "Sản phẩm đang hết hàng hoặc không đủ số lượng."];
+                 return ['success' => false, 'message' => "Sản phẩm {$item['ten_san_pham']} không đủ số lượng."];
             }
             
-            // Tính tổng tiền
-            $gia_ban = $item['gia']; 
-            $total_amount += $gia_ban * $item['so_luong'];
+            $total_amount += $item['gia'] * $item['so_luong'];
         }
 
-        // 3. Lưu đơn hàng
-        $sql_order = "INSERT INTO don_hang (ngay_dat, tong_tien, phuong_thuc_thanh_toan, trang_thai_don_hang, trang_thai_thanh_toan, nguoi_dung_id, ho_ten_nguoi_nhan, sdt_nguoi_nhan, dia_chi_giao_hang, ghi_chu) 
-                      VALUES (NOW(), ?, ?, 'Chờ xử lý', 'Chưa thanh toán', ?, ?, ?, ?, ?)";
+        // 2. [QUAN TRỌNG] Áp dụng giảm giá và tìm ID mã khuyến mãi
+        $final_total = $total_amount - $discount_amount;
+        if ($final_total < 0) $final_total = 0;
+
+        $coupon_id = null;
+        if ($coupon_code) {
+            // Tìm ID của mã giảm giá trong database để lưu vào đơn hàng
+            $stmtC = $pdo->prepare("SELECT id FROM ma_khuyen_mai WHERE ten = ? LIMIT 1");
+            $stmtC->execute([$coupon_code]);
+            $coupon_id = $stmtC->fetchColumn();
+        }
+
+        // 3. Lưu đơn hàng (Với giá đã giảm và ID khuyến mãi)
+        $sql_order = "INSERT INTO don_hang (ngay_dat, tong_tien, phuong_thuc_thanh_toan, trang_thai_don_hang, trang_thai_thanh_toan, nguoi_dung_id, ho_ten_nguoi_nhan, sdt_nguoi_nhan, dia_chi_giao_hang, ghi_chu, ma_khuyen_mai_id) 
+                      VALUES (NOW(), ?, ?, 'Chờ xử lý', 'Chưa thanh toán', ?, ?, ?, ?, ?, ?)";
+        
         $pdo->prepare($sql_order)->execute([
-            $total_amount, 
-            strtoupper($payment_method), // VNPAY hoặc COD
+            $final_total, // Dùng giá sau giảm
+            strtoupper($payment_method),
             $user_id, 
             $customer_info['ho_ten'], 
             $customer_info['sdt'], 
             $customer_info['dia_chi'], 
-            $customer_info['ghi_chu']
+            $customer_info['ghi_chu'],
+            $coupon_id // Lưu ID mã giảm giá
         ]);
         $order_id = $pdo->lastInsertId();
 
-        // 4. Lưu chi tiết & TRỪ KHO (Đây là đoạn giúp kho giảm số lượng)
+        // 4. Lưu chi tiết & Trừ kho (Giữ nguyên logic cũ)
         foreach ($cart_items as $item) {
-            // A. Lưu chi tiết đơn
+            // Lưu chi tiết
             $sql_detail = "INSERT INTO chi_tiet_don_hang (don_hang_id, san_pham_id, bien_the_id, so_luong, don_gia) VALUES (?, ?, ?, ?, ?)";
             $pdo->prepare($sql_detail)->execute([
                 $order_id, $item['san_pham_id'], $item['bien_the_id'], $item['so_luong'], $item['gia']
             ]);
 
-            // B. Trừ kho TỔNG (bảng bien_the_san_pham)
+            // Trừ kho tổng
             if (!empty($item['bien_the_id'])) {
                 $pdo->prepare("UPDATE bien_the_san_pham SET so_luong_ton = so_luong_ton - ? WHERE id = ?")->execute([$item['so_luong'], $item['bien_the_id']]);
             } else {
                 $pdo->prepare("UPDATE san_pham SET so_luong = so_luong - ? WHERE id = ?")->execute([$item['so_luong'], $item['san_pham_id']]);
             }
 
-            // C. Trừ kho CHI TIẾT (bảng chi_tiet_kho_hang - Admin thấy cái này)
+            // Trừ kho chi tiết (Admin)
             $qty_needed = $item['so_luong'];
-            
-            // Tìm các kho đang có hàng (Ưu tiên kho nhiều hàng trừ trước)
             $sql_get_wh = "SELECT id, so_luong_ton FROM chi_tiet_kho_hang 
                            WHERE san_pham_id = ? 
                            AND (bien_the_id = ? OR (bien_the_id IS NULL AND ? IS NULL)) 
                            AND so_luong_ton > 0 
                            ORDER BY so_luong_ton DESC";
-            
             $bt_param = !empty($item['bien_the_id']) ? $item['bien_the_id'] : null;
-            
             $stmt_wh = $pdo->prepare($sql_get_wh);
             $stmt_wh->execute([$item['san_pham_id'], $bt_param, $bt_param]);
             $warehouses = $stmt_wh->fetchAll(PDO::FETCH_ASSOC);
 
             foreach ($warehouses as $wh) {
                 if ($qty_needed <= 0) break; 
-
                 $deduct = min($qty_needed, $wh['so_luong_ton']);
-                
-                // Trừ số lượng trong kho cụ thể
-                $pdo->prepare("UPDATE chi_tiet_kho_hang SET so_luong_ton = so_luong_ton - ? WHERE id = ?")
-                    ->execute([$deduct, $wh['id']]);
-                
+                $pdo->prepare("UPDATE chi_tiet_kho_hang SET so_luong_ton = so_luong_ton - ? WHERE id = ?")->execute([$deduct, $wh['id']]);
                 $qty_needed -= $deduct;
             }
         }
@@ -574,7 +577,7 @@ function processCheckout(PDO $pdo, $user_id, $cart_items, $customer_info, $payme
             'success' => true, 
             'message' => 'Thành công', 
             'order_id' => $order_id,
-            'total' => $total_amount
+            'total' => $final_total // Trả về giá cuối cùng để gửi sang VNPAY
         ];
 
     } catch (Exception $e) {
