@@ -131,20 +131,18 @@ ul {
 /* === (MỚI) CSS CHO HEADER CỐ ĐỊNH === */
 .site-header-sticky {
   /* (ĐÃ SỬA) Đổi tên class */
-
   position: -webkit-sticky; /* Hỗ trợ Safari cũ */
   position: sticky;
   top: 0;
   z-index: 990; /* Đảm bảo nó luôn ở trên cùng */
 
   /* Thêm nền trắng và bóng mờ để nó che nội dung bên dưới khi cuộn */
-  background-color: #1e293b;
+  background-color: var(--color-bg-page);
   box-shadow: var(--shadow);
 
   /* (MỚI) Đảm bảo nó chiếm 100% chiều rộng */
   width: 100%;
 }
-
 /* === (MỚI) CSS TÁCH TỪ HEADER.PHP === */
 
 /* --- Dropdown --- */
@@ -426,22 +424,20 @@ ul {
 .nav-search-form {
   display: flex; /* Xếp input và button ngang hàng */
   align-items: center; /* Căn giữa theo chiều dọc */
-  border: 1px solid var(--color-border);
-  border-radius: 30px;
-  width:auto;
-  overflow: hidden; /* Ẩn phần bo góc của input bên trong */
+  border: 1px solid black;
+  border-radius:100px;
+  overflow: hidden; 
+  width:300px;
 }
 
 .nav-search-input {
   padding: var(--spacing-8) var(--spacing-12);
   font: var(--font-body-s);
+  border: none; /* Bỏ viền của input */
   outline: none; /* Bỏ viền xanh khi focus */
   width: 160px; /* Độ rộng ban đầu */
   transition: width 0.3s ease;
-  background-color:#1e293b;
-  border:none;
-  padding:10px;
-  width:250px;
+  width:88%;
 }
 
 /* Khi focus (bấm) vào ô tìm kiếm */

@@ -47,7 +47,7 @@ if (!isset($page_title)) {
                 
                 <a href="index.php?page=home" class="logo"><img src="assets/img/logo.png" alt="Hishop" style="width:70px; height:50px;margin-top:10px;"></a>
                 
-                <div class="nav-center-links">
+                <div class="nav-center-links" style="text-decoration: double;">
                     <a href="index.php?page=home">Trang Chủ</a>
                     
                     <div class="nav-item has-dropdown" id="categoryDropdown">
