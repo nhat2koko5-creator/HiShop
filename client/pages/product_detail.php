@@ -45,16 +45,17 @@ $stmt_discount->execute([$product_id, $today, $today]);
             }
         }
 
-        $key = $variant['mau_sac'] . '|' . $variant['dung_luong_ssd'];
+$key = $variant['mau_sac'] . '|' . $variant['dung_luong_ssd'];
         $variants_js_data[$key] = [
             'id' => $variant['id'],
-            'gia' => $variant['gia_hien_tai'], 
+            'gia' => $variant['gia_hien_tai'],
+            'gia_goc' => $variant['gia'], // Thêm giá gốc vào data JS
             'so_luong_ton' => $variant['so_luong_ton'],
             'hinh_anh' => $variant['hinh_anh']
         ];
     }
     unset($variant);
-    $base_price = min(array_column($variants, 'gia_hien_tai'));
+    $base_price = min(array_column($variants, 'gia_hien_tai')); // Vẫn dùng giá đã giảm để làm giá khởi điểm
 } else {
     $base_price = $product['gia'] ?? 0;
 }
@@ -144,15 +145,22 @@ if (!file_exists($img_path)) $img_path = $default_img;
                 <div class="pd-options">
                     <h4>Chọn phiên bản:</h4>
                     <div class="pd-option-list" id="variantOptions">
-                        <?php foreach ($variants as $variant): 
+<?php foreach ($variants as $variant): 
                             $variant_key = htmlspecialchars($variant['mau_sac'] . '|' . $variant['dung_luong_ssd']);
-                            $full_price_text = price_format($variant['gia_hien_tai']);
+                            $new_price = $variant['gia_hien_tai'];
+                            $old_price = $variant['gia'];
+                            $is_discounted = $new_price < $old_price;
                         ?>
                         <div class="pd-option-item" data-key="<?= $variant_key ?>">
                             <span class="pd-opt-name">
                                 <?= htmlspecialchars($variant['mau_sac']) ?> - <?= htmlspecialchars($variant['dung_luong_ssd']) ?>
                             </span>
-                            <span class="pd-opt-price"><?= $full_price_text ?></span>
+                            <span class="pd-opt-price">
+                                <?php if ($is_discounted): ?>
+                                    <del style="color: #999; margin-right: 8px; font-size: 0.8em;"><?= price_format($old_price) ?></del>
+                                <?php endif; ?>
+                                <span class="new-price" style="<?= $is_discounted ? 'color: #d70018; font-weight: 700;' : '' ?>"><?= price_format($new_price) ?></span>
+                            </span>
                         </div>
                         <?php endforeach; ?>
                     </div>
@@ -356,8 +364,20 @@ function checkSelections() {
 
     const variant = variantsData[selectedVariantKey];
     if (variant) {
-        priceEl.textContent = formatPrice(variant.gia);
+        // --- CẬP NHẬT HIỂN THỊ GIÁ ---
+        const originalPrice = variant.gia_goc; // Lấy giá gốc
+        const currentPrice = variant.gia;     // Lấy giá hiện tại (đã giảm)
+        let priceHtml = "";
+
+        if (currentPrice < originalPrice) {
+            priceHtml += `<del style="color: #999; margin-right: 10px; font-size: 0.8em;">${formatPrice(originalPrice)}</del>`;
+            priceHtml += `<span style="color: #d70018; font-weight: 700; font-size: 1.2em;">${formatPrice(currentPrice)}</span>`;
+        } else {
+            priceHtml = formatPrice(currentPrice);
+        }
         
+        priceEl.innerHTML = priceHtml; // SỬ DỤNG innerHTML
+
         if (variant.so_luong_ton > 0) {
             stockTextEl.textContent = "Còn hàng";
             stockTextEl.className = "stock-label";

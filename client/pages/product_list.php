@@ -244,12 +244,12 @@ function format_price($p) {
 </div>
 
                 <?php 
-                $cpu_display = !empty($p['cpu']) ? "CPU: " . htmlspecialchars($p['cpu']) : '';
-                $ram_display = !empty($p['ram']) ? "RAM: " . htmlspecialchars($p['ram']) : '';
+                $cpu_display = !empty($p['cpu']) ? "" . htmlspecialchars($p['cpu']) : '';
+                $ram_display = !empty($p['ram']) ? "" . htmlspecialchars($p['ram']) : '';
                 
                 $spec_line = '';
                 if ($cpu_display && $ram_display) {
-                    $spec_line = $cpu_display . ' || ' . $ram_display; 
+                    $spec_line = $cpu_display . ' |' . $ram_display; 
                 } elseif ($cpu_display) {
                     $spec_line = $cpu_display;
                 } elseif ($ram_display) {
@@ -258,40 +258,42 @@ function format_price($p) {
                 ?>
 
                 <?php if ($spec_line): ?>
-                <div class="product-specs" style="font-size: 13px; color: #666; margin-bottom: 10px; font-weight: 500;">
+                <div class="product-specs" style="font-size: 13px; color: #666; margin-bottom: 10px; font-weight: 500; text-align:center;">
                     <?= $spec_line ?>
                 </div>
                 <?php endif; ?>
-<div class="btn-group-vertical">
-    <?php if (!empty($p['variants'])): ?>
-        <!-- Nút Thêm vào giỏ (mở modal) -->
-        <a href="javascript:void(0);" 
-   class="btn-cart btn-quick-add"
-   data-product-id="<?= $p['id'] ?>"
-   data-product-name="<?= htmlspecialchars($p['ten']) ?>"
-   data-product-image="<?= htmlspecialchars($p['hinh_anh']) ?>"
-   data-discount='<?= json_encode($discount) ?>'
-   data-variants='<?= htmlspecialchars(json_encode($p['variants']), ENT_QUOTES) ?>'>
-            🛒 Thêm vào giỏ
-        </a>
+                <div class="btn-group-vertical">
+                    <?php if (!empty($p['variants'])): ?>
+                        
+                        <a href="javascript:void(0);"
+                        class="btn-view btn-buy-now btn-quick-buy"
+                        data-product-id="<?= $p['id'] ?>"
+                        data-product-name="<?= htmlspecialchars($p['ten']) ?>"
+                        data-product-image="<?= htmlspecialchars($p['hinh_anh']) ?>"
+                        data-discount='<?= json_encode($discount) ?>'
+                        data-variants='<?= htmlspecialchars(json_encode($p['variants']), ENT_QUOTES) ?>'>
+                            🔥 Mua ngay
+                        </a>
 
-        <!-- Nút Mua ngay -->
-        <a href="javascript:void(0);"
-   class="btn-cart btn-quick-buy"
-   data-product-id="<?= $p['id'] ?>"
-   data-product-name="<?= htmlspecialchars($p['ten']) ?>"
-   data-product-image="<?= htmlspecialchars($p['hinh_anh']) ?>"
-   data-discount='<?= json_encode($discount) ?>'
-   data-variants='<?= htmlspecialchars(json_encode($p['variants']), ENT_QUOTES) ?>'>
-            🔥 Mua ngay
-        </a>
-    <?php else: ?>
-        <!-- Sản phẩm không có biến thể: Thêm trực tiếp vào giỏ -->
-        <a href="index.php?page=cart&action=add&id=<?= $p['id'] ?>" class="btn-cart">
-            🛒 Thêm vào giỏ
-        </a>
-    <?php endif; ?>
-</div>
+                        <a href="javascript:void(0);" 
+                        class="btn-cart btn-quick-add"
+                        title="Thêm vào giỏ"
+                        data-product-id="<?= $p['id'] ?>"
+                        data-product-name="<?= htmlspecialchars($p['ten']) ?>"
+                        data-product-image="<?= htmlspecialchars($p['hinh_anh']) ?>"
+                        data-discount='<?= json_encode($discount) ?>'
+                        data-variants='<?= htmlspecialchars(json_encode($p['variants']), ENT_QUOTES) ?>'>
+                            🛒
+                        </a>
+
+                    <?php else: ?>
+                        
+                        <a href="index.php?page=cart&action=add&id=<?= $p['id'] ?>" class="btn-view" style="width: 100%;">
+                            🛒 Thêm vào giỏ
+                        </a>
+
+                    <?php endif; ?>
+                </div>
 
 
             </div>

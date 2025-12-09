@@ -5,7 +5,26 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 // Logic đếm giỏ hàng
-$total_cart_items = $_SESSION['global_cart_count'] ?? 0; 
+$total_cart_items = 0;
+
+if (isset($_SESSION['user_id'])) {
+    // Nếu biến $pdo tồn tại (được load từ config.php ở index), ta query trực tiếp
+    if (isset($pdo)) {
+        try {
+            $stmtCnt = $pdo->prepare("SELECT SUM(so_luong) FROM gio_hang WHERE nguoi_dung_id = ?");
+            $stmtCnt->execute([$_SESSION['user_id']]);
+            $total_cart_items = (int)$stmtCnt->fetchColumn(); // Ép kiểu int để null thành 0
+            
+            // Cập nhật ngược lại session cho các trang khác dùng
+            $_SESSION['global_cart_count'] = $total_cart_items;
+        } catch (Exception $e) {
+            $total_cart_items = 0;
+        }
+    } else {
+        // Fallback: Nếu không có $pdo thì mới dùng Session
+        $total_cart_items = isset($_SESSION['global_cart_count']) ? (int)$_SESSION['global_cart_count'] : 0;
+    }
+}
 
 if (!isset($page_title)) {
     $page_title = 'HIShop - Giải Pháp Công Nghệ';
@@ -60,7 +79,7 @@ if (!isset($page_title)) {
                     </form>
                     
                    <a href="index.php?page=cart" class="icon-btn cart-icon-wrapper">
-                        🛒 <span id="cart-item-count" style="display: <?php echo ($total_cart_items > 0) ? 'flex' : 'none'; ?>;">
+                        🛒 <span id="cart-item-count" style="display: <?php echo ($total_cart_items > 0) ? 'flex !important' : 'none !important'; ?>;">
                             <?php echo $total_cart_items; ?>
                         </span>
                     </a>

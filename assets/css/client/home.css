@@ -184,14 +184,13 @@
     padding: var(--spacing-64) 0;
 }
 
+/* --- FIX LỖI SWIPER BUTTON --- */
+
 .product-carousel-wrapper {
     position: relative;
-    padding: 0 40px; /* Chừa chỗ cho nút next/prev */
+    /* Tăng padding lên 54px để tạo khoảng trống rộng rãi cho nút, không đè lên sản phẩm */
+    padding: 0 54px; 
     overflow: visible;
-}
-
-.product-carousel {
-    overflow: hidden;
 }
 
 /* Nút điều hướng Carousel */
@@ -202,33 +201,56 @@
     background-color: var(--color-white);
     border: 1px solid var(--color-border);
     border-radius: 50%;
-    box-shadow: var(--shadow);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Tăng bóng đổ cho nổi bật */
     transition: all 0.2s ease;
     color: var(--color-primary);
+    
+    /* Định vị chuẩn */
+    position: absolute; 
     top: 50%;
     transform: translateY(-50%);
-    z-index: 50;
+    
+    /* QUAN TRỌNG: Phải cao hơn Tag giảm giá (z-index: 1000) */
+    z-index: 1010; 
+    
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
 }
 
-.product-carousel-wrapper .swiper-button-prev { left: 0; }
-.product-carousel-wrapper .swiper-button-next { right: 0; }
+/* Đảm bảo nút nằm đúng vị trí trong vùng padding */
+.product-carousel-wrapper .swiper-button-prev { 
+    left: 0; 
+}
+
+.product-carousel-wrapper .swiper-button-next { 
+    right: 0; 
+}
 
 .product-carousel-wrapper .swiper-button-prev:hover,
 .product-carousel-wrapper .swiper-button-next:hover {
     background-color: var(--color-primary);
     color: var(--color-white);
     border-color: var(--color-primary);
+    box-shadow: 0 6px 16px rgba(15, 98, 254, 0.3); /* Hiệu ứng glow khi hover */
 }
 
+/* Chỉnh icon mũi tên bên trong nhỏ gọn */
 .product-carousel-wrapper .swiper-button-prev::after,
 .product-carousel-wrapper .swiper-button-next::after {
-    font-size: 18px;
+    font-size: 16px; /* Giảm size icon chút cho tinh tế */
     font-weight: 700;
 }
 
+/* Xử lý trạng thái khi không bấm được (Disable) */
+.product-carousel-wrapper .swiper-button-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #f3f4f6;
+    color: #9ca3af;
+    box-shadow: none;
+}
 .swiper-slide {
     flex-shrink: 0;
     height: auto;
@@ -483,12 +505,84 @@
     transform: translateY(-2px);
 }
 
-/* Hai nút đặt dọc, cách nhau nhẹ */
 .btn-group-vertical {
     display: flex;
-    flex-direction: column;
+    flex-direction: row !important; /* QUAN TRỌNG: Ép thành hàng ngang */
+    align-items: center;
     gap: 8px;
     margin-top: auto;
+    width: 100%;
+}
+
+/* Style chung cho nút */
+.btn-view, .btn-cart {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px; /* Chiều cao cố định */
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+
+/* 1. Nút MUA NGAY (Nút to bên trái - Màu xanh) */
+.btn-view, .btn-buy-now {
+    flex: 1; /* Tự giãn hết cỡ */
+    background-color: #0f62fe;
+    color: #ffffff !important;
+    border: 1px solid transparent;
+    padding: 0 10px;
+}
+
+.btn-view:hover, .btn-buy-now:hover {
+    background-color: #0043ce;
+    box-shadow: 0 4px 12px rgba(15, 98, 254, 0.2);
+    transform: translateY(-2px);
+}
+
+/* 2. Nút GIỎ HÀNG (Nút icon vuông bên phải - Màu xám nhạt) */
+.btn-cart {
+    width: 38px !important; /* Vuông vức */
+    flex-shrink: 0;
+    background-color: #f3f4f6;
+    color: #1f2937 !important;
+    border: 1px solid transparent;
+    padding: 0; /* Bỏ padding để icon căn giữa */
+    font-size: 16px;
+}
+
+.btn-cart:hover {
+    background-color: #e5e7eb;
+    color: #0f62fe !important;
+    transform: translateY(-2px);
+}
+
+/* --- Style cho thông số kỹ thuật (Pill style) --- */
+.product-specs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    min-height: 24px;
+    border: none !important; /* Bỏ viền cũ nếu có */
+    padding: 0 !important;
+}
+
+.spec-pill {
+    font-size: 12px;
+    color: #555;
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
 }
 
 /* CARD SẢN PHẨM */
@@ -504,24 +598,27 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.product-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-}
-
 /* Hình ảnh sản phẩm */
 .product-image {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 180px;
-    margin-bottom: 10px;
+    margin-bottom: 16px; /* Tăng khoảng cách dưới ảnh để thoáng hơn */
+    overflow: hidden;    /* QUAN TRỌNG: Cắt phần thừa khi ảnh phóng to */
+    position: relative;  /* Để định vị tốt hơn */
 }
 
 .product-image img {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Hiệu ứng zoom nhẹ khi hover vào card */
+.product-card:hover .product-image img {
+    transform: scale(1.05);
 }
 
 /* Nội dung card */
@@ -624,6 +721,54 @@
     border-top: 1px solid #eee; /* Dòng kẻ trên */
     padding-top: 10px;
     padding-bottom: 5px; 
+    text-align: center;
 }
+
+.featured-carousel, .discount-carousel {
+    overflow: hidden;
+    position: relative;
+    padding-bottom: 20px; /* Khoảng đệm nhẹ */
+}
+.qty-box {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: fit-content;
+    overflow: hidden;
+    height: 32px; /* chiều cao giống mẫu */
+}
+
+.qty-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: white;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    border-right: 1px solid #ddd;
+}
+
+.qty-btn:last-child {
+    border-right: none;
+}
+
+#qty-input {
+    width: 40px;
+    height: 32px;
+    border: none;
+    text-align: center;
+    font-size: 16px;
+    outline: none;
+    border-right: 1px solid #ddd;
+}
+
+#qty-input::-webkit-outer-spin-button,
+#qty-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
 /* ... và .spec-item, .spec-label, .spec-value ... */
 /* Hết CSS Variant Combo */

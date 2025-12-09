@@ -1,10 +1,11 @@
 <?php
+// admin/layouts/sidebar.php
+
 // Lấy trang hiện tại để xử lý Active Class
 $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
 
-// Hàm kiểm tra active
+// Hàm kiểm tra active (Trả về class 'active')
 function isActive($name, $currentPage) {
-    // Kiểm tra nếu trang hiện tại trùng khớp
     return $name === $currentPage ? 'active' : '';
 }
 
@@ -12,11 +13,11 @@ function isActive($name, $currentPage) {
 $warehouse_pages = ['warehouse_list', 'warehouse_detail', 'warehouse_import', 'warehouse_export', 'warehouse_history'];
 $is_warehouse_group = in_array($page, $warehouse_pages);
 ?>
-
+<link rel="stylesheet" href="../assets/css/admin/style-admin.css">
 <aside class="admin-sidebar">
     <div class="sidebar-brand">
-        <img src="../assets/img/logo.png" alt="Hishop Admin" class="brand-logo">
-        <span style="font-weight: 700; font-size :20px">HiShop Admin</span>
+        <img src="../assets/img/logo.png" alt="Hishop" class="brand-logo">
+        <span class="brand-text">HiShop Admin</span>
     </div>
 
     <div class="sidebar-menu">
@@ -46,8 +47,7 @@ $is_warehouse_group = in_array($page, $warehouse_pages);
             </li>
             <li>
                 <a href="index.php?page=categories_list" class="nav-link <?php echo isActive('categories_list', $page); ?>">
-                    <i class="fas fa-tags"></i>
-                    <span>Danh mục</span>
+                    <i class="fas fa-layer-group"></i> <span>Danh mục</span>
                 </a>
             </li>
             <li>
@@ -64,7 +64,7 @@ $is_warehouse_group = in_array($page, $warehouse_pages);
                 <a href="javascript:void(0)" class="nav-link toggle-submenu">
                     <i class="fas fa-warehouse"></i>
                     <span>Kho hàng</span>
-                    <i class="fas fa-chevron-right arrow-icon" style="margin-left: auto; font-size: 10px;"></i>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
                 </a>
                 
                 <ul class="submenu">
@@ -85,7 +85,7 @@ $is_warehouse_group = in_array($page, $warehouse_pages);
                     </li>
                     <li>
                         <a href="index.php?page=warehouse_history" class="<?php echo isActive('warehouse_history', $page); ?>">
-                            Lịch sử nhập/xuất
+                            Lịch sử X/N
                         </a>
                     </li>
                 </ul>
@@ -110,26 +110,24 @@ $is_warehouse_group = in_array($page, $warehouse_pages);
     </div>
 
     <div class="admin-user">
-        <a href="../client/index.php" target="_blank" class="nav-link" style="color: #64748b;">
-            <i class="fas fa-external-link-alt"></i> Xem Website
+        <a href="../client/index.php" target="_blank" style="color: #94a3b8; font-size: 13px; font-weight: 500; display: block;">
+            <i class="fas fa-external-link-alt" style="margin-right: 5px;"></i> Xem Website
         </a>
     </div>
 </aside>
 
 <script>
-    // Script xử lý đóng mở menu con (Submenu)
-    document.querySelectorAll('.toggle-submenu').forEach(item => {
-        item.addEventListener('click', event => {
-            event.preventDefault(); // Ngăn chặn load lại trang
-            let parent = item.parentElement;
-            parent.classList.toggle('open');
-            
-            // Xoay mũi tên
-            let arrow = item.querySelector('.arrow-icon');
-            if(arrow) {
-                arrow.style.transform = parent.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
-                arrow.style.transition = 'transform 0.3s';
-            }
+    document.addEventListener("DOMContentLoaded", function() {
+        const toggles = document.querySelectorAll('.toggle-submenu');
+        
+        toggles.forEach(toggle => {
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                const parentLi = this.parentElement;
+                
+                // Toggle class 'open' để CSS xử lý animation
+                parentLi.classList.toggle('open');
+            });
         });
     });
 </script>

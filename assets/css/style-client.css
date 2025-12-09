@@ -144,6 +144,7 @@ ul {
   /* (MỚI) Đảm bảo nó chiếm 100% chiều rộng */
   width: 100%;
 }
+
 /* === (MỚI) CSS TÁCH TỪ HEADER.PHP === */
 
 /* --- Dropdown --- */
@@ -426,19 +427,21 @@ ul {
   display: flex; /* Xếp input và button ngang hàng */
   align-items: center; /* Căn giữa theo chiều dọc */
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: 30px;
+  width:auto;
   overflow: hidden; /* Ẩn phần bo góc của input bên trong */
 }
 
 .nav-search-input {
   padding: var(--spacing-8) var(--spacing-12);
   font: var(--font-body-s);
-  border: none; /* Bỏ viền của input */
   outline: none; /* Bỏ viền xanh khi focus */
   width: 160px; /* Độ rộng ban đầu */
   transition: width 0.3s ease;
   background-color:#1e293b;
-  border: 2px soild #fff;
+  border:none;
+  padding:10px;
+  width:250px;
 }
 
 /* Khi focus (bấm) vào ô tìm kiếm */
