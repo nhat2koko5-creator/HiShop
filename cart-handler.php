@@ -1,5 +1,5 @@
 <?php
-// FILE: cart-handler.php (ĐÃ BỔ SUNG LOGIC COUPON)
+// FILE: cart-handler.php (ĐÃ FIX SẠCH SẼ)
 ob_start();
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once __DIR__ . '/src/config.php';
-// [QUAN TRỌNG] Đảm bảo file functions.php chứa hàm getCouponByCode được include tại đây!
+// [KHUYẾN NGHỊ] Nên bỏ comment dòng dưới để dùng chung hàm với hệ thống
 // require_once __DIR__ . '/src/functions.php'; 
 
 header('Content-Type: application/json; charset=utf-8');
@@ -16,10 +16,11 @@ $response = ['status' => 'error', 'message' => 'Lỗi không xác định.'];
 
 // GIẢ ĐỊNH HÀM getCouponByCode ĐÃ ĐƯỢC LOAD
 if (!function_exists('getCouponByCode')) {
-    // Nếu bạn chưa include functions.php, hãy thêm logic này vào functions.php
     function getCouponByCode(PDO $pdo, $code) {
         try {
-            $sql = "SELECT ten, loai_khuyen_mai, gia_tri, dieu_kien FROM ma_khuyen_mai 
+            // [ĐÃ SỬA] Thêm so_luong, da_dung vào SELECT để logic check số lượng hoạt động
+            $sql = "SELECT ten, loai_khuyen_mai, gia_tri, dieu_kien, so_luong, da_dung 
+                    FROM ma_khuyen_mai 
                     WHERE ten = ? 
                     AND (ngay_bat_dau IS NULL OR ngay_bat_dau <= NOW())
                     AND (ngay_ket_thuc IS NULL OR ngay_ket_thuc >= NOW())
@@ -35,10 +36,10 @@ if (!function_exists('getCouponByCode')) {
         }
     }
 }
-if ($_POST['action'] === 'buy') {
+
+if (isset($_POST['action']) && $_POST['action'] === 'buy') {
     $_POST['action'] = 'add';
 }
-
 
 if (!isset($_SESSION['user_id'])) {
     $response['message'] = 'Bạn cần đăng nhập trước.';
@@ -57,18 +58,17 @@ $cart_id_raw = $_POST['key'] ?? null;
 ======================================================= */
 function compute_unit_price(PDO $pdo, $product_id, $variant_id = null)
 {
-    // lấy giá biến thể nếu có
+    // ... (Giữ nguyên logic cũ của bạn) ...
     if ($variant_id) {
         $stmt = $pdo->prepare("SELECT gia FROM bien_the_san_pham WHERE id = ? AND san_pham_id = ?");
         $stmt->execute([$variant_id, $product_id]);
         $gia = $stmt->fetchColumn();
-
-        if ($gia !== false) {
-            $base_price = (float)$gia;
-        } else {
-            $stmt2 = $pdo->prepare("SELECT gia FROM san_pham WHERE id = ?");
-            $stmt2->execute([$product_id]);
-            $base_price = (float)$stmt2->fetchColumn();
+        $base_price = ($gia !== false) ? (float)$gia : 0;
+        
+        if ($gia === false) {
+             $stmt2 = $pdo->prepare("SELECT gia FROM san_pham WHERE id = ?");
+             $stmt2->execute([$product_id]);
+             $base_price = (float)$stmt2->fetchColumn();
         }
     } else {
         $stmt = $pdo->prepare("SELECT gia FROM san_pham WHERE id = ?");
@@ -76,7 +76,6 @@ function compute_unit_price(PDO $pdo, $product_id, $variant_id = null)
         $base_price = (float)$stmt->fetchColumn();
     }
 
-    // kiểm tra giảm giá
     $stmtD = $pdo->prepare("
         SELECT g.loai_giam_gia, g.gia_tri
         FROM san_pham_giam_gia spg
@@ -99,7 +98,6 @@ function compute_unit_price(PDO $pdo, $product_id, $variant_id = null)
 
     return max($base_price, 0);
 }
-
 
 /* =======================================================
     HÀM TRẢ VỀ TỔNG SỐ SẢN PHẨM TRONG GIỎ
@@ -129,56 +127,31 @@ switch ($action) {
             break;
         }
 
-        // kiểm tra đã có trong giỏ chưa
         if ($variant_id) {
-            $stmt = $pdo->prepare("
-                SELECT id, so_luong 
-                FROM gio_hang 
-                WHERE nguoi_dung_id = ? AND san_pham_id = ? AND bien_the_id = ?
-                LIMIT 1
-            ");
+            $stmt = $pdo->prepare("SELECT id, so_luong FROM gio_hang WHERE nguoi_dung_id = ? AND san_pham_id = ? AND bien_the_id = ? LIMIT 1");
             $stmt->execute([$user_id, $product_id, $variant_id]);
         } else {
-            $stmt = $pdo->prepare("
-                SELECT id, so_luong 
-                FROM gio_hang 
-                WHERE nguoi_dung_id = ? 
-                  AND san_pham_id = ?
-                  AND bien_the_id IS NULL
-                LIMIT 1
-            ");
+            $stmt = $pdo->prepare("SELECT id, so_luong FROM gio_hang WHERE nguoi_dung_id = ? AND san_pham_id = ? AND bien_the_id IS NULL LIMIT 1");
             $stmt->execute([$user_id, $product_id]);
         }
-
         $exist = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($exist) {
             $newQty = $exist['so_luong'] + $quantity;
             $stmtUp = $pdo->prepare("UPDATE gio_hang SET so_luong = ? WHERE id = ?");
             $stmtUp->execute([$newQty, $exist['id']]);
-        } 
-        else {
-            $stmtIns = $pdo->prepare("
-                INSERT INTO gio_hang (nguoi_dung_id, san_pham_id, bien_the_id, so_luong)
-                VALUES (?, ?, ?, ?)
-            ");
-            $stmtIns->execute([
-                $user_id,
-                $product_id,
-                $variant_id ?: null,
-                $quantity
-            ]);
+        } else {
+            $stmtIns = $pdo->prepare("INSERT INTO gio_hang (nguoi_dung_id, san_pham_id, bien_the_id, so_luong) VALUES (?, ?, ?, ?)");
+            $stmtIns->execute([$user_id, $product_id, $variant_id ?: null, $quantity]);
         }
 
-        $response['status'] = 'success';
-        $response['message'] = 'Đã thêm vào giỏ hàng';
-        $response['cart_count'] = getCartCount($pdo, $user_id);
         $currentCount = getCartCount($pdo, $user_id);
         $_SESSION['global_cart_count'] = $currentCount; 
-
+        
+        $response['status'] = 'success';
+        $response['message'] = 'Đã thêm vào giỏ hàng';
         $response['cart_count'] = $currentCount;
         break;
-
 
 
     /* -----------------------
@@ -186,7 +159,6 @@ switch ($action) {
     ----------------------- */
     case 'update':
         $cart_id = (int)$cart_id_raw;
-
         $stmt = $pdo->prepare("SELECT san_pham_id, bien_the_id FROM gio_hang WHERE id = ? AND nguoi_dung_id = ?");
         $stmt->execute([$cart_id, $user_id]);
         $cartRow = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -196,23 +168,20 @@ switch ($action) {
             break;
         }
 
-        $pdo->prepare("UPDATE gio_hang SET so_luong = ? WHERE id = ?")
-            ->execute([$quantity, $cart_id]);
-
+        $pdo->prepare("UPDATE gio_hang SET so_luong = ? WHERE id = ?")->execute([$quantity, $cart_id]);
         $price = compute_unit_price($pdo, $cartRow['san_pham_id'], $cartRow['bien_the_id']);
+
+        $currentCount = getCartCount($pdo, $user_id);
+        $_SESSION['global_cart_count'] = $currentCount; 
 
         $response = [
             'status' => 'success',
             'quantity' => $quantity,
             'unit_price' => number_format($price, 0, ',', '.') . '₫',
             'item_total' => number_format($price * $quantity, 0, ',', '.') . '₫',
-            'cart_count' => getCartCount($pdo, $user_id)
+            'cart_count' => $currentCount
         ];
-        $currentCount = getCartCount($pdo, $user_id);
-        $_SESSION['global_cart_count'] = $currentCount; 
-        $response['cart_count'] = $currentCount;
         break;
-
 
 
     /* -----------------------
@@ -220,22 +189,20 @@ switch ($action) {
     ----------------------- */
     case 'delete':
         $cart_id = (int)$cart_id_raw;
+        $pdo->prepare("DELETE FROM gio_hang WHERE id = ? AND nguoi_dung_id = ?")->execute([$cart_id, $user_id]);
 
-        $pdo->prepare("DELETE FROM gio_hang WHERE id = ? AND nguoi_dung_id = ?")
-            ->execute([$cart_id, $user_id]);
-
-        $response['status'] = 'success';
-        $response['cart_count'] = getCartCount($pdo, $user_id);
         $currentCount = getCartCount($pdo, $user_id);
         $_SESSION['global_cart_count'] = $currentCount; 
+
+        $response['status'] = 'success';
         $response['cart_count'] = $currentCount;
         break;
 
     
     /* -----------------------
-        APPLY COUPON (ĐÃ THÊM)
+        APPLY COUPON (ĐÃ FIX CHECK LIMIT)
     ----------------------- */
-    case 'apply_coupon':
+   case 'apply_coupon':
         $coupon_code_input = $_POST['code'] ?? '';
         
         if (empty($coupon_code_input)) {
@@ -252,13 +219,47 @@ switch ($action) {
             break;
         }
         
-        // **LƯU Ý: Thêm logic kiểm tra điều kiện `dieu_kien` ở đây nếu cần**
+        // --- 1. TÍNH TỔNG TIỀN HIỆN TẠI ---
+        $current_total = 0;
 
-        // LƯU VÀO SESSION
+        if (isset($_SESSION['buy_now_item']) && !empty($_SESSION['buy_now_item'])) {
+            $item = $_SESSION['buy_now_item'];
+            $current_total = (float)$item['gia'] * (int)$item['so_luong'];
+        } else {
+            $stmtC = $pdo->prepare("SELECT san_pham_id, bien_the_id, so_luong FROM gio_hang WHERE nguoi_dung_id = ?");
+            $stmtC->execute([$user_id]);
+            $cart_items = $stmtC->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($cart_items as $item) {
+                $price = compute_unit_price($pdo, $item['san_pham_id'], $item['bien_the_id']);
+                $current_total += $price * $item['so_luong'];
+            }
+        }
+
+        // --- 2. CHECK ĐIỀU KIỆN TIỀN TỐI THIỂU ---
+        $min_condition = (float)$coupon['dieu_kien'];
+        if ($current_total < $min_condition) {
+            $response['message'] = 'Mã này chỉ áp dụng cho đơn hàng từ ' . number_format($min_condition, 0, ',', '.') . '₫ trở lên.';
+            unset($_SESSION['promo']);
+            break;
+        }
+
+        // --- 3. CHECK SỐ LƯỢNG GIỚI HẠN (FIX LOGIC) ---
+        $limit = isset($coupon['so_luong']) ? (int)$coupon['so_luong'] : 0;
+        $used  = isset($coupon['da_dung']) ? (int)$coupon['da_dung'] : 0;
+
+        if ($limit > 0 && $used >= $limit) {
+            $response['message'] = 'Rất tiếc, mã khuyến mãi này đã hết lượt sử dụng.';
+            unset($_SESSION['promo']);
+            break;
+        }
+
+        // --- 4. THÀNH CÔNG: LƯU SESSION ---
         $_SESSION['promo'] = [
             'code' => $coupon['ten'],
             'type' => $coupon['loai_khuyen_mai'],
-            'value' => (float)$coupon['gia_tri']
+            'value' => (float)$coupon['gia_tri'],
+            'min_order' => $min_condition
         ];
         
         $response['status'] = 'success'; 
@@ -267,7 +268,7 @@ switch ($action) {
     
     
     /* -----------------------
-        REMOVE COUPON (ĐÃ THÊM)
+        REMOVE COUPON
     ----------------------- */
     case 'remove_coupon':
         unset($_SESSION['promo']);
@@ -277,7 +278,6 @@ switch ($action) {
 
 
     default:
-        // Lỗi này gây ra vấn đề "Hành động không hợp lệ" trước đó
         $response['message'] = 'Hành động không hợp lệ.';
 }
 

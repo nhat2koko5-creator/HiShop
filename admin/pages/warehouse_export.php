@@ -2,7 +2,7 @@
 // FILE: admin/pages/warehouse_export.php
 
 /* ===========================================================
-   PHẦN 1: XỬ LÝ LOGIC BACKEND (GIỮ NGUYÊN)
+   PHẦN 1: XỬ LÝ LOGIC BACKEND
    =========================================================== */
 $msg = '';
 $msg_type = '';
@@ -11,7 +11,7 @@ $msg_type = '';
 $stmt = $pdo->query("SELECT * FROM kho_hang WHERE trang_thai = 1 ORDER BY id DESC");
 $ds_kho = $stmt->fetchAll();
 
-// 2. Lấy danh sách sản phẩm (Kèm tồn kho tổng)
+// 2. Lấy danh sách sản phẩm (Kèm tồn kho tổng để hiển thị gợi ý)
 $sqlProducts = "
     SELECT bt.id as bien_the_id, sp.ten, bt.mau_sac, bt.dung_luong_ssd, bt.so_luong_ton, sp.hinh_anh
     FROM bien_the_san_pham bt
@@ -25,6 +25,7 @@ $ds_san_pham = $stmtProd->fetchAll();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $kho_id = isset($_POST['kho_id']) ? (int)$_POST['kho_id'] : 0;
     $ghi_chu = isset($_POST['ghi_chu']) ? trim($_POST['ghi_chu']) : '';
+    // Lấy ID người dùng an toàn
     $nguoi_xuat_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : (isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : 10); 
 
     $product_ids = isset($_POST['product_variant_id']) ? $_POST['product_variant_id'] : [];
@@ -33,37 +34,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = [];
 
     // Check kho
-    $stmtCheckKho = $pdo->prepare("SELECT id FROM kho_hang WHERE id = ? AND trang_thai = 1");
+    $stmtCheckKho = $pdo->prepare("SELECT ten_kho FROM kho_hang WHERE id = ? AND trang_thai = 1");
     $stmtCheckKho->execute([$kho_id]);
-    if ($stmtCheckKho->rowCount() == 0) $errors[] = "Kho xuất không hợp lệ.";
-
+    $ten_kho = $stmtCheckKho->fetchColumn();
+    
+    if (!$ten_kho) $errors[] = "Kho xuất không hợp lệ.";
     if (empty($product_ids)) $errors[] = "Chưa chọn sản phẩm nào.";
 
-    // Check tồn kho
+    // Check chi tiết từng dòng
     if (empty($errors)) {
         $temp_check = [];
-        for ($i = 0; $i < count($product_ids); $i++) {
-            $pid = (int)$product_ids[$i];
-            $qty = (int)$quantities[$i];
+        foreach ($product_ids as $key => $pid) {
+            if (empty($pid)) continue;
 
+            $qty = (int)$quantities[$key];
+
+            // 1. Check trùng sản phẩm trong phiếu
             if (in_array($pid, $temp_check)) {
-                $errors[] = "Dòng " . ($i + 1) . ": Sản phẩm bị trùng.";
+                $errors[] = "Dòng " . ($key + 1) . ": Sản phẩm bị trùng.";
             }
             $temp_check[] = $pid;
 
+            // 2. Check số lượng âm
             if ($qty <= 0) {
-                $errors[] = "Dòng " . ($i + 1) . ": Số lượng phải > 0.";
+                $errors[] = "Dòng " . ($key + 1) . ": Số lượng phải lớn hơn 0.";
                 continue;
             }
 
-            // Check tồn kho thực tế
+            // 3. [QUAN TRỌNG] Check tồn kho thực tế TẠI KHO ĐÓ
+            // Phải kiểm tra bảng chi_tiet_kho_hang, chứ không phải bảng tổng
             $stmtStock = $pdo->prepare("SELECT so_luong_ton FROM chi_tiet_kho_hang WHERE kho_hang_id = ? AND bien_the_id = ?");
             $stmtStock->execute([$kho_id, $pid]);
             $current_stock = $stmtStock->fetchColumn();
 
+            // Nếu không tìm thấy dòng nào hoặc số lượng không đủ
             if ($current_stock === false || $current_stock < $qty) {
                 $stock_show = ($current_stock === false) ? 0 : $current_stock;
-                $errors[] = "Dòng " . ($i + 1) . ": <b>Lỗi tồn kho!</b> Kho này chỉ còn <b>$stock_show</b> sản phẩm (Cần xuất: $qty).";
+                $errors[] = "Dòng " . ($key + 1) . ": <b>Không đủ hàng!</b> Kho <b>$ten_kho</b> chỉ còn <b>$stock_show</b> sản phẩm (Yêu cầu xuất: $qty).";
             }
         }
     }
@@ -89,19 +96,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $bt_id = $product_ids[$i];
                 $so_luong = $quantities[$i];
 
+                if(empty($bt_id)) continue;
+
                 $stmtGetParent = $pdo->prepare("SELECT san_pham_id FROM bien_the_san_pham WHERE id = ?");
                 $stmtGetParent->execute([$bt_id]);
                 $sp_id = $stmtGetParent->fetchColumn();
 
-                // Chi tiết phiếu
+                // Chi tiết phiếu (Giá xuất để 0 hoặc có thể phát triển thêm giá vốn)
                 $sqlChiTiet = "INSERT INTO chi_tiet_phieu_kho (phieu_kho_id, san_pham_id, bien_the_id, so_luong, don_gia) VALUES (?, ?, ?, ?, 0)";
                 $pdo->prepare($sqlChiTiet)->execute([$phieu_id, $sp_id, $bt_id, $so_luong]);
 
-                // Trừ kho chi tiết
+                // Trừ kho chi tiết (chi_tiet_kho_hang)
                 $sqlKhoChiTiet = "UPDATE chi_tiet_kho_hang SET so_luong_ton = so_luong_ton - ? WHERE kho_hang_id = ? AND bien_the_id = ?";
                 $pdo->prepare($sqlKhoChiTiet)->execute([$so_luong, $kho_id, $bt_id]);
 
-                // Trừ kho tổng
+                // Trừ kho tổng (bien_the_san_pham)
                 $pdo->prepare("UPDATE bien_the_san_pham SET so_luong_ton = so_luong_ton - ? WHERE id = ?")->execute([$so_luong, $bt_id]);
             }
 
@@ -118,7 +127,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="../assets/css/admin/warehouse_export.css">
+
 
 <div class="export-container">
     
@@ -184,18 +195,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <tbody>
                             <tr class="item-row">
                                 <td>
-                                    <select name="product_variant_id[]" class="form-select product-select" required onchange="updateStockHint(this)">
-                                        <option value="" data-stock="0">-- Chọn sản phẩm --</option>
+                                    <select name="product_variant_id[]" class="form-select product-select select2-init" required onchange="updateStockHint(this)">
+                                        <option value="" data-stock="0">-- Tìm kiếm & chọn sản phẩm --</option>
                                         <?php foreach ($ds_san_pham as $sp): ?>
                                             <option value="<?php echo $sp['bien_the_id']; ?>" data-stock="<?php echo $sp['so_luong_ton']; ?>">
                                                 <?php echo htmlspecialchars($sp['ten'] . ' (' . $sp['mau_sac'] . ' - ' . $sp['dung_luong_ssd'] . ')'); ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
-                                    <div class="stock-hint">Tổng tồn hệ thống: <span>0</span></div>
+                                    <div class="stock-hint">Tổng tồn kho hệ thống: <span>0</span></div>
                                 </td>
                                 <td>
-                                    <input type="number" name="quantity[]" class="form-input qty text-center" min="1" value="1" required>
+                                    <input type="number" name="quantity[]" class="form-input qty text-center" min="1" value="1" required
+                                           oninput="enforcePositive(this)">
                                 </td>
                                 <td class="text-center">
                                     <button type="button" class="btn-remove" onclick="removeRow(this)"><i class="fa-solid fa-xmark"></i></button>
@@ -214,32 +226,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
+    // 1. Khởi tạo Select2
+    $(document).ready(function() {
+        initSelect2();
+    });
+
+    function initSelect2() {
+        $('.select2-init').select2({
+            width: '100%',
+            placeholder: "-- Tìm kiếm sản phẩm --",
+            allowClear: true
+        });
+    }
+
+    // 2. Chặn số âm
+    function enforcePositive(el) {
+        if (el.value === '') return;
+        if (parseInt(el.value) < 0) {
+            el.value = 1;
+        }
+    }
+
+    // 3. Hiển thị tồn kho (Tổng)
     function updateStockHint(select) {
         var stock = select.options[select.selectedIndex].getAttribute('data-stock') || 0;
         var hint = select.parentNode.querySelector('.stock-hint span');
         if(hint) hint.innerText = stock;
     }
 
+    // 4. Thêm dòng mới
     function addRow() {
         var table = document.getElementById("productTable").getElementsByTagName('tbody')[0];
-        var newRow = table.rows[0].cloneNode(true);
         
-        newRow.querySelector('select').value = '';
-        newRow.querySelector('.stock-hint span').innerText = '0';
-        newRow.querySelector('.qty').value = 1;
+        // Chuỗi Options cho select
+        var optionsHtml = `
+            <option value="" data-stock="0">-- Tìm kiếm & chọn sản phẩm --</option>
+            <?php foreach ($ds_san_pham as $sp): ?>
+                <option value="<?php echo $sp['bien_the_id']; ?>" data-stock="<?php echo $sp['so_luong_ton']; ?>">
+                    <?php echo htmlspecialchars($sp['ten'] . ' (' . $sp['mau_sac'] . ' - ' . $sp['dung_luong_ssd'] . ')'); ?>
+                </option>
+            <?php endforeach; ?>
+        `;
+
+        var newRowHtml = `
+            <tr class="item-row">
+                <td>
+                    <select name="product_variant_id[]" class="form-select product-select select2-init" required onchange="updateStockHint(this)">
+                        ${optionsHtml}
+                    </select>
+                    <div class="stock-hint">Tổng tồn kho hệ thống: <span>0</span></div>
+                </td>
+                <td>
+                    <input type="number" name="quantity[]" class="form-input qty text-center" min="1" value="1" required oninput="enforcePositive(this)">
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn-remove" onclick="removeRow(this)"><i class="fa-solid fa-xmark"></i></button>
+                </td>
+            </tr>
+        `;
         
-        table.appendChild(newRow);
+        $(table).append(newRowHtml);
+        initSelect2();
     }
 
     function removeRow(btn) {
         var row = btn.closest('tr');
         var tbody = row.parentNode;
-        if (tbody.rows.length > 1) row.remove();
+        if (tbody.querySelectorAll('tr').length > 1) row.remove();
         else alert("Phải có ít nhất 1 dòng sản phẩm!");
     }
 
     function validateForm() {
+        if(document.querySelectorAll('.item-row').length === 0) {
+            alert("Vui lòng chọn sản phẩm cần xuất.");
+            return false;
+        }
         return confirm('CẢNH BÁO: Bạn đang thực hiện XUẤT KHO. Số lượng tồn kho sẽ bị trừ ngay lập tức. Bạn có chắc chắn không?');
     }
 </script>

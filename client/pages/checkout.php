@@ -8,17 +8,22 @@ $is_buy_now = isset($_GET['action'])
              && isset($_SESSION['user_id']);
 
 if ($is_buy_now) {
-    // --- LUỒNG MUA NGAY ---
+    // --- LUỒNG MUA NGAY (ĐÃ FIX LẤY GIÁ GIẢM) ---
     $variant_id = (int)$_GET['variant_id'];
-    // [MỚI] Hỗ trợ lấy số lượng từ URL (mặc định là 1)
     $qty_buy_now = isset($_GET['quantity']) ? max(1, intval($_GET['quantity'])) : 1;
     
+    // [CẬP NHẬT SQL] Join thêm bảng giảm giá để lấy thông tin khuyến mãi
     $stmt = $pdo->prepare("
         SELECT 
             sp.id AS parent_id, sp.ten, sp.hinh_anh, 
-            bv.id AS bien_the_id, bv.gia, bv.mau_sac, bv.dung_luong_ssd, bv.so_luong_ton
+            bv.id AS bien_the_id, bv.gia, bv.mau_sac, bv.dung_luong_ssd, bv.so_luong_ton,
+            gg.loai_giam_gia, gg.gia_tri
         FROM bien_the_san_pham AS bv
         JOIN san_pham AS sp ON bv.san_pham_id = sp.id
+        LEFT JOIN san_pham_giam_gia spgg ON sp.id = spgg.san_pham_id
+        LEFT JOIN giam_gia gg ON spgg.giam_gia_id = gg.id
+            AND (gg.ngay_bat_dau IS NULL OR gg.ngay_bat_dau <= NOW())
+            AND (gg.ngay_ket_thuc IS NULL OR gg.ngay_ket_thuc >= NOW())
         WHERE bv.id = ? AND bv.so_luong_ton > 0
     ");
     $stmt->execute([$variant_id]);
@@ -29,9 +34,20 @@ if ($is_buy_now) {
         exit;
     }
     
-    // Kiểm tra số lượng tồn kho
     if ($qty_buy_now > $item['so_luong_ton']) $qty_buy_now = $item['so_luong_ton'];
 
+    // [THÊM LOGIC] Tính giá sau giảm (nếu có)
+    $final_price = (float)$item['gia'];
+    if (!empty($item['loai_giam_gia']) && !empty($item['gia_tri'])) {
+        if ($item['loai_giam_gia'] === 'percent') {
+            $final_price -= ($final_price * ($item['gia_tri'] / 100));
+        } elseif ($item['loai_giam_gia'] === 'amount') {
+            $final_price -= $item['gia_tri'];
+        }
+    }
+    if ($final_price < 0) $final_price = 0;
+
+    // Lưu vào session với giá ĐÃ GIẢM
     $cart_items = [
         [
             'san_pham_id' => $item['parent_id'], 
@@ -40,34 +56,32 @@ if ($is_buy_now) {
             'mau_sac'     => $item['mau_sac'],     
             'dung_luong_ssd' => $item['dung_luong_ssd'], 
             'hinh_anh'    => $item['hinh_anh'],
-            'gia'         => $item['gia'],
+            'gia'         => $final_price, // Dùng giá đã tính toán
+            'gia_goc'     => $item['gia'], // Lưu thêm giá gốc để hiển thị nếu cần
             'so_luong'    => $qty_buy_now
         ]
     ];
-    $subtotal = $item['gia'] * $qty_buy_now;
+    
+    $subtotal = $final_price * $qty_buy_now;
     $_SESSION['buy_now_item'] = $cart_items[0]; 
 
-} else {
-    // --- LUỒNG GIỎ HÀNG BÌNH THƯỜNG ---
+}else {
+    // --- LUỒNG GIỎ HÀNG ---
     unset($_SESSION['buy_now_item']); 
     
-    // [MỚI] 1. Lấy danh sách ID sản phẩm được chọn từ URL
     $selected_ids_input = $_GET['selected_ids'] ?? '';
     $selected_ids_arr = [];
 
     if (!empty($selected_ids_input)) {
         $parts = explode(',', $selected_ids_input);
-        // Chỉ lấy số để bảo mật
         $selected_ids_arr = array_filter($parts, 'is_numeric');
     }
 
-    // [MỚI] 2. Nếu không chọn gì thì đá về giỏ hàng
     if (empty($selected_ids_arr)) {
         echo "<script>alert('Vui lòng chọn ít nhất 1 sản phẩm để thanh toán.'); window.location.href='index.php?page=cart';</script>";
         exit;
     }
 
-    // [MỚI] 3. Gọi hàm lấy giỏ hàng VỚI BỘ LỌC ID (truyền mảng ID vào tham số thứ 3)
     $cartData = getCartItemsAndTotal($pdo, $_SESSION['user_id'], $selected_ids_arr); 
     
     $cart_items = $cartData['items'];
@@ -79,13 +93,12 @@ if ($is_buy_now) {
     }
 }
 
-// 3. LẤY DATA CẦN THIẾT
+// 3. LẤY DATA NGƯỜI DÙNG & MÃ KM
 $user_profile = getUserProfile($pdo, $_SESSION['user_id']);
 $available_coupons = getAvailableCoupons($pdo); 
-
-// [MỚI] Lấy danh sách địa chỉ đã lưu của khách
 $saved_addresses = getUserAddresses($pdo, $_SESSION['user_id']);
 
+// 4. TÍNH TOÁN MÃ GIẢM GIÁ (Có Validate lại điều kiện)
 $discount = 0;
 $promo_code = '';
 $promo_message = '';
@@ -93,19 +106,32 @@ $promo_status_class = '';
 
 if (isset($_SESSION['promo']) && is_array($_SESSION['promo'])) { 
     $coupon = $_SESSION['promo'];
-    $promo_code = $coupon['code'];
-    $promo_message = "Đã áp dụng mã: " . htmlspecialchars($promo_code);
-    $promo_status_class = 'text-success'; 
+    
+    // [QUAN TRỌNG] Kiểm tra lại: Tổng tiền hiện tại có đủ điều kiện không?
+    $min_condition = isset($coupon['min_order']) ? (float)$coupon['min_order'] : 0;
 
-    if ($coupon['type'] == 'phan_tram') {
-           $discount = ($subtotal * $coupon['value']) / 100;
-    } elseif ($coupon['type'] == 'tien_mat') { 
-           $discount = $coupon['value'];
+    if ($subtotal < $min_condition) {
+        // Nếu mua ngay số lượng ít -> không đủ điều kiện -> Tự động gỡ mã
+        unset($_SESSION['promo']);
+        $promo_code = '';
+        $promo_message = '';
+    } else {
+        // Đủ điều kiện -> Tính tiền
+        $promo_code = $coupon['code'];
+        $promo_message = "Đã áp dụng mã: " . htmlspecialchars($promo_code);
+        $promo_status_class = 'text-success'; 
+
+        if ($coupon['type'] == 'phan_tram') {
+               $discount = ($subtotal * $coupon['value']) / 100;
+        } elseif ($coupon['type'] == 'tien_mat') { 
+               $discount = $coupon['value'];
+        }
+        
+        if ($discount > $subtotal) $discount = $subtotal;
     }
-    if ($discount > $subtotal) $discount = $subtotal;
 }
 
-$shipping = 0; // Miễn phí vận chuyển
+$shipping = 0; 
 $shipping_display = 'Miễn phí';
 $total = $subtotal + $shipping - $discount;
 ?>
@@ -119,10 +145,14 @@ $total = $subtotal + $shipping - $discount;
         <input type="hidden" name="shipping_cost" value="0">
         <input type="hidden" name="order_type" value="<?= $is_buy_now ? 'buy_now' : 'cart' ?>">
         <?php if (!$is_buy_now && isset($selected_ids_input)): ?>
-        <input type="hidden" name="selected_ids" value="<?= htmlspecialchars($selected_ids_input) ?>">
-    <?php endif; ?>
+            <input type="hidden" name="selected_ids" value="<?= htmlspecialchars($selected_ids_input) ?>">
+        <?php endif; ?>
+        
+        <?php if(!empty($promo_code)): ?>
+            <input type="hidden" name="coupon_code" value="<?= htmlspecialchars($promo_code) ?>">
+        <?php endif; ?>
+
         <div class="checkout-layout">
-            
             <div class="checkout-form"> 
                 <div class="form-section">
                     <div class="form-section-header"><h2>Thông tin người nhận</h2></div>
@@ -135,7 +165,6 @@ $total = $subtotal + $shipping - $discount;
                             <label>Số điện thoại *</label>
                             <input type="tel" maxlength="10" name="so_dien_thoai" class="form-input" value="<?= htmlspecialchars($user_profile['so_dien_thoai'] ?? '') ?>" required>
                         </div>
-                        
                         <div class="form-group">
                             <label>
                                 Địa chỉ nhận hàng *
@@ -145,7 +174,6 @@ $total = $subtotal + $shipping - $discount;
                             </label>
                             <input type="text" name="dia_chi" id="input-shipping-address" class="form-input" placeholder="Số nhà, tên đường, phường/xã, quận/huyện..." required>
                         </div>
-
                         <div class="form-group">
                             <label>Ghi chú</label>
                             <textarea name="ghi_chu" class="form-textarea" rows="3"></textarea>
@@ -286,21 +314,45 @@ $total = $subtotal + $shipping - $discount;
     <div class="coupon-modal">
         <div class="coupon-modal-header">
             <h3>✨ Chọn mã ưu đãi</h3>
-            <button class="close-modal-btn" id="close-coupon-modal">&times;</button>
+            <button class="close-modal-btn" id="close-coupon-modal" type="button">&times;</button>
         </div>
         <div class="coupon-modal-body">
             <?php if (empty($available_coupons)): ?>
                 <p style="text-align: center; padding: 20px; color: #666;">Không có mã giảm giá nào khả dụng.</p>
             <?php else: ?>
                 <?php foreach ($available_coupons as $cp): ?>
-                    <div class="coupon-item">
+                    <?php 
+                        $limit = (int)$cp['so_luong'];
+                        $used  = (int)$cp['da_dung'];
+                        $is_out_of_stock = ($limit > 0 && $used >= $limit);
+                        $remaining = $limit - $used;
+                        $remaining_text = ($limit > 0) ? "Còn lại: $remaining" : "Không giới hạn";
+                    ?>
+                    <div class="coupon-item <?= $is_out_of_stock ? 'disabled-coupon' : '' ?>" 
+                         style="<?= $is_out_of_stock ? 'opacity: 0.6; background: #f9f9f9;' : '' ?>">
                         <div class="coupon-info">
-                            <strong style="color: var(--color-primary); font-size: 16px;"><?= htmlspecialchars($cp['ten']) ?></strong>
-                            <p style="margin: 4px 0; font-size: 13px; color: #555;">
-                                Giảm: <?= ($cp['loai_khuyen_mai'] == 'phan_tram') ? $cp['gia_tri'] . '%' : number_format($cp['gia_tri']) . '₫' ?>
+                            <strong style="color: var(--color-primary); font-size: 16px;">
+                                <?= htmlspecialchars($cp['ten']) ?>
+                            </strong>
+                            <p style="margin: 4px 0; font-size: 13px; color: #333; font-weight: 600;">
+                                Giảm: <?= ($cp['loai_khuyen_mai'] == 'phan_tram') ? number_format($cp['gia_tri']) . '%' : number_format($cp['gia_tri']) . '₫' ?>
                             </p>
+                            <div style="font-size: 12px; color: #666;">
+                                <?php if ((float)$cp['dieu_kien'] > 0): ?>
+                                    <span><i class="fa-solid fa-circle-exclamation" style="font-size: 10px; color: #f59e0b;"></i> Đơn tối thiểu: <?= number_format($cp['dieu_kien']) ?>₫</span><br>
+                                <?php endif; ?>
+                                <?php if ($is_out_of_stock): ?>
+                                    <span style="color: #ef4444; font-weight: bold;">Đã hết lượt sử dụng</span>
+                                <?php else: ?>
+                                    <span style="color: #10b981;"><?= $remaining_text ?></span>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                        <button type="button" class="btn-apply-from-modal" data-code="<?= htmlspecialchars($cp['ten']) ?>">Chọn</button>
+                        <?php if ($is_out_of_stock): ?>
+                            <button type="button" class="btn-apply-from-modal" disabled style="background:#ccc; cursor:not-allowed;">Hết lượt</button>
+                        <?php else: ?>
+                            <button type="button" class="btn-apply-from-modal" data-code="<?= htmlspecialchars($cp['ten']) ?>">Chọn</button>
+                        <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             <?php endif; ?>
@@ -314,18 +366,26 @@ $total = $subtotal + $shipping - $discount;
         <div class="alert-modal-body" style="padding: 20px 0;">
             <p id="alert-modal-message" style="font-size: 16px; text-align: center;">Nội dung</p>
         </div>
-        <div class="alert-modal-footer"><button id="btn-alert-close" class="btn btn-primary" style="width: 100%;">OK</button></div>
+        <div class="alert-modal-footer">
+            <button id="btn-alert-close" type="button" class="btn btn-primary" style="width: 100%;">OK</button>
+        </div>
     </div>
 </div>
 
 <script>
-// --- LOGIC CHỌN ĐỊA CHỈ (MỚI) ---
+// --- 1. TỰ ĐỘNG RELOAD TRANG KHI VÀO TỪ CACHE (Back/Forward) ---
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+        console.log("Reloading from cache...");
+        window.location.reload();
+    }
+});
+
 function selectAddress(addressText) {
     const inputAddr = document.getElementById('input-shipping-address');
     const modal = document.getElementById('address-modal-overlay');
     if(inputAddr) {
         inputAddr.value = addressText;
-        // Hiệu ứng nháy nhẹ để biết đã điền
         inputAddr.style.borderColor = '#0f62fe';
         setTimeout(() => inputAddr.style.borderColor = '#e5e7eb', 500);
     }
@@ -333,108 +393,119 @@ function selectAddress(addressText) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Xử lý Modal Địa chỉ
-    const btnOpenAddr = document.getElementById('open-address-modal');
-    const btnCloseAddr = document.getElementById('close-address-modal');
-    const modalAddr = document.getElementById('address-modal-overlay');
-
-    if(btnOpenAddr) {
-        btnOpenAddr.addEventListener('click', (e) => {
-            e.preventDefault();
-            modalAddr.style.display = 'flex';
-        });
-    }
-    if(btnCloseAddr) {
-        btnCloseAddr.addEventListener('click', () => { modalAddr.style.display = 'none'; });
-    }
-    // Đóng khi click ngoài
-    window.addEventListener('click', (e) => {
-        if (e.target === modalAddr) modalAddr.style.display = 'none';
-        if (e.target === document.getElementById('coupon-modal-overlay')) document.getElementById('coupon-modal-overlay').style.display = 'none';
-    });
-
-    // 2. Validate Form & Payment Method (Giữ nguyên logic cũ)
-    const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
-    paymentRadios.forEach(radio => {
-        radio.addEventListener('change', () => {
-            paymentRadios.forEach(r => {
-                if(r.checked) r.closest('.payment-method-box').classList.add('active');
-                else r.closest('.payment-method-box').classList.remove('active');
-            });
-        });
-    });
-
-    const checkoutForm = document.getElementById('checkout-form');
-    if (checkoutForm) {
-        checkoutForm.addEventListener('submit', function(e) {
-            let errors = [];
-            const name = document.querySelector('input[name="ho_ten"]').value.trim();
-            const phone = document.querySelector('input[name="so_dien_thoai"]').value.trim();
-            const address = document.querySelector('input[name="dia_chi"]').value.trim();
-            
-            if (name.length < 2) errors.push("Họ tên quá ngắn.");
-            const phoneRegex = /^(03|05|07|08|09)+([0-9]{8})$/;
-            if (!phoneRegex.test(phone)) errors.push("Số điện thoại không hợp lệ.");
-            if (address.length < 5) errors.push("Vui lòng nhập địa chỉ chi tiết.");
-
-            if (errors.length > 0) {
-                e.preventDefault();
-                alert("Lỗi nhập liệu:\n- " + errors.join("\n- "));
-            } else {
-                if(!confirm("Xác nhận đặt hàng?")) e.preventDefault();
-            }
-        });
-    }
-
-    // 3. Logic Mã giảm giá (Giữ nguyên logic AJAX cũ của bạn)
-    const btnOpenCoupon = document.getElementById('open-coupon-modal');
-    const btnCloseCoupon = document.getElementById('close-coupon-modal');
+    
+    // --- KHỞI TẠO BIẾN ---
     const couponOverlay = document.getElementById('coupon-modal-overlay');
     const alertOverlay = document.getElementById('alert-modal-overlay');
     const btnAlertClose = document.getElementById('btn-alert-close');
-    const couponInput = document.getElementById('coupon-input');
-    const btnApplyManual = document.getElementById('btn-apply-coupon'); 
-    const btnRemoveManual = document.getElementById('btn-remove-coupon'); 
-    let needReload = false;
+    const addressOverlay = document.getElementById('address-modal-overlay');
 
-    if (btnOpenCoupon) btnOpenCoupon.addEventListener('click', (e) => { e.preventDefault(); couponOverlay.style.display = 'flex'; });
-    if (btnCloseCoupon) btnCloseCoupon.addEventListener('click', () => { couponOverlay.style.display = 'none'; });
+    function bindClick(id, callback) {
+        const el = document.getElementById(id);
+        if(el) el.addEventListener('click', callback);
+    }
 
-    if (btnAlertClose) {
+    // --- XỬ LÝ CLICK ---
+    bindClick('open-address-modal', (e) => { e.preventDefault(); addressOverlay.style.display = 'flex'; });
+    bindClick('close-address-modal', () => { addressOverlay.style.display = 'none'; });
+    bindClick('open-coupon-modal', (e) => { e.preventDefault(); couponOverlay.style.display = 'flex'; });
+    bindClick('close-coupon-modal', () => { couponOverlay.style.display = 'none'; });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === addressOverlay) addressOverlay.style.display = 'none';
+        if (e.target === couponOverlay) couponOverlay.style.display = 'none';
+        if (e.target === alertOverlay && btnAlertClose) btnAlertClose.click(); 
+    });
+
+    // --- XỬ LÝ AJAX COUPON (QUAN TRỌNG) ---
+    let successReload = false;
+
+    if(btnAlertClose) {
         btnAlertClose.addEventListener('click', function() {
             alertOverlay.style.display = 'none';
-            if (needReload) window.location.reload(); 
+            if (successReload) window.location.reload(); 
         });
     }
 
     async function handleCoupon(code, action) {
-        couponOverlay.style.display = 'none';
+        if(couponOverlay) couponOverlay.style.display = 'none';
+
         const formData = new URLSearchParams();
         formData.append('action', action);
         if (code) formData.append('code', code);
 
         try {
             const response = await fetch('cart-handler.php', { method: 'POST', body: formData });
-            const data = await response.json();
+            const text = await response.text();
+            let data;
             
-            document.getElementById('alert-modal-title').textContent = data.status === 'success' ? 'Thành công' : 'Thất bại';
-            document.getElementById('alert-modal-message').textContent = data.message;
-            document.getElementById('alert-modal-box').className = 'alert-modal-box ' + (data.status === 'success' ? 'success' : 'error');
+            try { 
+                data = JSON.parse(text); 
+            } catch (e) {
+                console.error("JSON Error:", text);
+                alert("Lỗi dữ liệu từ hệ thống.");
+                return;
+            }
+
+            const titleEl = document.getElementById('alert-modal-title');
+            const msgEl = document.getElementById('alert-modal-message');
+            const boxEl = document.getElementById('alert-modal-box');
+
+            if(titleEl) titleEl.textContent = data.status === 'success' ? 'Thành công' : 'Thông báo';
+            if(msgEl) msgEl.textContent = data.message;
+            if(boxEl) boxEl.className = 'alert-modal-box ' + (data.status === 'success' ? 'success' : 'error');
             
-            alertOverlay.style.display = 'flex';
-            if(data.status === 'success') needReload = true;
-        } catch (err) { console.error(err); }
+            successReload = (data.status === 'success');
+            if(alertOverlay) alertOverlay.style.display = 'flex';
+
+        } catch (err) { 
+            console.error(err);
+            alert('Lỗi kết nối đến máy chủ!');
+        }
     }
 
-    if (btnApplyManual) btnApplyManual.addEventListener('click', (e) => { e.preventDefault(); handleCoupon(couponInput.value, 'apply_coupon'); });
-    if (btnRemoveManual) btnRemoveManual.addEventListener('click', (e) => { e.preventDefault(); handleCoupon(null, 'remove_coupon'); });
+    const btnApply = document.getElementById('btn-apply-coupon');
+    const btnRemove = document.getElementById('btn-remove-coupon');
+    const inputC = document.getElementById('coupon-input');
+
+    if(btnApply) btnApply.addEventListener('click', (e) => { 
+        e.preventDefault(); handleCoupon(inputC.value, 'apply_coupon'); 
+    });
+    
+    if(btnRemove) btnRemove.addEventListener('click', (e) => { 
+        e.preventDefault(); handleCoupon(null, 'remove_coupon'); 
+    });
 
     document.querySelectorAll('.btn-apply-from-modal').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
-            handleCoupon(this.getAttribute('data-code'), 'apply_coupon');
+            if(!this.hasAttribute('disabled')) {
+                handleCoupon(this.getAttribute('data-code'), 'apply_coupon');
+            }
         });
     });
+    
+    // --- VALIDATE FORM ---
+    const checkoutForm = document.getElementById('checkout-form');
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', function(e) {
+            const name = document.querySelector('input[name="ho_ten"]').value.trim();
+            const phone = document.querySelector('input[name="so_dien_thoai"]').value.trim();
+            const address = document.querySelector('input[name="dia_chi"]').value.trim();
+            
+            let errors = [];
+            if (name.length < 2) errors.push("Họ tên quá ngắn.");
+            if (address.length < 5) errors.push("Địa chỉ quá ngắn.");
+            if (!/^(03|05|07|08|09)+([0-9]{8})$/.test(phone)) errors.push("Số điện thoại không đúng định dạng.");
+
+            if (errors.length > 0) {
+                e.preventDefault();
+                alert("Vui lòng kiểm tra lại:\n- " + errors.join("\n- "));
+                return;
+            }
+            if(!confirm("Xác nhận đặt hàng?")) e.preventDefault();
+        });
+    }
 });
 </script>
 

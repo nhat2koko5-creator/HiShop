@@ -25,9 +25,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // --- LOGIC TỰ ĐỘNG CẬP NHẬT TIỀN (CHUẨN) ---
         
         // A. Giao thành công -> Auto "Đã thanh toán"
-        if ($new_status == 'Đã giao hàng') {
-             $pdo->prepare("UPDATE don_hang SET trang_thai_thanh_toan = 'Đã thanh toán' WHERE id = ?")->execute([$order_id]);
-        }
+       if ($new_status == 'Đã giao hàng') {
+     // Cập nhật trạng thái tiền và NGÀY HOÀN THÀNH
+     $pdo->prepare("UPDATE don_hang SET trang_thai_thanh_toan = 'Đã thanh toán', ngay_hoan_thanh = NOW() WHERE id = ?")->execute([$order_id]);
+}
         
         // B. Hủy đơn -> Chỉ hoàn tiền NẾU trước đó đã thanh toán
         if ($new_status == 'Đã hủy') {
@@ -94,7 +95,7 @@ function getStatusColor($status) {
 <link rel="stylesheet" href="../assets/css/admin/orders-detail.css">
 
 <div class="admin-page-content admin-detail-page">
-    
+
     <div class="top-action-bar no-print">
         <a href="index.php?page=orders_list" class="btn-back">
             <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách đơn hàng
@@ -105,21 +106,23 @@ function getStatusColor($status) {
     </div>
 
     <div class="od-layout">
-        
+
         <div class="col-left">
             <div class="od-card">
                 <div class="od-card-header">
                     <div>
                         <h2 class="order-main-title">
                             Đơn hàng #<?= $order['id'] ?>
-                            <span class="status-badge" style="background-color: <?= getStatusColor($order['trang_thai_don_hang']) ?>; margin-left: 10px;">
+                            <span class="status-badge"
+                                style="background-color: <?= getStatusColor($order['trang_thai_don_hang']) ?>; margin-left: 10px;">
                                 <?= $order['trang_thai_don_hang'] ?>
                             </span>
                         </h2>
                         <div class="order-sub-meta">
                             <span><?= date('H:i d/m/Y', strtotime($order['ngay_dat'])) ?></span>
                             <span style="color: #cbd5e1;">|</span>
-                            <span>PTTT: <strong style="color: #334155;"><?= $order['phuong_thuc_thanh_toan'] ?? 'COD' ?></strong></span>
+                            <span>PTTT: <strong
+                                    style="color: #334155;"><?= $order['phuong_thuc_thanh_toan'] ?? 'COD' ?></strong></span>
                         </div>
                     </div>
                     <div class="badge-count"><?= count($items) ?> sản phẩm</div>
@@ -146,16 +149,18 @@ function getStatusColor($status) {
                                         <div class="prod-info">
                                             <div><?= htmlspecialchars($item['ten_san_pham']) ?></div>
                                             <?php if ($item['mau_sac'] || $item['dung_luong_ssd']): ?>
-                                                <span class="prod-variant">
-                                                    <?= $item['mau_sac'] ?> <?= $item['dung_luong_ssd'] ? '• '.$item['dung_luong_ssd'] : '' ?>
-                                                </span>
+                                            <span class="prod-variant">
+                                                <?= $item['mau_sac'] ?>
+                                                <?= $item['dung_luong_ssd'] ? '• '.$item['dung_luong_ssd'] : '' ?>
+                                            </span>
                                             <?php endif; ?>
                                         </div>
                                     </div>
                                 </td>
                                 <td style="text-align: right;"><?= number_format($item['don_gia']) ?></td>
                                 <td style="text-align: center;">x<?= $item['so_luong'] ?></td>
-                                <td style="text-align: right; font-weight: 600;"><?= number_format($item['don_gia'] * $item['so_luong']) ?>đ</td>
+                                <td style="text-align: right; font-weight: 600;">
+                                    <?= number_format($item['don_gia'] * $item['so_luong']) ?>đ</td>
                             </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -179,8 +184,10 @@ function getStatusColor($status) {
                     </div>
 
                     <?php if(!empty($order['ghi_chu'])): ?>
-                    <div style="margin-top: 20px; padding: 15px; background: #fffbeb; border: 1px dashed #f59e0b; border-radius: 6px; font-size: 13px; color: #b45309;">
-                        <strong><i class="fa-solid fa-note-sticky"></i> Ghi chú:</strong> <?= htmlspecialchars($order['ghi_chu']) ?>
+                    <div
+                        style="margin-top: 20px; padding: 15px; background: #fffbeb; border: 1px dashed #f59e0b; border-radius: 6px; font-size: 13px; color: #b45309;">
+                        <strong><i class="fa-solid fa-note-sticky"></i> Ghi chú:</strong>
+                        <?= htmlspecialchars($order['ghi_chu']) ?>
                     </div>
                     <?php endif; ?>
 
@@ -240,7 +247,7 @@ function getStatusColor($status) {
                                 <p class="t-desc">Lý do: <strong><?= $order['ly_do_huy'] ?></strong></p>
                             </li>
                             <?php endif; ?>
-                            
+
                             <?php if($order['trang_thai_thanh_toan'] == 'Đã hoàn tiền'): ?>
                             <li class="timeline-item danger">
                                 <div class="timeline-dot"></div>
@@ -255,7 +262,7 @@ function getStatusColor($status) {
         </div>
 
         <div class="col-right no-print">
-            
+
             <div class="od-card">
                 <div class="od-card-header"><span class="od-card-title">Khách hàng</span></div>
                 <div class="od-card-body">
@@ -266,36 +273,46 @@ function getStatusColor($status) {
                             <span>ID: #<?= $order['nguoi_dung_id'] ?></span>
                         </div>
                     </div>
-                    <div class="contact-row"><i class="fa-solid fa-phone"></i> <?= htmlspecialchars($order['sdt_nguoi_nhan']) ?></div>
-                    <div class="contact-row"><i class="fa-solid fa-location-dot"></i> <?= htmlspecialchars($order['dia_chi_giao_hang']) ?></div>
-                    <div class="contact-row"><i class="fa-solid fa-envelope"></i> <?= htmlspecialchars($order['user_email'] ?? '---') ?></div>
+                    <div class="contact-row"><i class="fa-solid fa-phone"></i>
+                        <?= htmlspecialchars($order['sdt_nguoi_nhan']) ?></div>
+                    <div class="contact-row"><i class="fa-solid fa-location-dot"></i>
+                        <?= htmlspecialchars($order['dia_chi_giao_hang']) ?></div>
+                    <div class="contact-row"><i class="fa-solid fa-envelope"></i>
+                        <?= htmlspecialchars($order['user_email'] ?? '---') ?></div>
                 </div>
             </div>
 
             <div class="od-card" style="border-top: 3px solid #4f46e5;">
                 <div class="od-card-header"><span class="od-card-title">Xử lý đơn hàng</span></div>
                 <div class="od-card-body">
-                    
+
                     <form method="POST" id="updateStatusForm">
                         <input type="hidden" name="update_status" value="1">
                         <input type="hidden" name="cancel_reason" id="hiddenCancelReason">
 
                         <div class="form-group" style="margin-bottom: 0;">
-                            <label style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:6px;">TRẠNG THÁI ĐƠN</label>
+                            <label
+                                style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:6px;">TRẠNG
+                                THÁI ĐƠN</label>
                             <select name="order_status" class="status-select" id="statusSelect">
                                 <?php foreach ($status_list as $st): ?>
-                                    <option value="<?= $st ?>" <?= $order['trang_thai_don_hang'] == $st ? 'selected' : '' ?>><?= $st ?></option>
+                                <option value="<?= $st ?>"
+                                    <?= $order['trang_thai_don_hang'] == $st ? 'selected' : '' ?>><?= $st ?></option>
                                 <?php endforeach; ?>
                             </select>
-                            
-                            <button type="button" class="btn-primary" style="margin-top: 10px;" onclick="handleStatusUpdate()">
+
+                            <button type="button" class="btn-primary" style="margin-top: 10px;"
+                                onclick="handleStatusUpdate()">
                                 <i class="fa-solid fa-arrows-rotate"></i> Cập nhật
                             </button>
                         </div>
                     </form>
 
-                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0; font-size: 13px; color: #64748b;">
-                        <div>Thanh toán: <strong style="color: <?= $order['trang_thai_thanh_toan']=='Đã thanh toán'?'#10b981':'#f59e0b' ?>"><?= $order['trang_thai_thanh_toan'] ?></strong></div>
+                    <div
+                        style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0; font-size: 13px; color: #64748b;">
+                        <div>Thanh toán: <strong
+                                style="color: <?= $order['trang_thai_thanh_toan']=='Đã thanh toán'?'#10b981':'#f59e0b' ?>"><?= $order['trang_thai_thanh_toan'] ?></strong>
+                        </div>
                         <div style="font-size: 11px; margin-top: 4px;">*Trạng thái tiền sẽ tự động cập nhật.</div>
                     </div>
 
@@ -311,8 +328,9 @@ function getStatusColor($status) {
             <h3>Xác nhận hủy đơn hàng</h3>
         </div>
         <div class="am-body">
-            
-            <p id="modalWarningText" style="display:none; color:#ef4444; background:#fef2f2; padding:10px; border:1px solid #fecaca; border-radius:6px; margin-bottom:15px; font-weight:600; text-align:center;">
+
+            <p id="modalWarningText"
+                style="display:none; color:#ef4444; background:#fef2f2; padding:10px; border:1px solid #fecaca; border-radius:6px; margin-bottom:15px; font-weight:600; text-align:center;">
                 ⚠️ Đơn hàng này ĐÃ THANH TOÁN.<br>Hãy chắc chắn bạn đã hoàn tiền cho khách trước khi hủy!
             </p>
 
@@ -324,11 +342,13 @@ function getStatusColor($status) {
                 <button type="button" class="tag-reason" onclick="setReason('Hết hàng trong kho')">Hết hàng</button>
                 <button type="button" class="tag-reason" onclick="setReason('Khách yêu cầu hủy')">Khách hủy</button>
                 <button type="button" class="tag-reason" onclick="setReason('Sai thông tin giá')">Sai giá</button>
-                <button type="button" class="tag-reason" onclick="setReason('Khách không nghe máy')">Ko nghe máy</button>
+                <button type="button" class="tag-reason" onclick="setReason('Khách không nghe máy')">Ko nghe
+                    máy</button>
                 <button type="button" class="tag-reason" onclick="setReason('Boom hàng')">Boom hàng</button>
             </div>
 
-            <textarea id="modalReasonInput" class="am-textarea" placeholder="Hoặc nhập lý do chi tiết tại đây..."></textarea>
+            <textarea id="modalReasonInput" class="am-textarea"
+                placeholder="Hoặc nhập lý do chi tiết tại đây..."></textarea>
         </div>
         <div class="am-footer">
             <button type="button" class="btn-close-modal" onclick="closeCancelModal()">Đóng</button>
@@ -338,47 +358,47 @@ function getStatusColor($status) {
 </div>
 
 <script>
-    // [MỚI] Hàm điền lý do nhanh
-    function setReason(text) {
-        var input = document.getElementById('modalReasonInput');
-        input.value = text;
-        input.focus(); // Focus vào ô text để admin có thể sửa thêm nếu muốn
-    }
+// [MỚI] Hàm điền lý do nhanh
+function setReason(text) {
+    var input = document.getElementById('modalReasonInput');
+    input.value = text;
+    input.focus(); // Focus vào ô text để admin có thể sửa thêm nếu muốn
+}
 
-    function handleStatusUpdate() {
-        var statusSelect = document.getElementById('statusSelect');
-        var selectedValue = statusSelect.value;
-        var currentPaymentStatus = "<?= $order['trang_thai_thanh_toan'] ?>";
+function handleStatusUpdate() {
+    var statusSelect = document.getElementById('statusSelect');
+    var selectedValue = statusSelect.value;
+    var currentPaymentStatus = "<?= $order['trang_thai_thanh_toan'] ?>";
 
-        if (selectedValue === 'Đã hủy') {
-            if (currentPaymentStatus === 'Đã thanh toán') {
-                document.getElementById('modalWarningText').style.display = 'block';
-            } else {
-                document.getElementById('modalWarningText').style.display = 'none';
-            }
-            document.getElementById('adminCancelModal').classList.add('show');
+    if (selectedValue === 'Đã hủy') {
+        if (currentPaymentStatus === 'Đã thanh toán') {
+            document.getElementById('modalWarningText').style.display = 'block';
         } else {
-            document.getElementById('updateStatusForm').submit();
+            document.getElementById('modalWarningText').style.display = 'none';
         }
-    }
-
-    function closeCancelModal() { 
-        document.getElementById('adminCancelModal').classList.remove('show'); 
-    }
-
-    function submitCancelForm() {
-        var reason = document.getElementById('modalReasonInput').value.trim();
-        if (reason === "") {
-            alert("Vui lòng chọn hoặc nhập lý do hủy đơn!");
-            return;
-        }
-        document.getElementById('hiddenCancelReason').value = reason;
+        document.getElementById('adminCancelModal').classList.add('show');
+    } else {
         document.getElementById('updateStatusForm').submit();
     }
+}
 
-    window.onclick = function(event) { 
-        if (event.target == document.getElementById('adminCancelModal')) {
-            closeCancelModal();
-        }
+function closeCancelModal() {
+    document.getElementById('adminCancelModal').classList.remove('show');
+}
+
+function submitCancelForm() {
+    var reason = document.getElementById('modalReasonInput').value.trim();
+    if (reason === "") {
+        alert("Vui lòng chọn hoặc nhập lý do hủy đơn!");
+        return;
     }
+    document.getElementById('hiddenCancelReason').value = reason;
+    document.getElementById('updateStatusForm').submit();
+}
+
+window.onclick = function(event) {
+    if (event.target == document.getElementById('adminCancelModal')) {
+        closeCancelModal();
+    }
+}
 </script>

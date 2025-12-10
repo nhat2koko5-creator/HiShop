@@ -1,0 +1,244 @@
+/* FILE: assets/css/admin/reports.css */
+
+/* 1. LAYOUT */
+.admin-page-container {
+  padding: 20px 30px;
+  background-color: #f8f9fc;
+  min-height: 100vh;
+  font-family: "Inter", sans-serif;
+}
+.page-header-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-header-title i {
+  color: #4f46e5;
+}
+
+/* 2. CARD BOX & TOOLBAR */
+.main-card-box {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.03);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+.chart-header {
+  padding: 15px 25px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.box-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #334155;
+  margin: 0;
+}
+
+.filter-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.date-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8f9fc;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+.label-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+}
+.form-control-date {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: #334155;
+}
+
+/* 3. BUTTONS */
+.btn-action {
+  padding: 9px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  transition: 0.2s;
+}
+.btn-filter {
+  background: #4f46e5;
+  color: #fff;
+}
+.btn-filter:hover {
+  background: #4338ca;
+}
+.btn-print {
+  background: #fff;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+.btn-print:hover {
+  background: #f1f5f9;
+}
+
+/* 4. STATS GRID (3 CỘT) */
+.stats-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 25px;
+}
+.stat-card {
+  background: #fff;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  border: 1px solid #f1f5f9;
+  transition: transform 0.2s;
+}
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  flex-shrink: 0;
+}
+.bg-green {
+  background: #10b981;
+}
+.bg-purple {
+  background: #8b5cf6;
+}
+.bg-orange {
+  background: #f97316;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+.stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.stat-number {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1e293b;
+}
+.text-success {
+  color: #10b981;
+}
+
+/* 5. TABLE */
+.table-responsive {
+  overflow-x: auto;
+}
+.table-custom {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table-custom th {
+  background: #f8fafc;
+  padding: 15px 25px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e2e8f0;
+}
+.table-custom td {
+  padding: 16px 25px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 14px;
+  color: #334155;
+  vertical-align: middle;
+}
+.table-footer-row td {
+  background: #f8fafc;
+  font-weight: 700;
+  border-top: 2px solid #e2e8f0;
+  font-size: 15px;
+}
+
+/* 6. HELPERS */
+.text-center {
+  text-align: center;
+}
+.text-end {
+  text-align: right;
+}
+.text-muted {
+  color: #94a3b8;
+}
+.fw-bold {
+  font-weight: 700;
+}
+
+@media (max-width: 1024px) {
+  .stats-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .stats-grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .filter-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+@media print {
+  .admin-sidebar,
+  .admin-topbar,
+  .no-print {
+    display: none !important;
+  }
+  .admin-page-container {
+    margin: 0;
+    padding: 0;
+  }
+  .main-card-box {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}

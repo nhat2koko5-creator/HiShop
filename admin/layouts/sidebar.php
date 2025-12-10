@@ -1,59 +1,87 @@
 <?php
 // admin/layouts/sidebar.php
 
-// Lấy trang hiện tại để xử lý Active Class
+// 1. Lấy trang hiện tại
 $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
 
-// Hàm kiểm tra active (Trả về class 'active')
+// 2. Hàm kiểm tra active đơn giản
 function isActive($name, $currentPage) {
     return $name === $currentPage ? 'active' : '';
 }
 
-// Kiểm tra nhóm Warehouse để mở rộng menu con
+// 3. Xử lý Logic mở rộng Menu con (Dropdown)
+// Nhóm Sản phẩm (Gồm: Danh sách, Thêm mới, Giảm giá)
+$product_pages = ['products_list', 'product_form', 'product_sale'];
+$is_product_group = in_array($page, $product_pages);
+
+// Nhóm Kho hàng (Gồm: Danh sách, Nhập, Xuất, Lịch sử)
 $warehouse_pages = ['warehouse_list', 'warehouse_detail', 'warehouse_import', 'warehouse_export', 'warehouse_history'];
 $is_warehouse_group = in_array($page, $warehouse_pages);
+
+// Nhóm Hệ thống (Khách hàng, Báo cáo...)
+$system_pages = ['users_list', 'reports'];
+$is_system_group = in_array($page, $system_pages);
 ?>
-<link rel="stylesheet" href="../assets/css/admin/style-admin.css">
+
 <aside class="admin-sidebar">
     <div class="sidebar-brand">
-        <img src="../assets/img/logo.png" alt="Hishop" class="brand-logo">
+        <img src="../assets/img/logo.png" alt="Hishop" class="brand-logo" style="filter: brightness(0) invert(1);">
         <span class="brand-text">HiShop Admin</span>
     </div>
 
     <div class="sidebar-menu">
+        
         <div class="nav-group-title">Tổng quan</div>
         <ul class="nav-group">
             <li>
                 <a href="index.php?page=dashboard" class="nav-link <?php echo isActive('dashboard', $page); ?>">
-                    <i class="fas fa-th-large"></i>
-                    <span>Dashboard</span>
+                    <div class="nav-icon"><i class="fas fa-th-large"></i></div>
+                    <span class="nav-text">Trang Chủ</span>
                 </a>
             </li>
         </ul>
 
-        <div class="nav-group-title">Kinh doanh</div>
+        <div class="nav-group-title">Quản lý bán hàng</div>
         <ul class="nav-group">
+            
             <li>
                 <a href="index.php?page=orders_list" class="nav-link <?php echo isActive('orders_list', $page) . isActive('order_detail', $page); ?>">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span>Đơn hàng</span>
+                    <div class="nav-icon"><i class="fas fa-shopping-cart"></i></div>
+                    <span class="nav-text">Đơn hàng</span>
                 </a>
             </li>
-            <li>
-                <a href="index.php?page=products_list" class="nav-link <?php echo isActive('products_list', $page) . isActive('product_form', $page); ?>">
-                    <i class="fas fa-box-open"></i>
-                    <span>Sản phẩm</span>
+
+            <li class="has-submenu <?php echo $is_product_group ? 'open' : ''; ?>">
+                <a href="javascript:void(0)" class="nav-link toggle-submenu <?php echo $is_product_group ? 'active-parent' : ''; ?>">
+                    <div class="nav-icon"><i class="fas fa-box-open"></i></div>
+                    <span class="nav-text">Sản phẩm</span>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
                 </a>
+                <ul class="submenu">
+                    <li>
+                        <a href="index.php?page=products_list" class="<?php echo isActive('products_list', $page) . isActive('product_form', $page); ?>">
+                            Danh sách sản phẩm
+                        </a>
+                    </li>
+                    <li>
+                        <a href="index.php?page=product_sale" class="<?php echo isActive('product_sale', $page); ?>">
+                            Sản phẩm giảm giá
+                        </a>
+                    </li>
+                </ul>
             </li>
+
             <li>
                 <a href="index.php?page=categories_list" class="nav-link <?php echo isActive('categories_list', $page); ?>">
-                    <i class="fas fa-layer-group"></i> <span>Danh mục</span>
+                    <div class="nav-icon"><i class="fas fa-layer-group"></i></div>
+                    <span class="nav-text">Danh mục</span>
                 </a>
             </li>
+            
             <li>
                 <a href="index.php?page=promos_list" class="nav-link <?php echo isActive('promos_list', $page); ?>">
-                    <i class="fas fa-ticket-alt"></i>
-                    <span>Khuyến mãi</span>
+                    <div class="nav-icon"><i class="fas fa-ticket-alt"></i></div>
+                    <span class="nav-text">Mã khuyến mãi</span>
                 </a>
             </li>
         </ul>
@@ -61,12 +89,11 @@ $is_warehouse_group = in_array($page, $warehouse_pages);
         <div class="nav-group-title">Quản lý Kho</div>
         <ul class="nav-group">
             <li class="has-submenu <?php echo $is_warehouse_group ? 'open' : ''; ?>">
-                <a href="javascript:void(0)" class="nav-link toggle-submenu">
-                    <i class="fas fa-warehouse"></i>
-                    <span>Kho hàng</span>
+                <a href="javascript:void(0)" class="nav-link toggle-submenu <?php echo $is_warehouse_group ? 'active-parent' : ''; ?>">
+                    <div class="nav-icon"><i class="fas fa-warehouse"></i></div>
+                    <span class="nav-text">Kho hàng</span>
                     <i class="fas fa-chevron-right arrow-icon"></i>
                 </a>
-                
                 <ul class="submenu">
                     <li>
                         <a href="index.php?page=warehouse_list" class="<?php echo isActive('warehouse_list', $page); ?>">
@@ -75,12 +102,12 @@ $is_warehouse_group = in_array($page, $warehouse_pages);
                     </li>
                     <li>
                         <a href="index.php?page=warehouse_import" class="<?php echo isActive('warehouse_import', $page); ?>">
-                            Nhập kho
+                            Tạo phiếu nhập
                         </a>
                     </li>
                     <li>
                         <a href="index.php?page=warehouse_export" class="<?php echo isActive('warehouse_export', $page); ?>">
-                            Xuất kho
+                            Tạo phiếu xuất
                         </a>
                     </li>
                     <li>
@@ -96,36 +123,34 @@ $is_warehouse_group = in_array($page, $warehouse_pages);
         <ul class="nav-group">
             <li>
                 <a href="index.php?page=users_list" class="nav-link <?php echo isActive('users_list', $page); ?>">
-                    <i class="fas fa-users"></i>
-                    <span>Khách hàng</span>
+                    <div class="nav-icon"><i class="fas fa-users"></i></div>
+                    <span class="nav-text">Người Dùng</span>
                 </a>
             </li>
             <li>
-                <a href="index.php?page=settings" class="nav-link <?php echo isActive('settings', $page); ?>">
-                    <i class="fas fa-cog"></i>
-                    <span>Cài đặt</span>
+                <a href="index.php?page=reports" class="nav-link <?php echo isActive('reports', $page); ?>">
+                    <div class="nav-icon"><i class="fas fa-chart-line"></i></div>
+                    <span class="nav-text">Báo cáo doanh thu</span>
                 </a>
             </li>
         </ul>
     </div>
 
     <div class="admin-user">
-        <a href="../client/index.php" target="_blank" style="color: #94a3b8; font-size: 13px; font-weight: 500; display: block;">
-            <i class="fas fa-external-link-alt" style="margin-right: 5px;"></i> Xem Website
+        <a href="../client/index.php" target="_blank" class="btn-view-web">
+            <i class="fas fa-globe" style="margin-right: 8px;"></i> Xem Website
         </a>
     </div>
 </aside>
 
 <script>
+    // Script xử lý đóng mở menu con
     document.addEventListener("DOMContentLoaded", function() {
         const toggles = document.querySelectorAll('.toggle-submenu');
-        
         toggles.forEach(toggle => {
             toggle.addEventListener('click', function(e) {
                 e.preventDefault();
                 const parentLi = this.parentElement;
-                
-                // Toggle class 'open' để CSS xử lý animation
                 parentLi.classList.toggle('open');
             });
         });

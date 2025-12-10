@@ -24,24 +24,24 @@ if (isset($_GET['id'])) {
     $stmt->execute([$id]);
     $product = $stmt->fetch();
     
-    if($product) {
-        $isEdit = true;
-        // Lấy biến thể
-        $stmt2 = $pdo->prepare("SELECT * FROM bien_the_san_pham WHERE san_pham_id=?");
-        $stmt2->execute([$id]);
-        $variants = $stmt2->fetchAll();
-
-        // [MỚI] Lấy thông số kỹ thuật hiện tại của sản phẩm
-        // Join bảng san_pham_thong_so với thong_so
-        $stmt3 = $pdo->prepare("
-            SELECT ts.* FROM san_pham_thong_so spts 
-            JOIN thong_so ts ON spts.thong_so_id = ts.id 
-            WHERE spts.san_pham_id = ? 
-            LIMIT 1
-        ");
-        $stmt3->execute([$id]);
-        $current_specs = $stmt3->fetch(PDO::FETCH_ASSOC);
-    }
+if($product) {
+    $isEdit = true;
+    
+    // [SỬA] Lấy biến thể KÈM GIÁ NHẬP GẦN NHẤT
+    $stmt2 = $pdo->prepare("
+        SELECT bt.*, 
+        COALESCE((
+            SELECT don_gia FROM chi_tiet_phieu_kho ctpk 
+            JOIN phieu_kho pk ON ctpk.phieu_kho_id = pk.id 
+            WHERE ctpk.bien_the_id = bt.id AND pk.loai_phieu = 'nhap' 
+            ORDER BY pk.ngay_tao DESC LIMIT 1
+        ), 0) as gia_nhap_gan_nhat
+        FROM bien_the_san_pham bt 
+        WHERE bt.san_pham_id=?
+    ");
+    $stmt2->execute([$id]);
+    $variants = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+}
 }
 ?>
 
@@ -68,10 +68,10 @@ if (isset($_GET['id'])) {
                         <label class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
                         <input type="text" name="ten" class="form-control" value="<?= htmlspecialchars($product['ten'] ?? '') ?>" required placeholder="VD: MacBook Air M2 2023">
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Mô tả chi tiết</label>
-                        <textarea name="mo_ta" class="form-control"><?= htmlspecialchars($product['mo_ta'] ?? '') ?></textarea>
-                    </div>
+                   <div class="form-group">
+                    <label class="form-label">Mô tả chi tiết </label>
+                    <textarea name="mo_ta_chi_tiet" class="form-control" rows="15" placeholder="Nhập bài đánh giá chi tiết sản phẩm tại đây..."><?= htmlspecialchars($product['mo_ta_chi_tiet'] ?? '') ?></textarea>
+                </div>
                 </div>
 
                 <div class="card">
@@ -188,7 +188,13 @@ function addVariant(data = null) {
     const mau = data ? data.mau_sac : '';
     const ssd = data ? data.dung_luong_ssd : '';
     const gia = data ? data.gia : '';
-    const ton = data ? data.so_luong_ton : '';
+    // Tồn kho hiển thị (nếu thêm mới thì là 0)
+    const ton = data ? data.so_luong_ton : '0'; 
+    // Giá nhập tham khảo
+    const giaNhap = (data && data.gia_nhap_gan_nhat > 0) 
+                    ? new Intl.NumberFormat('vi-VN').format(data.gia_nhap_gan_nhat) + 'đ' 
+                    : 'Chưa có';
+
     const imgName = data ? data.hinh_anh : ''; 
     const imgUrl = imgName ? '/HiShop/assets/img/products/' + imgName : '';
 
@@ -205,10 +211,23 @@ function addVariant(data = null) {
             <div style="font-size:11px; color:#666; margin-top:4px;">Ảnh</div>
         </div>
         <div class="v-row">
-            <div class="v-col"><label class="form-label">Màu sắc</label><input type="text" class="form-control v_mau" value="${mau}" required></div>
-            <div class="v-col"><label class="form-label">SSD</label><input type="text" class="form-control v_ssd" value="${ssd}" required></div>
-            <div class="v-col"><label class="form-label">Giá</label><input type="number" class="form-control v_gia" value="${gia}" required></div>
-            <div class="v-col"><label class="form-label">Kho</label><input type="number" class="form-control v_ton" value="${ton}" required></div>
+            <div class="v-col">
+                <label class="form-label">Màu sắc</label>
+                <input type="text" class="form-control v_mau" value="${mau}" required placeholder="VD: Đen">
+            </div>
+            <div class="v-col">
+                <label class="form-label">Cấu hình (SSD/RAM)</label>
+                <input type="text" class="form-control v_ssd" value="${ssd}" required placeholder="VD: 512GB">
+            </div>
+            <div class="v-col">
+                <label class="form-label">Giá bán <small style="color:#d97706; font-weight:normal;">(Giá nhập: ${giaNhap})</small></label>
+                <input type="number" class="form-control v_gia" value="${gia}" required placeholder="Nhập giá bán">
+            </div>
+            <div class="v-col" style="flex: 0 0 100px;">
+                <label class="form-label">Tồn kho</label>
+                <input type="text" class="form-control v_ton" value="${ton}" readonly style="background-color: #f1f5f9; color: #64748b; cursor: not-allowed;">
+                <small style="font-size:10px; color:#64748b;">(Quản lý tại Nhập kho)</small>
+            </div>
         </div>
     </div>`;
     

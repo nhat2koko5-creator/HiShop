@@ -20,10 +20,15 @@ function getActiveCategories(PDO $pdo) {
 /* =============================
    LẤY SẢN PHẨM NỔI BẬT
    ============================= */
+/* =========================================================================
+   LẤY SẢN PHẨM NỔI BẬT (TỰ ĐỘNG DỰA TRÊN SỐ LƯỢNG BÁN CHẠY NHẤT)
+   ========================================================================= */
 function getFeaturedProducts($pdo) {
+    // Logic: Join với bảng chi tiết đơn hàng, đếm tổng số lượng bán và sắp xếp giảm dần
     $sql = "
         SELECT 
             sp.*,
+            COALESCE(SUM(ct.so_luong), 0) AS tong_da_ban, -- Tổng số lượng đã bán
             ts.man_hinh,
             ts.o_cung,
             ts.cpu,
@@ -31,14 +36,11 @@ function getFeaturedProducts($pdo) {
             ts.ram
         FROM san_pham sp
         
-        -- Subquery 1: Lấy ID sản phẩm và ID nổi bật tối đa
-        JOIN (
-            SELECT san_pham_id, MAX(noi_bat_id) AS max_nb
-            FROM san_pham_noi_bat
-            GROUP BY san_pham_id
-        ) nb_max ON sp.id = nb_max.san_pham_id
+        -- 1. Join để tính số lượng bán (Chỉ tính đơn KHÔNG bị hủy)
+        LEFT JOIN chi_tiet_don_hang ct ON sp.id = ct.san_pham_id
+        LEFT JOIN don_hang dh ON ct.don_hang_id = dh.id AND dh.trang_thai_don_hang != 'Đã hủy'
         
-        -- Subquery 2: Lấy thông số kỹ thuật (đảm bảo mỗi sản phẩm chỉ có 1 bộ thông số)
+        -- 2. Join lấy thông số kỹ thuật (Giữ nguyên để hiển thị đẹp)
         LEFT JOIN (
             SELECT 
                 spts.san_pham_id,
@@ -52,7 +54,11 @@ function getFeaturedProducts($pdo) {
             GROUP BY spts.san_pham_id
         ) ts ON sp.id = ts.san_pham_id
         
-        ORDER BY nb_max.max_nb DESC
+        WHERE sp.trang_thai = 1
+        GROUP BY sp.id
+        
+        -- 3. SẮP XẾP QUAN TRỌNG NHẤT: Bán nhiều nhất lên đầu
+        ORDER BY tong_da_ban DESC, sp.id DESC
         LIMIT 8
     ";
 
@@ -60,14 +66,17 @@ function getFeaturedProducts($pdo) {
     $stmt->execute();
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Load variants cho từng sản phẩm (Giữ nguyên logic của bạn)
+    // Load biến thể & Tính giá giảm (Giữ nguyên logic cũ)
     foreach ($products as &$sp) {
         $sp['variants'] = getProductVariants($pdo, $sp['id']);
+        
+        $discountData = apply_discount($sp);
+        $sp['gia_moi'] = $discountData['gia_moi'];
+        $sp['phan_tram_giam'] = $discountData['phan_tram_giam'];
     }
 
     return $products;
 }
-
 /* =============================
    LẤY SẢN PHẨM GIẢM GIÁ
    ============================= */
@@ -532,6 +541,10 @@ function processCheckout(PDO $pdo, $user_id, $cart_items, $customer_info, $payme
             $coupon_id // Lưu ID mã giảm giá
         ]);
         $order_id = $pdo->lastInsertId();
+        if ($coupon_id) {
+        $stmtUpdateCoupon = $pdo->prepare("UPDATE ma_khuyen_mai SET da_dung = da_dung + 1 WHERE id = ?");
+        $stmtUpdateCoupon->execute([$coupon_id]);
+        }
 
         // 4. Lưu chi tiết & Trừ kho (Giữ nguyên logic cũ)
         foreach ($cart_items as $item) {

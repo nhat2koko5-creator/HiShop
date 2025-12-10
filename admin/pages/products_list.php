@@ -36,16 +36,23 @@ function saveProductSpecs($pdo, $productId, $specs) {
 // 1. XỬ LÝ LOGIC
 // =================================================================
 
+// =================================================================
+// 1. XỬ LÝ LOGIC (ĐÃ CẬP NHẬT LOGIC KHO)
+// =================================================================
+
 // A. THÊM SẢN PHẨM MỚI
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] == 'add_product') {
     $ten = trim($_POST['ten']);
     $mo_ta = $_POST['mo_ta'];
+    $mo_ta_chi_tiet = $_POST['mo_ta_chi_tiet'];
     $danh_muc = $_POST['danh_muc'];
     $variants = json_decode($_POST['variants_json'], true);
 
-    $tong_sl = 0; $gia_min = 0;
+    // [THAY ĐỔI] Không tính tổng SL từ form nữa, mặc định là 0
+    $tong_sl = 0; 
+    $gia_min = 0;
     if (!empty($variants)) {
-        $tong_sl = array_sum(array_column($variants, 'ton'));
+        // Lấy giá nhỏ nhất làm giá đại diện
         $gia_min = min(array_column($variants, 'gia'));
     }
 
@@ -56,11 +63,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $hinh_anh = $fileName;
     }
 
-    $stmt = $pdo->prepare("INSERT INTO san_pham (ten, gia, so_luong, hinh_anh, mo_ta, trang_thai, danh_muc_id) VALUES (?, ?, ?, ?, ?, 1, ?)");
-    $stmt->execute([$ten, $gia_min, $tong_sl, $hinh_anh, $mo_ta, $danh_muc]);
+    // Insert SP (Số lượng = 0)
+    $stmt = $pdo->prepare("INSERT INTO san_pham (ten, gia, so_luong, hinh_anh, mo_ta_chi_tiet, trang_thai, danh_muc_id) VALUES (?, ?, 0, ?, ?, 1, ?)");
+    $stmt->execute([$ten, $gia_min, $hinh_anh, $mo_ta_chi_tiet, $danh_muc]);
     $product_id = $pdo->lastInsertId();
 
-    // [MỚI] LƯU THÔNG SỐ KỸ THUẬT
+    // Lưu thông số kỹ thuật (Giữ nguyên code cũ)
     $specs = [
         'man_hinh' => $_POST['man_hinh'] ?? '',
         'cpu'      => $_POST['cpu'] ?? '',
@@ -79,8 +87,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $imgName = time() . "_" . basename($_FILES['variant_imgs']['name'][$idx]);
                 move_uploaded_file($_FILES['variant_imgs']['tmp_name'][$idx], "../assets/img/products/" . $imgName);
             }
-            $stmt2 = $pdo->prepare("INSERT INTO bien_the_san_pham (san_pham_id, mau_sac, dung_luong_ssd, gia, so_luong_ton, hinh_anh) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt2->execute([$product_id, $v['mau'], $v['ssd'], $v['gia'], $v['ton'], $imgName]);
+            // [THAY ĐỔI] so_luong_ton luôn là 0 khi tạo mới
+            $stmt2 = $pdo->prepare("INSERT INTO bien_the_san_pham (san_pham_id, mau_sac, dung_luong_ssd, gia, so_luong_ton, hinh_anh) VALUES (?, ?, ?, ?, 0, ?)");
+            $stmt2->execute([$product_id, $v['mau'], $v['ssd'], $v['gia'], $imgName]);
         }
     }
     js_redirect("index.php?page=products_list&added=1");
@@ -88,20 +97,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // B. CẬP NHẬT SẢN PHẨM
 elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] == 'update_product') {
-    $id = intval($_POST['product_id']);
-    $ten = trim($_POST['ten']);
-    $mo_ta = $_POST['mo_ta'];
-    $danh_muc = $_POST['danh_muc'];
-    $variants = json_decode($_POST['variants_json'], true);
+        $id = intval($_POST['product_id']);
+        $ten = trim($_POST['ten']);
+        $mo_ta_chi_tiet = $_POST['mo_ta_chi_tiet']; // [SỬA 1] Lấy đúng tên input
+        $danh_muc = $_POST['danh_muc'];
+        $variants = json_decode($_POST['variants_json'], true);
 
-    $tong_sl = 0; $gia_min = 0;
-    if (!empty($variants)) {
-        $tong_sl = array_sum(array_column($variants, 'ton'));
-        $gia_min = min(array_column($variants, 'gia'));
-    }
+        $gia_min = 0;
+        if (!empty($variants)) {
+            $gia_min = min(array_column($variants, 'gia'));
+        }
 
-    $sql_update = "UPDATE san_pham SET ten=?, gia=?, so_luong=?, mo_ta=?, danh_muc_id=?";
-    $params = [$ten, $gia_min, $tong_sl, $mo_ta, $danh_muc];
+        // [SỬA 2] Update vào cột 'mo_ta_chi_tiet'
+        $sql_update = "UPDATE san_pham SET ten=?, gia=?, mo_ta_chi_tiet=?, danh_muc_id=?";
+        
+        // [SỬA 3] Truyền đúng biến vào tham số
+        $params = [$ten, $gia_min, $mo_ta_chi_tiet, $danh_muc];
 
     if (!empty($_FILES['hinh_anh']['name'])) {
         $fileName = time() . "_" . basename($_FILES["hinh_anh"]["name"]);
@@ -115,7 +126,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_PO
     $stmt = $pdo->prepare($sql_update);
     $stmt->execute($params);
 
-    // [MỚI] CẬP NHẬT THÔNG SỐ KỸ THUẬT
+    // Lưu thông số kỹ thuật (Giữ nguyên)
     $specs = [
         'man_hinh' => $_POST['man_hinh'] ?? '',
         'cpu'      => $_POST['cpu'] ?? '',
@@ -125,9 +136,21 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_PO
     ];
     saveProductSpecs($pdo, $id, $specs);
 
-    // CẬP NHẬT BIẾN THỂ (Xóa hết thêm lại)
+    // CẬP NHẬT BIẾN THỂ
+    // Logic: Xóa cũ thêm mới nhưng PHẢI GIỮ LẠI SỐ LƯỢNG TỒN CŨ
+    // 1. Lấy map tồn kho cũ: [ 'Mau-SSD' => sl_ton ]
+    $oldStockMap = [];
+    $stmtOld = $pdo->prepare("SELECT mau_sac, dung_luong_ssd, so_luong_ton FROM bien_the_san_pham WHERE san_pham_id = ?");
+    $stmtOld->execute([$id]);
+    while($row = $stmtOld->fetch()){
+        $key = $row['mau_sac'] . '-' . $row['dung_luong_ssd'];
+        $oldStockMap[$key] = $row['so_luong_ton'];
+    }
+
+    // 2. Xóa hết
     $pdo->prepare("DELETE FROM bien_the_san_pham WHERE san_pham_id=?")->execute([$id]);
 
+    // 3. Thêm lại (Khôi phục tồn kho nếu trùng màu/ssd)
     if (!empty($variants)) {
         foreach ($variants as $v) {
             $imgName = $v['old_img']; 
@@ -137,13 +160,21 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_PO
                 move_uploaded_file($_FILES['variant_imgs']['tmp_name'][$idx], "../assets/img/products/" . $newImgName);
                 $imgName = $newImgName; 
             }
+            
+            // Tìm lại tồn kho cũ
+            $keyCheck = $v['mau'] . '-' . $v['ssd'];
+            $currentStock = isset($oldStockMap[$keyCheck]) ? $oldStockMap[$keyCheck] : 0;
+
             $stmt2 = $pdo->prepare("INSERT INTO bien_the_san_pham (san_pham_id, mau_sac, dung_luong_ssd, gia, so_luong_ton, hinh_anh) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt2->execute([$id, $v['mau'], $v['ssd'], $v['gia'], $v['ton'], $imgName]);
+            $stmt2->execute([$id, $v['mau'], $v['ssd'], $v['gia'], $currentStock, $imgName]);
         }
     }
+    
+    // [QUAN TRỌNG] Tính lại tổng tồn kho cho sản phẩm cha sau khi update biến thể
+    $pdo->prepare("UPDATE san_pham SET so_luong = (SELECT COALESCE(SUM(so_luong_ton),0) FROM bien_the_san_pham WHERE san_pham_id = ?) WHERE id = ?")->execute([$id, $id]);
+
     js_redirect("index.php?page=products_list&updated=1");
 }
-
 // C. ẨN/HIỆN
 if (isset($_GET['toggle'])) {
     $id = intval($_GET['toggle']);
@@ -160,7 +191,7 @@ require_once 'layouts/header.php';
 
 <?php
 // =================================================================
-// 3. LẤY DỮ LIỆU (GET)
+// 3. LẤY DỮ LIỆU (GET) - ĐÃ FIX LỌC TỒN KHO THỰC TẾ
 // =================================================================
 $stats = [
     'total' => $pdo->query("SELECT COUNT(*) FROM san_pham")->fetchColumn(),
@@ -169,26 +200,42 @@ $stats = [
 ];
 
 $keyword = $_GET['keyword'] ?? '';
+$stock_filter = $_GET['stock'] ?? ''; // Lấy tham số lọc
+
 $limit = 10;
 $page = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
 $offset = ($page - 1) * $limit;
 
-$sqlCount = "SELECT COUNT(*) FROM san_pham WHERE ten LIKE :kw";
-$stmtCount = $pdo->prepare($sqlCount);
-$stmtCount->execute(['kw' => "%$keyword%"]);
+// Xây dựng câu query
+$sql_base = "FROM san_pham sp LEFT JOIN danh_muc dm ON sp.danh_muc_id = dm.id WHERE 1=1";
+
+if (!empty($keyword)) {
+    $sql_base .= " AND sp.ten LIKE :kw";
+}
+
+if ($stock_filter === 'low') {
+    $sql_base .= " AND (
+        (SELECT COUNT(*) FROM bien_the_san_pham bt WHERE bt.san_pham_id = sp.id AND bt.so_luong_ton < 5) > 0
+        OR 
+        (SELECT COUNT(*) FROM bien_the_san_pham bt WHERE bt.san_pham_id = sp.id) = 0
+    )";
+}
+// Đếm tổng để phân trang
+$stmtCount = $pdo->prepare("SELECT COUNT(*) " . $sql_base);
+if (!empty($keyword)) $stmtCount->bindValue(':kw', "%$keyword%");
+$stmtCount->execute();
 $totalRecords = $stmtCount->fetchColumn();
 $totalPages = ceil($totalRecords / $limit);
 
+// Lấy dữ liệu
 $sql = "SELECT sp.*, dm.ten AS ten_danh_muc,
-        (SELECT SUM(so_luong_ton) FROM bien_the_san_pham WHERE san_pham_id = sp.id) AS tong_bien_the
-        FROM san_pham sp 
-        LEFT JOIN danh_muc dm ON sp.danh_muc_id = dm.id
-        WHERE sp.ten LIKE :kw
+        (SELECT COALESCE(SUM(so_luong_ton), 0) FROM bien_the_san_pham WHERE san_pham_id = sp.id) AS tong_bien_the
+        " . $sql_base . "
         ORDER BY sp.id DESC
         LIMIT :limit OFFSET :offset";
 
 $stmt = $pdo->prepare($sql);
-$stmt->bindValue(':kw', "%$keyword%", PDO::PARAM_STR);
+if (!empty($keyword)) $stmt->bindValue(':kw', "%$keyword%");
 $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
 $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
@@ -208,6 +255,9 @@ if (!empty($products)) {
 ?>
 <link rel="stylesheet" href="../assets/css/admin/product_list.css">
 <div class="admin-page-container">
+     <div class="page-header-title">
+      <i class="fas fa-box-open"></i></i> Quản lý Sản Phẩm
+    </div>
     
     <div class="stats-row">
         <div class="stat-card">

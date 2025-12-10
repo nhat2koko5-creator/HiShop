@@ -46,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         // Kiểm tra xem người dùng có nhập ngày tương lai không
         if ($dateOfBirth > $today) {
-            $errors[] = 'Ngày sinh không hợp lệ.';
+            $errors[] = 'Bạn phải từ 16 tuổi trở lên mới được đăng ký tài khoản.';
         } else {
             // Tính khoảng cách năm
             $age = $today->diff($dateOfBirth)->y;
@@ -171,7 +171,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     
                     <div class="input-group">
                         <span class="material-icons">phone_iphone</span>
-                        <input type="tel" id="so_dien_thoai" name="so_dien_thoai" class="form-input" placeholder="Số điện thoại (Tùy chọn)" value="<?= htmlspecialchars($_POST['so_dien_thoai'] ?? '') ?>">
+                        <input type="tel" id="so_dien_thoai" name="so_dien_thoai" maxlength="10" class="form-input" placeholder="Số điện thoại (Tùy chọn)" value="<?= htmlspecialchars($_POST['so_dien_thoai'] ?? '') ?>">
                     </div>
                     
                     <div class="form-grid-2">
