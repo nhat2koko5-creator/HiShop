@@ -79,51 +79,95 @@ $exec_params[] = $offset;
 // Simpler: prepare statement dynamically with named param for category if exists.
 
 /* ---------------- LẤY SẢN PHẨM (có thông số kỹ thuật) ---------------- */
+/* ---------------- LẤY SẢN PHẨM (có thông số kỹ thuật) ---------------- */
 
-// Rebuild WHERE condition with named parameter for category
+// Rebuild WHERE condition with named parameter for category and filters
 $where_clauses2 = ['sp.trang_thai = 1'];
+
+/* ----- FILTER GIÁ ----- */
+if (!empty($_GET['price'])) {
+    switch ($_GET['price']) {
+        case "1":
+            $where_clauses2[] = 'sp.gia < 10000000';
+            break;
+        case "2":
+            $where_clauses2[] = 'sp.gia BETWEEN 10000000 AND 20000000';
+            break;
+        case "3":
+            $where_clauses2[] = 'sp.gia > 20000000';
+            break;
+    }
+}
+
+/* ----- FILTER RAM ----- */
+$useRam = false;
+if (!empty($_GET['ram'])) {
+    $where_clauses2[] = 'ts.ram LIKE :ram';
+    $useRam = true;
+}
+
+/* ----- FILTER CPU ----- */
+$useCpu = false;
+if (!empty($_GET['cpu'])) {
+    $where_clauses2[] = 'ts.cpu LIKE :cpu';
+    $useCpu = true;
+}
+
 if ($category_id > 0) {
     $where_clauses2[] = 'sp.danh_muc_id = :category_id';
+    $useCategory = true;
+} else {
+    $useCategory = false;
 }
+
 $where_sql2 = implode(' AND ', $where_clauses2);
 
-// SỬA ĐỔI: Thêm JOIN với thong_so và sử dụng GROUP BY để tránh lặp hàng
+// Query: lấy sp + thông số (dùng GROUP BY để tránh lặp)
 $sql_products = "
     SELECT 
         sp.*, 
         MAX(ts.cpu) AS cpu, 
         MAX(ts.ram) AS ram
     FROM san_pham sp
-    -- LEFT JOIN để lấy thông số kỹ thuật
     LEFT JOIN san_pham_thong_so spts ON spts.san_pham_id = sp.id
     LEFT JOIN thong_so ts ON ts.id = spts.thong_so_id
-    
     WHERE $where_sql2
-    
-    GROUP BY sp.id, sp.ten, sp.hinh_anh, sp.gia, sp.danh_muc_id, sp.mo_ta, sp.trang_thai -- Group tất cả cột sp.*
-    
-    ORDER BY sp.id DESC 
+    GROUP BY sp.id, sp.ten, sp.hinh_anh, sp.gia, sp.danh_muc_id, sp.mo_ta, sp.trang_thai
+    ORDER BY sp.id DESC
     LIMIT :limit OFFSET :offset
 ";
 
+// Prepare statement and check
 $stmt_products = $pdo->prepare($sql_products);
-
-// Bind category param nếu có
-if ($category_id > 0) {
-    $stmt_products->bindValue(':category_id', $category_id, PDO::PARAM_INT);
+if (!$stmt_products) {
+    $err = $pdo->errorInfo();
+    // Debug friendly message (bỏ hoặc thay bằng logging trong production)
+    die("Prepare products failed: " . htmlspecialchars($err[2] ?? 'Unknown error') . "<br>SQL: " . htmlspecialchars($sql_products));
 }
 
-// bind limit/offset as integers
+// Bind dynamic filters safely
+if ($useCategory) {
+    $stmt_products->bindValue(':category_id', (int)$category_id, PDO::PARAM_INT);
+}
+if ($useRam) {
+    $stmt_products->bindValue(':ram', '%' . trim($_GET['ram']) . '%', PDO::PARAM_STR);
+}
+if ($useCpu) {
+    $stmt_products->bindValue(':cpu', '%' . trim($_GET['cpu']) . '%', PDO::PARAM_STR);
+}
+
+// Bind limit/offset as integers (PDO::PARAM_INT)
 $stmt_products->bindValue(':limit', (int)$products_per_page, PDO::PARAM_INT);
 $stmt_products->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
 
-// bind limit/offset as integers
-$stmt_products->bindValue(':limit', (int)$products_per_page, PDO::PARAM_INT);
-$stmt_products->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-
-// execute
-$stmt_products->execute();
-$products = $stmt_products->fetchAll(PDO::FETCH_ASSOC);
+// Execute and fetch with try/catch to show helpful error if something fails
+try {
+    $stmt_products->execute();
+    $products = $stmt_products->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $ex) {
+    // Debug friendly; trong production hãy log thay vì die
+    die("Execute products failed: " . htmlspecialchars($ex->getMessage()));
+}
 
 /* ---------------- LẤY BIẾN THỂ TỐI ƯU ---------------- */
 if (!empty($products)) {
@@ -179,6 +223,38 @@ function format_price($p) {
         <?php endif; ?>
     </nav>    
     <h1 class="page-title"><?= htmlspecialchars($category_name) ?></h1>
+    <form method="GET" class="filter-bar" style="margin: 20px 0; display:flex; gap:15px; flex-wrap:wrap;">
+    <input type="hidden" name="page" value="product_list">
+    <?php if ($category_id > 0): ?>
+        <input type="hidden" name="category_id" value="<?= $category_id ?>">
+    <?php endif; ?>
+
+    <!-- Lọc theo giá -->
+    <select name="price" onchange="this.form.submit()" style="padding:6px 10px;">
+        <option value="">Giá</option>
+        <option value="1" <?= isset($_GET['price']) && $_GET['price']==1?'selected':'' ?>>Dưới 10 triệu</option>
+        <option value="2" <?= isset($_GET['price']) && $_GET['price']==2?'selected':'' ?>>10 – 20 triệu</option>
+        <option value="3" <?= isset($_GET['price']) && $_GET['price']==3?'selected':'' ?>>Trên 20 triệu</option>
+    </select>
+
+    <!-- Lọc theo RAM -->
+    <select name="ram" onchange="this.form.submit()" style="padding:6px 10px;">
+        <option value="">RAM</option>
+        <option value="8GB" <?= ($_GET['ram'] ?? '')=='8GB'?'selected':'' ?>>8GB</option>
+        <option value="16GB" <?= ($_GET['ram'] ?? '')=='16GB'?'selected':'' ?>>16GB</option>
+        <option value="32GB" <?= ($_GET['ram'] ?? '')=='32GB'?'selected':'' ?>>32GB</option>
+    </select>
+
+    <!-- Lọc theo CPU -->
+    <select name="cpu" onchange="this.form.submit()" style="padding:6px 10px;">
+        <option value="">CPU</option>
+        <option value="i5" <?= ($_GET['cpu'] ?? '')=='i5'?'selected':'' ?>>Intel Core i5</option>
+        <option value="i7" <?= ($_GET['cpu'] ?? '')=='i7'?'selected':'' ?>>Intel Core i7</option>
+        <option value="Ryzen 5" <?= ($_GET['cpu'] ?? '')=='Ryzen 5'?'selected':'' ?>>Ryzen 5</option>
+        <option value="Ryzen 7" <?= ($_GET['cpu'] ?? '')=='Ryzen 7'?'selected':'' ?>>Ryzen 7</option>
+    </select>
+</form>
+
         </div>
 
 
