@@ -222,44 +222,74 @@ function format_price($p) {
             <span class="current">Danh sách sản phẩm</span>
         <?php endif; ?>
     </nav>    
-    <h1 class="page-title"><?= htmlspecialchars($category_name) ?></h1>
-    <form method="GET" class="filter-bar" style="margin: 20px 0; display:flex; gap:15px; flex-wrap:wrap;">
-    <input type="hidden" name="page" value="product_list">
-    <?php if ($category_id > 0): ?>
-        <input type="hidden" name="category_id" value="<?= $category_id ?>">
-    <?php endif; ?>
+<h1 class="page-title"><?= htmlspecialchars($category_name) ?></h1>
+</div> <div class="main-content-layout">
 
-    <!-- Lọc theo giá -->
-    <select name="price" onchange="this.form.submit()" style="padding:6px 10px;">
-        <option value="">Giá</option>
-        <option value="1" <?= isset($_GET['price']) && $_GET['price']==1?'selected':'' ?>>Dưới 10 triệu</option>
-        <option value="2" <?= isset($_GET['price']) && $_GET['price']==2?'selected':'' ?>>10 – 20 triệu</option>
-        <option value="3" <?= isset($_GET['price']) && $_GET['price']==3?'selected':'' ?>>Trên 20 triệu</option>
-    </select>
+    <div class="sidebar-filters">
+        <form method="GET" class="filter-bar">
+            <input type="hidden" name="page" value="product_list">
+            <?php if ($category_id > 0): ?>
+                <input type="hidden" name="category_id" value="<?= $category_id ?>">
+            <?php endif; ?>
 
-    <!-- Lọc theo RAM -->
-    <select name="ram" onchange="this.form.submit()" style="padding:6px 10px;">
-        <option value="">RAM</option>
-        <option value="8GB" <?= ($_GET['ram'] ?? '')=='8GB'?'selected':'' ?>>8GB</option>
-        <option value="16GB" <?= ($_GET['ram'] ?? '')=='16GB'?'selected':'' ?>>16GB</option>
-        <option value="32GB" <?= ($_GET['ram'] ?? '')=='32GB'?'selected':'' ?>>32GB</option>
-    </select>
+            <div class="filter-box">
+                <h4 class="filter-title">Lọc theo Giá</h4>
+                <?php $current_price = $_GET['price'] ?? ''; ?>
+                <div class="filter-option">
+                    <input type="checkbox" id="price_1" name="price" value="1" onchange="this.form.submit()" <?= $current_price=='1'?'checked':'' ?>>
+                    <label for="price_1">Dưới 10 triệu</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="price_2" name="price" value="2" onchange="this.form.submit()" <?= $current_price=='2'?'checked':'' ?>>
+                    <label for="price_2">10 – 20 triệu</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="price_3" name="price" value="3" onchange="this.form.submit()" <?= $current_price=='3'?'checked':'' ?>>
+                    <label for="price_3">Trên 20 triệu</label>
+                </div>
+            </div>
+            
+            <div class="filter-box">
+                <h4 class="filter-title">Lọc theo RAM</h4>
+                <?php $current_ram = $_GET['ram'] ?? ''; ?>
+                <div class="filter-option">
+                    <input type="checkbox" id="ram_8" name="ram" value="8GB" onchange="this.form.submit()" <?= $current_ram=='8GB'?'checked':'' ?>>
+                    <label for="ram_8">8GB</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="ram_16" name="ram" value="16GB" onchange="this.form.submit()" <?= $current_ram=='16GB'?'checked':'' ?>>
+                    <label for="ram_16">16GB</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="ram_32" name="ram" value="32GB" onchange="this.form.submit()" <?= $current_ram=='32GB'?'checked':'' ?>>
+                    <label for="ram_32">32GB</label>
+                </div>
+            </div>
 
-    <!-- Lọc theo CPU -->
-    <select name="cpu" onchange="this.form.submit()" style="padding:6px 10px;">
-        <option value="">CPU</option>
-        <option value="i5" <?= ($_GET['cpu'] ?? '')=='i5'?'selected':'' ?>>Intel Core i5</option>
-        <option value="i7" <?= ($_GET['cpu'] ?? '')=='i7'?'selected':'' ?>>Intel Core i7</option>
-        <option value="Ryzen 5" <?= ($_GET['cpu'] ?? '')=='Ryzen 5'?'selected':'' ?>>Ryzen 5</option>
-        <option value="Ryzen 7" <?= ($_GET['cpu'] ?? '')=='Ryzen 7'?'selected':'' ?>>Ryzen 7</option>
-    </select>
-</form>
-
-        </div>
-
-
-    <?php if (!empty($products)): ?>
-<div class="product-grid">
+            <div class="filter-box">
+                <h4 class="filter-title">Lọc theo CPU</h4>
+                <?php $current_cpu = $_GET['cpu'] ?? ''; ?>
+                <div class="filter-option">
+                    <input type="checkbox" id="cpu_i5" name="cpu" value="i5" onchange="this.form.submit()" <?= $current_cpu=='i5'?'checked':'' ?>>
+                    <label for="cpu_i5">Intel Core i5</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="cpu_i7" name="cpu" value="i7" onchange="this.form.submit()" <?= $current_cpu=='i7'?'checked':'' ?>>
+                    <label for="cpu_i7">Intel Core i7</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="cpu_r5" name="cpu" value="Ryzen 5" onchange="this.form.submit()" <?= $current_cpu=='Ryzen 5'?'checked':'' ?>>
+                    <label for="cpu_r5">Ryzen 5</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="cpu_r7" name="cpu" value="Ryzen 7" onchange="this.form.submit()" <?= $current_cpu=='Ryzen 7'?'checked':'' ?>>
+                    <label for="cpu_r7">Ryzen 7</label>
+                </div>
+            </div>
+        </form>
+    </div><div class="product-list-content">
+        <?php if (!empty($products)): ?>
+            <div class="product-grid">
     <?php foreach ($products as $p): 
         // 1. Xử lý ảnh
         $img_path = (!empty($p['hinh_anh']) && file_exists($img_folder . '/' . $p['hinh_anh'])) 
@@ -381,7 +411,7 @@ function format_price($p) {
         <p class="no-products">Không có sản phẩm nào trong danh mục này.</p>
     <?php endif; ?>
 
-    <?php if ($total_pages > 1): ?>
+</div> <?php if ($total_pages > 1): ?>
         <nav class="pagination-nav">
             <ul class="pagination">
                 <?php if ($current_page > 1): ?>
@@ -411,9 +441,7 @@ function format_price($p) {
             </ul>
         </nav>
     <?php endif; ?>
-
-</div>
-
+    
 <div class="variant-modal-overlay" id="quick-add-modal" style="display: none;">
     <div class="variant-modal-box">
         <div class="variant-modal-header">

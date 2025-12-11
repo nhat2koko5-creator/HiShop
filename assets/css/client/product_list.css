@@ -471,3 +471,74 @@
   color: #9ca3af;
   cursor: not-allowed;
 }
+/* --- 1. Bố Cục Chính 2 Cột --- */
+.main-content-layout {
+    display: flex;
+    gap: 30px; /* Khoảng cách giữa sidebar và danh sách sản phẩm */
+    margin-top: 20px;
+}
+
+.sidebar-filters {
+    flex: 0 0 150px; /* Chiều rộng cố định cho sidebar */
+}
+
+.product-list-content {
+    flex: 1; /* Phần danh sách sản phẩm chiếm hết không gian còn lại */
+}
+
+/* --- 2. Tạo kiểu cho Form Bộ Lọc (Thẻ/Box) --- */
+.filter-bar {
+    border: 1px solid #e0e0e0;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.filter-box {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px dashed #ddd; /* Dấu gạch ngang phân cách các box */
+}
+.filter-box:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.filter-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+/* --- 3. Tạo kiểu cho Checkbox Options --- */
+.filter-option {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+
+.filter-option label {
+    margin-left: 8px;
+    font-size: 15px;
+    color: #555;
+    cursor: pointer;
+}
+
+.filter-option input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+}
+
+/* --- 4. Responsive (Chuyển sidebar xuống dưới ở màn hình nhỏ) --- */
+@media (max-width: 992px) {
+    .main-content-layout {
+        flex-direction: column; /* Chuyển sang bố cục 1 cột trên màn hình nhỏ */
+    }
+    .sidebar-filters {
+        flex: auto; /* Chiếm toàn bộ chiều rộng */
+    }
+}
