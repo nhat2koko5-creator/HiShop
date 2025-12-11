@@ -6,6 +6,7 @@
    =========================================================== */
 $msg = '';
 $msg_type = '';
+$redirect_url = ''; // Biến lưu link chuyển hướng
 
 // 1. Lấy danh sách kho
 $stmt = $pdo->query("SELECT * FROM kho_hang WHERE trang_thai = 1 ORDER BY id DESC");
@@ -25,7 +26,6 @@ $ds_san_pham = $stmtProd->fetchAll();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $kho_id = isset($_POST['kho_id']) ? (int)$_POST['kho_id'] : 0;
     $ghi_chu = isset($_POST['ghi_chu']) ? trim($_POST['ghi_chu']) : '';
-    // Lấy ID người dùng an toàn
     $nguoi_nhap_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : (isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : 10);
 
     $product_ids = isset($_POST['product_variant_id']) ? $_POST['product_variant_id'] : [];
@@ -46,18 +46,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check trùng lặp & Logic chi tiết
     $temp_check = [];
     foreach ($product_ids as $key => $pid) {
-        if (empty($pid)) continue; // Bỏ qua dòng trống
+        if (empty($pid)) continue;
 
         if (in_array($pid, $temp_check)) {
             $errors[] = "Dòng " . ($key + 1) . ": Sản phẩm bị trùng.";
         }
         $temp_check[] = $pid;
         
-        // Validate Backend chặn số âm
         if ($quantities[$key] <= 0) $errors[] = "Dòng " . ($key + 1) . ": Số lượng phải lớn hơn 0.";
         if ($import_prices[$key] < 0) $errors[] = "Dòng " . ($key + 1) . ": Giá nhập không được âm.";
 
-        // Logic kiểm tra giá nhập > giá bán
         if (isset($price_map[$pid])) {
             $gia_ban_hien_tai = $price_map[$pid];
             if ($import_prices[$key] > $gia_ban_hien_tai) {
@@ -68,12 +66,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!empty($errors)) {
         $msg = implode("<br>", $errors);
-        $msg_type = "danger";
+        $msg_type = "error"; // Đổi thành 'error' cho đồng bộ JS
     } else {
         try {
             $pdo->beginTransaction();
 
-            // Mã phiếu: PN + YmdHis
             $ma_phieu = 'PN' . date('YmdHis') . rand(10, 99);
 
             // Insert Header
@@ -95,26 +92,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmtGetParent->execute([$bt_id]);
                 $sp_id = $stmtGetParent->fetchColumn();
 
-                // Lưu chi tiết phiếu
                 $sqlChiTiet = "INSERT INTO chi_tiet_phieu_kho (phieu_kho_id, san_pham_id, bien_the_id, so_luong, don_gia) VALUES (?, ?, ?, ?, ?)";
                 $pdo->prepare($sqlChiTiet)->execute([$phieu_id, $sp_id, $bt_id, $sl, $gia]);
 
-                // Update Tồn kho chi tiết
                 $sqlKho = "INSERT INTO chi_tiet_kho_hang (kho_hang_id, san_pham_id, bien_the_id, so_luong_ton) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE so_luong_ton = so_luong_ton + VALUES(so_luong_ton)";
                 $pdo->prepare($sqlKho)->execute([$kho_id, $sp_id, $bt_id, $sl]);
 
-                // Update Tổng tồn kho
                 $pdo->prepare("UPDATE bien_the_san_pham SET so_luong_ton = so_luong_ton + ? WHERE id = ?")->execute([$sl, $bt_id]);
             }
 
             $pdo->commit();
-            echo "<script>alert('Nhập kho thành công! Mã phiếu: $ma_phieu'); window.location.href='index.php?page=warehouse_history';</script>";
-            exit;
+            
+            // [THAY ĐỔI] Set biến để hiện popup
+            $msg = "Nhập kho thành công! Mã phiếu: $ma_phieu. Đang chuyển hướng...";
+            $msg_type = "success";
+            $redirect_url = "index.php?page=warehouse_history";
 
         } catch (Exception $e) {
             $pdo->rollBack();
             $msg = "Lỗi hệ thống: " . $e->getMessage();
-            $msg_type = "danger";
+            $msg_type = "error";
         }
     }
 }
@@ -123,8 +120,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="../assets/css/admin/warehouse_import.css">
 
+<style>
+    #toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
+    .toast {
+        display: flex;
+        align-items: center;
+        background: #fff;
+        padding: 16px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        margin-bottom: 12px;
+        min-width: 300px;
+        max-width: 450px;
+        animation: slideIn 0.3s ease forwards;
+        border-left: 5px solid #ccc;
+    }
+    .toast.success { border-left-color: #10b981; }
+    .toast.error { border-left-color: #ef4444; }
+    .toast-icon { font-size: 20px; margin-right: 12px; }
+    .toast.success .toast-icon { color: #10b981; }
+    .toast.error .toast-icon { color: #ef4444; }
+    .toast-content { flex: 1; }
+    .toast-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; color: #1e293b; }
+    .toast-msg { font-size: 13px; color: #64748b; line-height: 1.4; }
+    .toast-close { cursor: pointer; font-size: 18px; color: #94a3b8; margin-left: 12px; }
+    
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes fadeOut {
+        to { opacity: 0; transform: translateX(20px); }
+    }
+</style>
 
 <div class="import-container">
+    <div id="toast-container"></div>
     
     <div class="page-header-title">
         <div style="display:flex; align-items:center; gap:12px;">
@@ -132,12 +168,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <span>Tạo Phiếu Nhập Kho</span>
         </div>
     </div>
-
-    <?php if ($msg): ?>
-        <div class="alert alert-<?php echo $msg_type; ?>">
-            <i class="fa-solid fa-triangle-exclamation"></i> <?php echo $msg; ?>
-        </div>
-    <?php endif; ?>
 
     <form action="" method="POST" id="importForm" onsubmit="return validateForm()">
         <div class="import-grid">
@@ -236,10 +266,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-    // 1. Khởi tạo Select2
     $(document).ready(function() {
         initSelect2();
+
+        // [MỚI] HIỂN THỊ TOAST TỪ PHP
+        <?php if ($msg): ?>
+            showToast("<?php echo $msg_type == 'success' ? 'Thành công' : 'Lỗi nhập kho'; ?>", 
+                      "<?php echo addslashes($msg); ?>", 
+                      "<?php echo $msg_type; ?>");
+            
+            <?php if ($redirect_url): ?>
+                setTimeout(function() {
+                    window.location.href = "<?php echo $redirect_url; ?>";
+                }, 1500);
+            <?php endif; ?>
+        <?php endif; ?>
     });
+
+    // [MỚI] HÀM SHOW TOAST
+    function showToast(title, message, type) {
+        const icons = {
+            success: '<i class="fa-solid fa-circle-check"></i>',
+            error: '<i class="fa-solid fa-triangle-exclamation"></i>',
+            info: '<i class="fa-solid fa-circle-info"></i>'
+        };
+        const icon = icons[type] || icons.info;
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+            <div class="toast-icon">${icon}</div>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-msg">${message}</div>
+            </div>
+            <div class="toast-close" onclick="this.parentElement.remove()">&times;</div>
+        `;
+        document.getElementById('toast-container').appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s ease forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
 
     function initSelect2() {
         $('.select2-init').select2({
@@ -247,40 +314,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             placeholder: "-- Tìm kiếm sản phẩm --",
             allowClear: true
         });
-        
-        // Khi Select2 thay đổi, kích hoạt sự kiện onchange của select gốc (để cập nhật giá bán)
         $('.select2-init').on('select2:select', function (e) {
             this.dispatchEvent(new Event('change'));
         });
     }
 
-    // 2. Hàm chặn số âm (UX)
     function enforcePositive(el) {
         if (el.value === '') return;
         if (parseInt(el.value) < 0) {
-            el.value = 0; // Hoặc 1 nếu là số lượng
+            el.value = 0; 
             if(el.classList.contains('qty')) el.value = 1;
         }
     }
 
-    // 3. Logic Cập nhật gợi ý giá
     function updatePriceHint(select) {
         var price = select.options[select.selectedIndex].getAttribute('data-price') || 0;
         var hint = select.parentNode.querySelector('.price-hint span');
         if(hint) hint.innerText = new Intl.NumberFormat('vi-VN').format(price);
         
-        // Check lại profit
         var row = select.closest('tr');
         var priceInput = row.querySelector('.price');
         checkProfit(priceInput);
     }
 
-    // 4. Thêm dòng mới (Phức tạp hơn vì có Select2)
     function addRow() {
         var table = document.getElementById("productTable").getElementsByTagName('tbody')[0];
         
-        // Lấy danh sách options từ PHP đã render sẵn ở dòng đầu tiên (nhưng chưa bị Select2 biến đổi DOM)
-        // Cách tốt nhất là tạo một biến JS chứa options string
         var optionsHtml = `
             <option value="" data-price="0">-- Tìm kiếm & chọn sản phẩm --</option>
             <?php foreach ($ds_san_pham as $sp): ?>
@@ -313,10 +372,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </tr>
         `;
         
-        // Chèn HTML vào cuối bảng
         $(table).append(newRowHtml);
-
-        // Khởi tạo Select2 cho dòng mới
         initSelect2();
     }
 
@@ -327,7 +383,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             row.remove();
             calcTotal();
         } else {
-            alert("Phải nhập ít nhất 1 sản phẩm!");
+            showToast("Cảnh báo", "Phải nhập ít nhất 1 sản phẩm!", "error");
         }
     }
 
@@ -343,7 +399,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     function validateForm() {
         if(document.querySelectorAll('.item-row').length === 0) {
-            alert("Vui lòng thêm ít nhất 1 sản phẩm.");
+            showToast("Lỗi nhập liệu", "Vui lòng thêm ít nhất 1 sản phẩm.", "error");
             return false;
         }
 
@@ -365,7 +421,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
 
         if (hasError) {
-            alert("CẢNH BÁO: Có sản phẩm giá nhập cao hơn giá bán!\nVui lòng kiểm tra lại các ô màu đỏ.");
+            showToast("Rủi ro kinh doanh", "Có sản phẩm giá nhập cao hơn giá bán! Vui lòng kiểm tra lại.", "error");
             return false;
         }
 

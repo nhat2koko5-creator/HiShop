@@ -934,7 +934,7 @@ ul {
   }
 }
 .result-box {
-  max_width: 600px;
+  max-width: 600px;
   margin: 50px auto;
   padding: 40px;
   background: #fff;

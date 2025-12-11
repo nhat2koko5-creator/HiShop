@@ -9,16 +9,13 @@ function isActive($name, $currentPage) {
     return $name === $currentPage ? 'active' : '';
 }
 
-// 3. Xử lý Logic mở rộng Menu con (Dropdown)
-// Nhóm Sản phẩm (Gồm: Danh sách, Thêm mới, Giảm giá)
+// 3. Xử lý Logic mở rộng Menu con
 $product_pages = ['products_list', 'product_form', 'product_sale'];
 $is_product_group = in_array($page, $product_pages);
 
-// Nhóm Kho hàng (Gồm: Danh sách, Nhập, Xuất, Lịch sử)
 $warehouse_pages = ['warehouse_list', 'warehouse_detail', 'warehouse_import', 'warehouse_export', 'warehouse_history'];
 $is_warehouse_group = in_array($page, $warehouse_pages);
 
-// Nhóm Hệ thống (Khách hàng, Báo cáo...)
 $system_pages = ['users_list', 'reports'];
 $is_system_group = in_array($page, $system_pages);
 ?>
@@ -137,14 +134,13 @@ $is_system_group = in_array($page, $system_pages);
     </div>
 
     <div class="admin-user">
-        <a href="../client/index.php" target="_blank" class="btn-view-web">
-            <i class="fas fa-globe" style="margin-right: 8px;"></i> Xem Website
+        <a href="#" onclick="confirmLogout(event)" class="btn-view-web"">
+            <i class="fas fa-sign-out-alt" style="margin-right: 8px;"></i> Đăng xuất
         </a>
     </div>
 </aside>
 
 <script>
-    // Script xử lý đóng mở menu con
     document.addEventListener("DOMContentLoaded", function() {
         const toggles = document.querySelectorAll('.toggle-submenu');
         toggles.forEach(toggle => {

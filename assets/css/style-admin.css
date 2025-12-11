@@ -230,7 +230,8 @@ img {
   padding: 10px;
   background: transparent;
   border: 1px solid #334155;
-  color: #cbd5e1;
+  color: #0f172a;
+  background-color: #ffff;
   border-radius: var(--radius);
   font-weight: 600;
 }

@@ -48,20 +48,29 @@ $stmt = $pdo->prepare($sql_final);
 $stmt->execute($params);
 $orders = $stmt->fetchAll();
 
-// --- 3. THỐNG KÊ NHANH ---
+// --- 3. THỐNG KÊ NHANH (ĐÃ FIX LOGIC DOANH THU) ---
 $count_pending = $pdo->query("SELECT COUNT(*) FROM don_hang WHERE trang_thai_don_hang = 'Chờ xử lý'")->fetchColumn();
 $count_shipping = $pdo->query("SELECT COUNT(*) FROM don_hang WHERE trang_thai_don_hang = 'Đang giao hàng'")->fetchColumn();
-// [SỬA] Tính theo ngày hoàn thành (ngay_hoan_thanh)
-$total_revenue_today = $pdo->query("SELECT SUM(tong_tien) FROM don_hang WHERE trang_thai_thanh_toan = 'Đã thanh toán' AND DATE(ngay_hoan_thanh) = CURDATE()")->fetchColumn();
+
+// [QUAN TRỌNG] Chỉ tính doanh thu của các đơn ĐÃ GIAO XONG vào HÔM NAY
+// Logic cũ: Dùng ngay_dat -> Sai
+// Logic mới: Dùng ngay_hoan_thanh -> Đúng thực tế nhận tiền
+$total_revenue_today = $pdo->query("
+    SELECT SUM(tong_tien) 
+    FROM don_hang 
+    WHERE trang_thai_thanh_toan = 'Đã thanh toán' 
+      AND trang_thai_don_hang = 'Đã giao hàng'
+      AND DATE(ngay_hoan_thanh) = CURDATE()
+")->fetchColumn();
 
 // --- HELPER CLASS ---
 function getStatusClass($status) {
     switch ($status) {
-        case 'Chờ xử lý':       return 'pending';   // Vàng
-        case 'Đã xác nhận':     return 'confirmed'; // Xanh dương nhạt
-        case 'Đang giao hàng':  return 'shipping';  // Xanh dương đậm
-        case 'Đã giao hàng':    return 'success';   // Xanh lá
-        case 'Đã hủy':          return 'danger';    // Đỏ
+        case 'Chờ xử lý':       return 'pending';
+        case 'Đã xác nhận':     return 'confirmed';
+        case 'Đang giao hàng':  return 'shipping';
+        case 'Đã giao hàng':    return 'success';
+        case 'Đã hủy':          return 'danger';
         default:                return 'secondary';
     }
 }
@@ -110,7 +119,7 @@ function getPaymentClass($status) {
                 <i class="fa-solid fa-money-bill-wave"></i>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Doanh thu hôm nay</div>
+                <div class="stat-label">Doanh thu thực tế hôm nay</div>
                 <div class="stat-value text-green">
                     <?= number_format($total_revenue_today ?? 0, 0, ',', '.') ?> <small>đ</small>
                 </div>
@@ -119,19 +128,13 @@ function getPaymentClass($status) {
     </div>
 
     <div class="main-card-wrapper">
-
         <div class="toolbar-wrapper">
             <div class="status-tabs">
-                <a href="index.php?page=orders_list&status=all"
-                    class="tab-item <?= $current_tab=='all'?'active':'' ?>">Tất cả</a>
-                <a href="index.php?page=orders_list&status=pending"
-                    class="tab-item <?= $current_tab=='pending'?'active':'' ?>">Chờ xử lý</a>
-                <a href="index.php?page=orders_list&status=shipping"
-                    class="tab-item <?= $current_tab=='shipping'?'active':'' ?>">Đang giao</a>
-                <a href="index.php?page=orders_list&status=delivered"
-                    class="tab-item <?= $current_tab=='delivered'?'active':'' ?>">Hoàn tất</a>
-                <a href="index.php?page=orders_list&status=cancelled"
-                    class="tab-item <?= $current_tab=='cancelled'?'active':'' ?>">Đã hủy</a>
+                <a href="index.php?page=orders_list&status=all" class="tab-item <?= $current_tab=='all'?'active':'' ?>">Tất cả</a>
+                <a href="index.php?page=orders_list&status=pending" class="tab-item <?= $current_tab=='pending'?'active':'' ?>">Chờ xử lý</a>
+                <a href="index.php?page=orders_list&status=shipping" class="tab-item <?= $current_tab=='shipping'?'active':'' ?>">Đang giao</a>
+                <a href="index.php?page=orders_list&status=delivered" class="tab-item <?= $current_tab=='delivered'?'active':'' ?>">Hoàn tất</a>
+                <a href="index.php?page=orders_list&status=cancelled" class="tab-item <?= $current_tab=='cancelled'?'active':'' ?>">Đã hủy</a>
             </div>
 
             <form method="GET" class="search-form">
@@ -139,8 +142,7 @@ function getPaymentClass($status) {
                 <input type="hidden" name="status" value="<?= $current_tab ?>">
                 <div class="search-box">
                     <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                    <input type="text" name="q" class="search-input" placeholder="Mã đơn, khách hàng..."
-                        value="<?= htmlspecialchars($search_query) ?>">
+                    <input type="text" name="q" class="search-input" placeholder="Mã đơn, khách hàng..." value="<?= htmlspecialchars($search_query) ?>">
                 </div>
             </form>
         </div>
@@ -162,8 +164,7 @@ function getPaymentClass($status) {
                 <?php if (empty($orders)): ?>
                 <tr>
                     <td colspan="8" class="text-center text-muted" style="padding: 40px;">
-                        <img src="../assets/img/empty-box.png" alt=""
-                            style="width: 50px; opacity: 0.5; margin-bottom: 10px;">
+                        <img src="../assets/img/empty-box.png" alt="" style="width: 50px; opacity: 0.5; margin-bottom: 10px;">
                         <p>Không tìm thấy đơn hàng nào.</p>
                     </td>
                 </tr>
@@ -174,45 +175,15 @@ function getPaymentClass($status) {
                         $pttt = $order['phuong_thuc_thanh_toan'] ?? 'COD';
                     ?>
                 <tr>
-                    <td>
-                        <div class="order-code">#<?= $order['id'] ?></div>
-                    </td>
-
-                    <td>
-                        <div class="customer-name"><?= htmlspecialchars($order['ho_ten']) ?></div>
-                    </td>
-
-                    <td class="text-muted">
-                        <?= date('d/m/Y H:i', strtotime($order['ngay_dat'])) ?>
-                    </td>
-
-                    <td>
-                        <span class="payment-method"><?= htmlspecialchars($pttt) ?></span>
-                    </td>
-
-                    <td>
-                        <span class="<?= $payment_class ?>" style="font-weight: 600; font-size: 13px;">
-                            <?= $order['trang_thai_thanh_toan'] ?>
-                        </span>
-                    </td>
-
-                    <td>
-                        <div class="total-price">
-                            <?= number_format($order['tong_tien'], 0, ',', '.') ?>đ
-                        </div>
-                    </td>
-
-                    <td>
-                        <span class="status-badge <?= $status_class ?>">
-                            <?= $order['trang_thai_don_hang'] ?>
-                        </span>
-                    </td>
-
+                    <td><div class="order-code">#<?= $order['id'] ?></div></td>
+                    <td><div class="customer-name"><?= htmlspecialchars($order['ho_ten']) ?></div></td>
+                    <td class="text-muted"><?= date('d/m/Y H:i', strtotime($order['ngay_dat'])) ?></td>
+                    <td><span class="payment-method"><?= htmlspecialchars($pttt) ?></span></td>
+                    <td><span class="<?= $payment_class ?>" style="font-weight: 600; font-size: 13px;"><?= $order['trang_thai_thanh_toan'] ?></span></td>
+                    <td><div class="total-price"><?= number_format($order['tong_tien'], 0, ',', '.') ?>đ</div></td>
+                    <td><span class="status-badge <?= $status_class ?>"><?= $order['trang_thai_don_hang'] ?></span></td>
                     <td class="text-right">
-                        <a href="index.php?page=order_detail&id=<?= $order['id'] ?>" class="btn-view-detail"
-                            title="Xem">
-                            <i class="fa-solid fa-eye"></i>Xem
-                        </a>
+                        <a href="index.php?page=order_detail&id=<?= $order['id'] ?>" class="btn-view-detail" title="Xem"><i class="fa-solid fa-eye"></i>Xem</a>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -222,8 +193,7 @@ function getPaymentClass($status) {
 
         <?php if ($total_pages > 1): ?>
         <div class="pagination-area">
-            <span class="page-info">Hiển thị <strong><?= count($orders) ?></strong> /
-                <strong><?= $total_records ?></strong> đơn hàng</span>
+            <span class="page-info">Hiển thị <strong><?= count($orders) ?></strong> / <strong><?= $total_records ?></strong> đơn hàng</span>
             <div class="page-list">
                 <?php 
                     $params = $_GET; 
@@ -231,10 +201,7 @@ function getPaymentClass($status) {
                     $qs = http_build_query($params);
                 ?>
                 <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                <a href="index.php?<?= $qs ?>&p=<?= $i ?>"
-                    class="page-number <?= ($i == $current_page) ? 'active' : '' ?>">
-                    <?= $i ?>
-                </a>
+                <a href="index.php?<?= $qs ?>&p=<?= $i ?>" class="page-number <?= ($i == $current_page) ? 'active' : '' ?>"><?= $i ?></a>
                 <?php endfor; ?>
             </div>
         </div>

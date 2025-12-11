@@ -1,31 +1,74 @@
 <?php
 // FILE: client/pages/account.php
 
-// 1. BẢO VỆ TRANG
+// 1. BẢO VỆ TRANG (Yêu cầu đăng nhập)
 if (!isset($_SESSION['user_id'])) {
     echo "<script>window.location.href='index.php?page=login';</script>";
     exit;
 }
 $user_id = $_SESSION['user_id'];
 
-// 2. ROUTER CON (Mặc định vào profile thay vì dashboard)
+// 2. ROUTER CON (Xác định đang ở mục nào: profile, orders, addresses...)
 $section = $_GET['section'] ?? 'profile'; 
 
-// 3. XỬ LÝ FORM (PROFILE & ADDRESS)
+// 3. KHỞI TẠO BIẾN THÔNG BÁO
 $update_success = null;
 $update_error = null; 
 
-// FILE: client/pages/account.php
+// =================================================================
+// A. XỬ LÝ ĐỔI MẬT KHẨU (MỚI THÊM)
+// =================================================================
+if ($section == 'profile' && isset($_POST['action']) && $_POST['action'] == 'change_password') {
+    $current_pass = $_POST['current_password'] ?? '';
+    $new_pass     = $_POST['new_password'] ?? '';
+    $confirm_pass = $_POST['confirm_password'] ?? '';
 
-// A. Xử lý cập nhật thông tin cá nhân (BAO GỒM AVATAR)
-if ($section == 'profile' && $_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Validate dữ liệu
+    if (empty($current_pass) || empty($new_pass) || empty($confirm_pass)) {
+        $update_error = "Vui lòng điền đầy đủ các trường.";
+    } elseif ($new_pass !== $confirm_pass) {
+        $update_error = "Mật khẩu xác nhận không khớp.";
+    } elseif (strlen($new_pass) < 6) {
+        $update_error = "Mật khẩu mới phải có ít nhất 6 ký tự.";
+    } else {
+        // Lấy mật khẩu cũ từ DB để kiểm tra
+        $stmt = $pdo->prepare("SELECT mat_khau FROM nguoi_dung WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $user_auth = $stmt->fetch();
+
+        if ($user_auth && password_verify($current_pass, $user_auth['mat_khau'])) {
+            // Mật khẩu cũ đúng -> Mã hóa mật khẩu mới và cập nhật
+            $new_hash = password_hash($new_pass, PASSWORD_DEFAULT);
+            $stmt_update = $pdo->prepare("UPDATE nguoi_dung SET mat_khau = ? WHERE id = ?");
+            
+            if ($stmt_update->execute([$new_hash, $user_id])) {
+                $update_success = "Đổi mật khẩu thành công! Vui lòng đăng nhập lại lần sau.";
+            } else {
+                $update_error = "Có lỗi xảy ra, vui lòng thử lại sau.";
+            }
+        } else {
+            $update_error = "Mật khẩu hiện tại không chính xác.";
+        }
+    }
+}
+
+// =================================================================
+// B. XỬ LÝ CẬP NHẬT THÔNG TIN CÁ NHÂN (AVATAR, TÊN, SĐT...)
+// =================================================================
+// Lưu ý: Thêm điều kiện !isset($_POST['action']) để tránh xung đột với form đổi mật khẩu
+if ($section == 'profile' && $_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['action'])) {
+    
     $ho_ten = trim($_POST['ho_ten'] ?? '');
     $so_dien_thoai = trim($_POST['so_dien_thoai'] ?? '');
     $ngay_sinh = $_POST['ngay_sinh'] ?? null;
     $gioi_tinh = $_POST['gioi_tinh'] ?? 'other';
     
-    // Lấy avatar hiện tại từ DB (nếu có)
-    $avatar_new_name = $user_profile_data['avatar'] ?? null; 
+    // Lấy avatar hiện tại để làm mặc định nếu không up ảnh mới
+    $stmt_u = $pdo->prepare("SELECT avatar FROM nguoi_dung WHERE id = ?");
+    $stmt_u->execute([$user_id]);
+    $curr_u = $stmt_u->fetch();
+    $avatar_new_name = $curr_u['avatar'] ?? null; 
+    
     $upload_error = null;
 
     // 1. Xử lý Upload Avatar
@@ -35,7 +78,6 @@ if ($section == 'profile' && $_SERVER['REQUEST_METHOD'] == 'POST') {
         $file_size = $_FILES['avatar_file']['size'];
         $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
 
-        // Các định dạng cho phép
         $allowed_ext = ['jpg', 'jpeg', 'png', 'gif'];
         
         if (!in_array($file_ext, $allowed_ext)) {
@@ -43,53 +85,44 @@ if ($section == 'profile' && $_SERVER['REQUEST_METHOD'] == 'POST') {
         } elseif ($file_size > 2 * 1024 * 1024) { // Giới hạn 2MB
              $upload_error = "Kích thước ảnh không được vượt quá 2MB.";
         } else {
-            // Tạo tên file mới để tránh trùng lặp: avatar_ID_Timestamp.ext
+            // Tạo tên file mới: avatar_ID_Timestamp.ext
             $avatar_new_name = 'avatar_' . $user_id . '_' . time() . '.' . $file_ext;
             $upload_dir = 'assets/img/avatars/';
             
-            // Tạo thư mục nếu chưa có
             if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
 
-            if (move_uploaded_file($file_tmp, $upload_dir . $avatar_new_name)) {
-                // Upload thành công. (Tùy chọn: Có thể xóa ảnh cũ ở đây nếu muốn tiết kiệm bộ nhớ)
-            } else {
+            if (!move_uploaded_file($file_tmp, $upload_dir . $avatar_new_name)) {
                 $upload_error = "Có lỗi xảy ra khi lưu ảnh.";
-                $avatar_new_name = $user_profile_data['avatar']; // Giữ lại ảnh cũ nếu lỗi
+                $avatar_new_name = $curr_u['avatar']; // Rollback nếu lỗi
             }
         }
     }
 
-    // 2. Kiểm tra lỗi và Cập nhật DB
+    // 2. Validate và Cập nhật vào DB
     if (empty($ho_ten)) {
         $update_error = "Họ và tên không được để trống.";
     } elseif ($upload_error) {
-        $update_error = $upload_error; // Hiển thị lỗi upload
+        $update_error = $upload_error;
     } else {
-        // Cần cập nhật hàm updateUserProfile trong src/user_functions.php để nhận thêm tham số avatar
-        // Ví dụ: updateUserProfile($pdo, $user_id, $ho_ten, $so_dien_thoai, $ngay_sinh, $gioi_tinh, $avatar_new_name);
-        
-        // GIẢ ĐỊNH: Bạn đã sửa hàm updateUserProfile để nhận tham số thứ 6 là $avatar_new_name
-        // Nếu chưa sửa hàm trong model, bạn cần vào đó thêm cột avatar = ? vào câu lệnh UPDATE.
-        
-        // Code tạm thời giả định hàm đã được sửa:
+        // Gọi hàm cập nhật (Giả định hàm này đã được sửa để nhận tham số avatar)
         $result = updateUserProfile($pdo, $user_id, $ho_ten, $so_dien_thoai, $ngay_sinh, $gioi_tinh, $avatar_new_name);
 
         if ($result) {
             $update_success = "Cập nhật thông tin thành công!";
-            $_SESSION['user_name'] = $ho_ten;
-            // Refresh lại dữ liệu mới nhất để hiển thị
-            $user_profile_data = getUserProfile($pdo, $user_id); 
+            $_SESSION['user_name'] = $ho_ten; // Cập nhật session tên hiển thị
         } else {
             $update_error = "Cập nhật thất bại. Vui lòng thử lại.";
         }
     }
 }
 
-// B. Xử lý Địa chỉ (Thêm - Sửa - Xóa)
+// =================================================================
+// C. XỬ LÝ SỔ ĐỊA CHỈ (THÊM, SỬA, XÓA)
+// =================================================================
 if ($section == 'addresses' && $_SERVER['REQUEST_METHOD'] == 'POST') {
     $action = $_POST['action'] ?? '';
     
-    // 1. Thêm mới
+    // Thêm mới
     if ($action == 'add_address') {
         $dia_chi_moi = trim($_POST['dia_chi_moi'] ?? '');
         if (!empty($dia_chi_moi)) {
@@ -100,7 +133,7 @@ if ($section == 'addresses' && $_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
     
-    // 2. Xóa
+    // Xóa
     if ($action == 'delete_address') {
         $address_id = $_POST['address_id'] ?? 0;
         if (deleteUserAddress($pdo, $user_id, $address_id)) {
@@ -109,7 +142,7 @@ if ($section == 'addresses' && $_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
-    // 3. Sửa (Cập nhật)
+    // Sửa
     if ($action == 'edit_address') {
         $address_id = $_POST['address_id'] ?? 0;
         $dia_chi_sua = trim($_POST['dia_chi_moi'] ?? '');
@@ -121,14 +154,14 @@ if ($section == 'addresses' && $_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// 4. LẤY DỮ LIỆU
+// 4. LẤY DỮ LIỆU NGƯỜI DÙNG MỚI NHẤT
 $user_profile_data = getUserProfile($pdo, $user_id); 
 if (!$user_profile_data) {
     echo "<script>window.location.href='index.php?page=logout';</script>";
     exit;
 }
 
-// Lấy dữ liệu cho section hiện tại
+// 5. LẤY DỮ LIỆU RIÊNG CHO TỪNG SECTION
 switch ($section) {
     case 'orders': $data = getUserOrders($pdo, $user_id); break;
     case 'addresses': $data = getUserAddresses($pdo, $user_id); break;
@@ -136,6 +169,7 @@ switch ($section) {
     default: $data = $user_profile_data; break;
 }
 ?>
+
 <link rel="stylesheet" href="assets/css/client/account.css">
 <div class="container" style="margin-top: 20px; margin-bottom: 40px;">
     
@@ -152,7 +186,7 @@ switch ($section) {
         <aside class="cps-sidebar">
             <div class="sidebar-user-info">
               <?php 
-                // Xác định avatar cho sidebar
+                // Logic hiển thị Avatar sidebar
                 $sidebar_avatar = 'https://ui-avatars.com/api/?name=' . urlencode($user_profile_data['ho_ten']) . '&background=ffebd0&color=fd7e14&size=64';
                 if (!empty($user_profile_data['avatar']) && file_exists('assets/img/avatars/' . $user_profile_data['avatar'])) {
                     $sidebar_avatar = 'assets/img/avatars/' . $user_profile_data['avatar'];
@@ -194,15 +228,16 @@ switch ($section) {
             <?php
             switch ($section) {
                 case 'profile':
-                    if (file_exists('client/account/profile.php')) require_once 'client/account/profile.php'; 
+                    // Include file profile (View)
+                    if (file_exists('client/account/profile.php')) require 'client/account/profile.php'; 
                     break;
 
                 case 'orders':
-                    if (file_exists('client/account/order_history.php')) require_once 'client/account/order_history.php'; 
+                    if (file_exists('client/account/order_history.php')) require 'client/account/order_history.php'; 
                     break;
 
                 case 'addresses':
-                    if (file_exists('client/account/address_book.php')) require_once 'client/account/address_book.php'; 
+                    if (file_exists('client/account/address_book.php')) require 'client/account/address_book.php'; 
                     break;
 
                 default:

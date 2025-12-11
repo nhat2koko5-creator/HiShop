@@ -1,24 +1,32 @@
 <?php
 // FILE: client/account/profile.php
 
-// 1. (FIX LỖI) Định nghĩa chế độ Sửa/Xem
-$is_edit_mode = isset($_GET['mode']) && $_GET['mode'] == 'edit';
+// 1. Xác định chế độ hiển thị từ URL (Mặc định là 'view')
+$mode = $_GET['mode'] ?? 'view'; // Các giá trị: view, edit, change_password
 
-// 2. Helper function: Xác định đường dẫn ảnh đại diện
+// 2. Helper lấy Avatar (Ưu tiên ảnh upload, nếu không có dùng UI Avatars)
 function getAvatarUrl($data) {
     if (!empty($data['avatar']) && file_exists('assets/img/avatars/' . $data['avatar'])) {
         return 'assets/img/avatars/' . $data['avatar'];
-    } else {
-        // Ảnh mặc định nếu chưa upload
-        return 'https://ui-avatars.com/api/?name=' . urlencode($data['ho_ten']) . '&background=ffebd0&color=fd7e14&size=128';
     }
+    // Fallback avatar theo tên
+    return 'https://ui-avatars.com/api/?name=' . urlencode($data['ho_ten']) . '&background=ffebd0&color=fd7e14&size=128';
 }
 $current_avatar = getAvatarUrl($data);
 ?>
+
 <link rel="stylesheet" href="assets/css/account.css">
+
 <div class="cps-card full-width" style="min-height: 400px;">
+    
     <div class="cps-card-header">
-        <h3>Thông tin cá nhân</h3>
+        <h3>
+            <?php 
+                if ($mode == 'edit') echo 'Chỉnh sửa thông tin';
+                elseif ($mode == 'change_password') echo 'Đổi mật khẩu';
+                else echo 'Hồ sơ cá nhân';
+            ?>
+        </h3>
     </div>
     
     <div class="cps-card-body">
@@ -36,17 +44,15 @@ $current_avatar = getAvatarUrl($data);
         <?php endif; ?>
 
 
-        <?php if ($is_edit_mode): ?>
+        <?php if ($mode == 'edit'): ?>
             <form class="cps-form profile-edit-form" method="POST" action="index.php?page=account&section=profile" enctype="multipart/form-data">
                 
                 <div class="form-group" style="text-align: center; margin-bottom: 25px;">
                     <label style="display: block; margin-bottom: 10px;">Ảnh đại diện</label>
                     <div class="avatar-upload-container">
-                        <img id="avatar-preview" src="<?php echo $current_avatar; ?>" alt="Avatar Preview" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #eee; margin-bottom: 10px; cursor: pointer;">
+                        <img id="avatar-preview" src="<?php echo $current_avatar; ?>" alt="Preview" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #eee; margin-bottom: 10px; cursor: pointer;">
                         <br>
-                        <label for="avatar_file" class="btn btn-outline btn-sm" style="cursor: pointer;">
-                            📷 Chọn ảnh mới
-                         </label>
+                        <label for="avatar_file" class="btn btn-outline btn-sm" style="cursor: pointer;">📷 Chọn ảnh mới</label>
                         <input type="file" id="avatar_file" name="avatar_file" accept="image/*" style="display: none;">
                         <p style="font-size: 12px; color: #888; margin-top: 5px;">Chấp nhận: JPG, PNG, GIF (Tối đa 2MB)</p>
                     </div>
@@ -82,26 +88,42 @@ $current_avatar = getAvatarUrl($data);
             <script>
                 document.getElementById('avatar_file').addEventListener('change', function(e) {
                     const file = e.target.files[0];
-                    if (file) {
-                        // Kiểm tra loại file
-                        if (!file.type.startsWith('image/')) {
-                            alert('Vui lòng chọn file ảnh.');
-                            this.value = ''; // Reset input
-                            return;
-                        }
-                        // Hiển thị xem trước
+                    if (file && file.type.startsWith('image/')) {
                         const reader = new FileReader();
-                        reader.onload = function(e) {
-                            document.getElementById('avatar-preview').src = e.target.result;
-                        }
+                        reader.onload = function(e) { document.getElementById('avatar-preview').src = e.target.result; }
                         reader.readAsDataURL(file);
+                    } else {
+                        alert('Vui lòng chọn file ảnh hợp lệ.');
                     }
                 });
-                // Cho phép click vào ảnh để chọn file
-                document.getElementById('avatar-preview').addEventListener('click', function() {
-                    document.getElementById('avatar_file').click();
-                });
             </script>
+
+
+        <?php elseif ($mode == 'change_password'): ?>
+            <form class="cps-form profile-edit-form" method="POST" action="index.php?page=account&section=profile&mode=change_password">
+                <input type="hidden" name="action" value="change_password">
+                
+                <div class="form-group">
+                    <label>Mật khẩu hiện tại <span style="color:red">*</span></label>
+                    <input type="password" name="current_password" class="cps-input" required placeholder="Nhập mật khẩu cũ">
+                </div>
+                
+                <div class="form-group">
+                    <label>Mật khẩu mới <span style="color:red">*</span></label>
+                    <input type="password" name="new_password" class="cps-input" required placeholder="Ít nhất 6 ký tự">
+                </div>
+                
+                <div class="form-group">
+                    <label>Xác nhận mật khẩu mới <span style="color:red">*</span></label>
+                    <input type="password" name="confirm_password" class="cps-input" required placeholder="Nhập lại mật khẩu mới">
+                </div>
+
+                <div class="form-actions" style="justify-content: center; gap: 15px; margin-top: 20px;">
+                    <a href="index.php?page=account&section=profile" class="btn btn-outline">Quay lại</a>
+                    <button type="submit" class="btn btn-primary">Cập nhật mật khẩu</button>
+                </div>
+            </form>
+
 
         <?php else: ?>
             <div class="profile-view-container">
@@ -113,6 +135,10 @@ $current_avatar = getAvatarUrl($data);
                     <div class="info-row">
                         <span class="info-label">Họ và tên</span>
                         <span class="info-value"><?php echo htmlspecialchars($data['ho_ten']); ?></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Email</span>
+                        <span class="info-value"><?php echo htmlspecialchars($data['email']); ?></span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Số điện thoại</span>
@@ -136,8 +162,13 @@ $current_avatar = getAvatarUrl($data);
                     </div>
                 </div>
 
-                <div class="profile-actions">
-                    <a href="index.php?page=account&section=profile&mode=edit" class="btn btn-danger btn-wide">Chỉnh sửa thông tin</a>
+                <div class="profile-actions" style="display: flex; gap: 15px; justify-content: center;">
+                    <a href="index.php?page=account&section=profile&mode=edit" class="btn btn-primary">
+                        <i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa thông tin
+                    </a>
+                    <a href="index.php?page=account&section=profile&mode=change_password" class="btn btn-outline" style="border: 1px solid #ddd; color: #333;">
+                        <i class="fa-solid fa-key"></i> Đổi mật khẩu
+                    </a>
                 </div>
             </div>
         <?php endif; ?>

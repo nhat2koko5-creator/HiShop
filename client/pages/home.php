@@ -345,13 +345,10 @@ $discountProducts = getDiscountProducts($pdo);
                 </div> </div> <?php endforeach; ?>
     <?php else: ?>
         <p style="text-align:center;width:100%;">Không có sản phẩm giảm giá.</p>
-    <?php endif; ?>
-</div>
-
-        <div class="swiper-button-prev discount-prev"></div>
+<?php endif; ?>
+</div> </div> <div class="swiper-button-prev discount-prev"></div>
         <div class="swiper-button-next discount-next"></div>
-    </div>
-</section>
+    </div> </section>
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script>
     var swiperDiscount = new Swiper(".discount-carousel", {
@@ -399,7 +396,7 @@ $discountProducts = getDiscountProducts($pdo);
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    
+    const isLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
     // --- Biến DOM (cho modal) ---
     const modal = document.getElementById('quick-add-modal');
     const modalProductName = document.getElementById('modal-product-name');
@@ -626,8 +623,29 @@ document.addEventListener("click", function(e) {
     });
 
     // 4. Gán sự kiện cho nút "Thêm vào giỏ" TRONG MODAL
+// 4. Gán sự kiện cho nút "Thêm vào giỏ" / "Mua ngay" TRONG MODAL
 modalAddBtn.addEventListener('click', async function () {
-    if (!currentSelectedVariant) return;
+    // 1. Kiểm tra đã chọn biến thể chưa
+    if (!currentSelectedVariant) {
+        showPopup("Vui lòng chọn phiên bản sản phẩm!");
+        return;
+    }
+
+    // [LOGIC MỚI] XỬ LÝ CHUYỂN HƯỚNG KHI MUA NGAY + CHƯA ĐĂNG NHẬP
+    if (currentAction === 'buy' && !isLoggedIn) {
+        // Tạo đường dẫn đến trang Checkout (nơi khách muốn đến)
+        const vid = currentSelectedVariant.id;
+        const qty = selectedQty;
+        const checkoutUrl = `index.php?page=checkout&action=buy_now&variant_id=${vid}&quantity=${qty}`;
+
+        // Chuyển hướng sang trang Login, kèm theo tham số redirect
+        // encodeURIComponent để đảm bảo đường dẫn không bị lỗi ký tự đặc biệt
+        window.location.href = `index.php?page=login&redirect=${encodeURIComponent(checkoutUrl)}`;
+        
+        return; // Dừng lại, không chạy code phía dưới nữa
+    }
+
+    // --- NẾU ĐÃ ĐĂNG NHẬP HOẶC CHỈ LÀ "THÊM VÀO GIỎ" THÌ CHẠY TIẾP ---
 
     const bodyData = {
         id: currentProductId,
@@ -635,28 +653,28 @@ modalAddBtn.addEventListener('click', async function () {
         quantity: selectedQty
     };
 
+    // Gọi AJAX xử lý
     const data = await sendCartRequest(currentAction, bodyData);
 
-    // -------------------
-    // Xử lý MUA NGAY
-    // -------------------
-if (currentAction === "buy") {
-    if (data && data.status === "success") {
-
-        // Lấy ID biến thể được chọn
-        const vid = currentSelectedVariant.id;
-
-        // CHUYỂN HƯỚNG ĐÚNG LINK BẠN CẦN
-        window.location.href = `index.php?page=checkout&action=buy_now&variant_id=${vid}&quantity=${selectedQty}`;
-
-    } else {
-        showPopup(data?.message || "Không thể mua ngay");
+    // Xử lý MUA NGAY (Khi đã đăng nhập)
+    if (currentAction === "buy") {
+        if (data && data.status === "success") {
+            const vid = currentSelectedVariant.id;
+            window.location.href = `index.php?page=checkout&action=buy_now&variant_id=${vid}&quantity=${selectedQty}`;
+        } else {
+            // Trường hợp lỗi (ví dụ: hết session, lỗi server) -> Hiện popup hoặc reload
+            if (data?.message === 'Bạn cần đăng nhập trước.') {
+                 // Fallback: Nếu backend báo chưa đăng nhập, cũng chuyển hướng luôn
+                 const checkoutUrl = `index.php?page=checkout&action=buy_now&variant_id=${currentSelectedVariant.id}&quantity=${selectedQty}`;
+                 window.location.href = `index.php?page=login&redirect=${encodeURIComponent(checkoutUrl)}`;
+            } else {
+                 showPopup(data?.message || "Không thể mua ngay");
+            }
+        }
+        return;
     }
-    return;
-}
-    // -------------------
-    // Xử lý THÊM VÀO GIỎ
-    // -------------------
+
+    // Xử lý THÊM VÀO GIỎ (Giữ nguyên)
     closeQuickAddModal();   
     if (data.status === "success") {
         showPopup("🛒 Sản phẩm đã được thêm vào giỏ hàng!");

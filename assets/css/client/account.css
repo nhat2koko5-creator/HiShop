@@ -690,9 +690,11 @@
 /* --- 3. Grid Thông tin (Địa chỉ & Thanh toán) --- */
 .od-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* Dùng repeat(2, 1fr) để chia đôi chính xác 50%-50% */
+  grid-template-columns: repeat(2, 1fr); 
   gap: 24px;
   margin-bottom: 24px;
+  align-items: stretch; /* Bắt buộc 2 cột cao bằng nhau */
 }
 
 .od-info-card {
@@ -701,7 +703,11 @@
   padding: 24px;
   border: 1px solid #e5e7eb;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-  height: 100%;
+  
+  /* Flex column để nội dung bên trong dàn đều */
+  display: flex;
+  flex-direction: column;
+  height: 100%; 
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -721,30 +727,42 @@
   letter-spacing: 0.5px;
 }
 
+/* Nội dung bên trong thẻ */
 .od-info-content {
   font-size: 15px;
   color: #4b5563;
   line-height: 1.6;
+  flex: 1; /* Đẩy các phần tử con chiếm hết khoảng trống */
+  display: flex;
+  flex-direction: column;
 }
 
 .od-info-content p {
   margin-bottom: 8px;
 }
 
-.od-info-content strong {
-  color: #111827;
-}
-
-/* Hộp trạng thái thanh toán bên trong card */
+/* Hộp trạng thái thanh toán (Clean CSS, bỏ inline style) */
 .payment-status-box {
-  background: #f9fafb !important;
-  padding: 16px !important;
-  border-radius: 10px !important;
-  border: 1px solid #e5e7eb !important;
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-top: 10px;
+  gap: 16px;
+  margin-top: auto; /* Đẩy xuống đáy card để thẳng hàng với bên kia */
+}
+
+.payment-status-box > span:first-child {
+    font-size: 24px; /* Kích thước icon */
+    flex-shrink: 0;
+}
+
+/* --- Responsive Mobile --- */
+@media (max-width: 768px) {
+  .od-grid {
+    grid-template-columns: 1fr; /* Về 1 cột trên mobile */
+  }
 }
 
 /* --- 4. Danh sách sản phẩm --- */

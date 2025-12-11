@@ -201,22 +201,22 @@
     background-color: var(--color-white);
     border: 1px solid var(--color-border);
     border-radius: 50%;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Tăng bóng đổ cho nổi bật */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     transition: all 0.2s ease;
     color: var(--color-primary);
     
-    /* Định vị chuẩn */
-    position: absolute; 
-    top: 50%;
-    transform: translateY(-50%);
-    
-    /* QUAN TRỌNG: Phải cao hơn Tag giảm giá (z-index: 1000) */
-    z-index: 1010; 
-    
+    position: absolute;
+    z-index: 100;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+
+    /* --- SỬA LẠI ĐOẠN NÀY --- */
+    /* Thay vì top: 50% (giữa thẻ), ta đặt cố định theo ảnh */
+    top: 106px; /* = 16px (padding card) + 90px (giữa ảnh 180px) */
+    transform: translateY(-50%); /* Căn tim nút vào đúng điểm 106px */
+    margin-top: 0; /* Xóa margin cũ */
 }
 
 /* Đảm bảo nút nằm đúng vị trí trong vùng padding */

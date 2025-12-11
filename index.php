@@ -121,9 +121,16 @@ switch ($page) {
 }
 // (MỚI) BƯỚC 8.5: KIỂM TRA BẢO MẬT (TRƯỚC KHI TẢI HEADER)
 $pages_that_require_login = ['checkout', 'account', 'process_payment', 'order_detail'];
+
 if (in_array($page, $pages_that_require_login) && !isset($_SESSION['user_id'])) {
-    // Người dùng chưa đăng nhập VÀ đang cố vào trang bảo mật
-    header('Location: index.php?page=login');
+    // 1. Lấy toàn bộ query string hiện tại (Ví dụ: page=checkout&action=buy_now&variant_id=1...)
+    $current_query = $_SERVER['QUERY_STRING'];
+    
+    // 2. Mã hóa URL đích để truyền an toàn qua URL
+    $redirect_url = urlencode("index.php?" . $current_query);
+    
+    // 3. Chuyển hướng đến trang login kèm theo tham số 'redirect'
+    header("Location: index.php?page=login&redirect=" . $redirect_url);
     exit; // Dừng lại ngay
 }
 // (MỚI) XỬ LÝ THANH TOÁN (PHẢI CHẠY TRƯỚC KHI IN HTML)

@@ -65,7 +65,36 @@ $pay_info = $pay_labels[$pay_status] ?? ['text' => $pay_status, 'color' => '#333
                 <?= $status_info['text'] ?>
             </div>
         </div>
-        <div class="od-grid">
+        <?php if ($order['trang_thai_don_hang'] == 'Đã hủy'): ?>
+            <div class="cancellation-alert" style="
+                background-color: #fef2f2; 
+                border: 1px solid #fecaca; 
+                border-left: 4px solid #ef4444; 
+                border-radius: 6px; 
+                padding: 16px; 
+                margin-bottom: 24px; 
+                display: flex; 
+                gap: 12px;
+                align-items: flex-start;">
+                
+                <div style="color: #ef4444; font-size: 20px;">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </div>
+                
+                <div>
+                    <h4 style="margin: 0 0 6px 0; color: #991b1b; font-size: 16px; font-weight: 700;">Đơn hàng đã bị hủy</h4>
+                    <p style="margin: 0; color: #7f1d1d; font-size: 14px; line-height: 1.5;">
+                        <strong>Lý do:</strong> 
+                        <?= !empty($order['ly_do_huy']) ? htmlspecialchars($order['ly_do_huy']) : 'Quyết định từ hệ thống/quản trị viên (Vui lòng liên hệ CSKH để biết thêm chi tiết).' ?>
+                    </p>
+                    <div style="margin-top: 8px; font-size: 13px; color: #991b1b;">
+                        Nếu bạn đã thanh toán online, tiền sẽ được hoàn về tài khoản của bạn trong vòng 3-5 ngày làm việc.
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+ <div class="od-grid">
+            
             <div class="od-info-card">
                 <h3>Địa chỉ người nhận</h3>
                 <div class="od-info-content">
@@ -83,13 +112,13 @@ $pay_info = $pay_labels[$pay_status] ?? ['text' => $pay_status, 'color' => '#333
                             <?php 
                                 if ($payment_method == 'COD') echo "Thanh toán khi nhận hàng (COD)";
                                 else if ($payment_method == 'VNPAY') echo "Thanh toán qua VNPAY";
-                                else echo $payment_method;
+                                else echo htmlspecialchars($payment_method);
                             ?>
                         </strong>
                     </p>
                     
-                    <div class="payment-status-box" style="background: #fff; padding: 12px; border-radius: 8px; border: 1px solid <?= $pay_info['color'] ?>40;">
-                        <span style="font-size: 24px;"><?= $pay_info['icon'] ?></span> 
+                    <div class="payment-status-box">
+                        <span><?= $pay_info['icon'] ?></span> 
                         <div>
                             <span style="font-size: 13px; color: #6b7280; display:block; font-weight: 500;">Trạng thái tiền:</span>
                             <strong style="color: <?= $pay_info['color'] ?>; font-size:15px;"><?= $pay_info['text'] ?></strong>
@@ -97,11 +126,10 @@ $pay_info = $pay_labels[$pay_status] ?? ['text' => $pay_status, 'color' => '#333
                     </div>
 
                     <?php 
-                    // [SỬA] Chỉ hiện nút thanh toán lại nếu là VNPAY
                     if ($pay_status == 'Chưa thanh toán' 
                         && $order_status != 'Đã hủy' 
                         && $order_status != 'Trả hàng'
-                        && $payment_method == 'VNPAY'): // <-- Thêm điều kiện này
+                        && $payment_method == 'VNPAY'): 
                     ?>
                         <div style="margin-top: 15px;">
                             <a href="client/pages/process_vnpay.php?repay_order_id=<?= $order['id'] ?>" class="btn btn-primary" style="width: 100%; text-align: center; display: block; background-color: #007bff; color: white; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: 600;">
@@ -114,16 +142,15 @@ $pay_info = $pay_labels[$pay_status] ?? ['text' => $pay_status, 'color' => '#333
                     <?php endif; ?>
                     
                     <?php if(!empty($order['ghi_chu'])): ?>
-                        <div style="margin-top: 15px;">
+                        <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #eee;">
                             <p style="color:#666; font-size: 13px; margin-bottom: 4px;">Ghi chú:</p>
                             <p style="font-style: italic;">"<?= htmlspecialchars($order['ghi_chu']) ?>"</p>
                         </div>
                     <?php endif; ?>
                 </div>
             </div>
-        </div>
 
-        <div class="od-products-card">
+        </div> <div class="od-products-card">
             <div class="od-products-header">Sản phẩm</div>
             <div class="od-products-list">
                 <?php foreach ($order_items as $item): 

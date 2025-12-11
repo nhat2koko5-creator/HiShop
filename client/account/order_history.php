@@ -59,12 +59,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['confirm_received_id'])
     $order_info = $stmt_check->fetch();
 
     if ($order_info) {
-        // Cập nhật trạng thái đơn -> Đã giao hàng
-        // Cập nhật thanh toán -> Đã thanh toán (Nếu là COD thì khách nhận hàng = đã trả tiền)
-       $stmt_update = $pdo->prepare("
+        // [QUAN TRỌNG] CẬP NHẬT NGAY_HOAN_THANH ĐỂ TÍNH DOANH THU CHO HÔM NAY
+        $stmt_update = $pdo->prepare("
             UPDATE don_hang 
             SET trang_thai_don_hang = 'Đã giao hàng',
-                trang_thai_thanh_toan = 'Đã thanh toán'
+                trang_thai_thanh_toan = 'Đã thanh toán',
+                ngay_hoan_thanh = NOW()
             WHERE id = ?
         ");
         $stmt_update->execute([$conf_id]);

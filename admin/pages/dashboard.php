@@ -64,7 +64,7 @@ foreach($chart_data as $d) { $labels[] = $d['ngay']; $values[] = (int)$d['doanh_
             <div class="card-icon" style="background: #fff8dd; color: #ffc700;"><i
                     class="fa-solid fa-boxes-stacked"></i></div>
             <div>
-                <div class="card-label">Mẫu sắp hết (< 5)</div>
+                <div class="card-label">Hàng sắp hết</div>
                         <div class="card-value text-warning"><?= $total_low_stock ?> <span
                                 style="font-size:13px; font-weight:500; color:#b5b5c3;">mục</span></div>
                 </div>

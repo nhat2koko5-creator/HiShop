@@ -3,7 +3,7 @@
 
 $title = $page_title ?? 'Dashboard';
 $admin_name = $_SESSION['user_name'] ?? 'Admin';
-$admin_avatar = 'https://ui-avatars.com/api/?name=' . urlencode($admin_name) . '&background=4f46e5&color=fff&size=128'; // Đổi màu nền avatar thành tím (Indigo) cho hợp brand
+$admin_avatar = 'https://ui-avatars.com/api/?name=' . urlencode($admin_name) . '&background=4f46e5&color=fff&size=128'; 
 ?>
 
 <header class="admin-topbar">
@@ -18,7 +18,8 @@ $admin_avatar = 'https://ui-avatars.com/api/?name=' . urlencode($admin_name) . '
 
     <div class="topbar-right">
         <form action="index.php" method="GET" class="header-search">
-            <input type="hidden" name="page" value="orders_list"> <div class="search-icon">
+            <input type="hidden" name="page" value="orders_list"> 
+            <div class="search-icon">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </div>
             <input type="text" name="q" placeholder="Tìm nhanh (ID, Tên, SĐT)..." class="search-input" value="<?= isset($_GET['q']) ? htmlspecialchars($_GET['q']) : '' ?>">
@@ -36,14 +37,7 @@ $admin_avatar = 'https://ui-avatars.com/api/?name=' . urlencode($admin_name) . '
             </div>
             <img src="<?php echo $admin_avatar; ?>" alt="Admin" class="user-avatar">
             
-            <div class="user-dropdown">
-                <a href="#" class="dropdown-item"><i class="fa-regular fa-user"></i> Hồ sơ cá nhân</a>
-                <div class="dropdown-divider"></div>
-                <a href="#" onclick="confirmLogout(event)" class="dropdown-item text-danger">
-                    <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
-                </a>
             </div>
-        </div>
     </div>
 </header>
 
