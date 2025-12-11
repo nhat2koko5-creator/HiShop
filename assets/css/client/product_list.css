@@ -479,7 +479,7 @@
 }
 
 .sidebar-filters {
-    flex: 0 0 150px; /* Chiều rộng cố định cho sidebar */
+    flex: 0 0 270px; /* Chiều rộng cố định cho sidebar */
 }
 
 .product-list-content {

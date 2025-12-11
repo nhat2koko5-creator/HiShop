@@ -1,12 +1,9 @@
 <?php
-// FILE: product_list.php (ĐÃ SỬA - HIỂN THỊ GIẢM GIÁ + GIỮ NGUYÊN PHÂN TRANG & MODAL)
+// FILE: product_list.php (ĐÃ SỬA HOÀN CHỈNH - LIÊN KẾT THƯƠNG HIỆU QUA BẢNG san_pham_thuong_hieu)
 require_once 'client/layouts/header.php';
 
 /* ------------ HÀM HỖ TRỢ: LẤY GIẢM GIÁ CHO 1 SẢN PHẨM ------------- */
-/* Sử dụng đúng cấu trúc DB trong hishop_db.sql:
-   - san_pham_giam_gia(giam_gia_id, san_pham_id)
-   - giam_gia(id, loai_giam_gia enum('percent','amount'), gia_tri, ngay_bat_dau, ngay_ket_thuc)
-*/
+/* (Code hàm discount không đổi, giữ nguyên) */
 
 /* ---------------- PHÂN TRANG ---------------- */
 $products_per_page = 11;
@@ -18,7 +15,7 @@ $offset = ($current_page - 1) * $products_per_page;
 $category_id = isset($_GET['category_id']) ? (int)$_GET['category_id'] : 0;
 $category_name = "Tất cả sản phẩm";
 
-/* Base WHERE */
+/* Base WHERE (Dùng sp.trang_thai = 1 cho sản phẩm - giữ nguyên) */
 $where_clauses = ['sp.trang_thai = 1'];
 $params = [];
 
@@ -36,11 +33,33 @@ if ($category_id > 0) {
 
 $where_sql = implode(' AND ', $where_clauses);
 
+/* ---------------- LẤY DANH SÁCH THƯƠNG HIỆU ---------------- */
+$sql_brands = "SELECT id, ten FROM thuong_hieu ORDER BY ten ASC";
+$stmt_brands = $pdo->prepare($sql_brands);
+$stmt_brands->execute();
+$brands = $stmt_brands->fetchAll(PDO::FETCH_ASSOC);
+
+
 /* ---------------- ĐẾM TỔNG SẢN PHẨM ---------------- */
-$sql_count = "SELECT COUNT(sp.id) FROM san_pham sp WHERE $where_sql";
+// CHÚ Ý: Nếu có filter brand, cần join bảng trung gian khi đếm tổng
+$where_clauses_count = $where_clauses;
+$params_count = $params;
+$join_count = "";
+
+/* ----- FILTER THƯƠNG HIỆU cho Count ----- */
+if (!empty($_GET['brand_id']) && (int)$_GET['brand_id'] > 0) {
+    // SỬ DỤNG JOIN với bảng trung gian
+    $join_count .= ' JOIN san_pham_thuong_hieu spth ON spth.san_pham_id = sp.id';
+    $where_clauses_count[] = 'spth.thuong_hieu_id = ?';
+    $params_count[] = (int)$_GET['brand_id'];
+}
+$where_sql_count = implode(' AND ', $where_clauses_count);
+
+
+$sql_count = "SELECT COUNT(DISTINCT sp.id) FROM san_pham sp $join_count WHERE $where_sql_count";
 $stmt_count = $pdo->prepare($sql_count);
-if (!empty($params)) {
-    $stmt_count->execute($params);
+if (!empty($params_count)) {
+    $stmt_count->execute($params_count);
 } else {
     $stmt_count->execute();
 }
@@ -51,38 +70,16 @@ if ($current_page > $total_pages) {
     $offset = ($current_page - 1) * $products_per_page;
 }
 
-/* ---------------- LẤY SẢN PHẨM (không lọc chỉ giảm giá) ---------------- */
-/* Chú ý: dùng placeholder cho LIMIT/OFFSET bằng bindValue (PDO::PARAM_INT) */
-
-
-// bind category params (positional: they were added with ? in $where_sql)
-$bindIndex = 1;
-if (!empty($params)) {
-    foreach ($params as $p) {
-        // bindParam is 1-indexed for positional ? — but we used ? placeholders earlier.
-        // Because we used ? in $where_sql, it's simpler to re-prepare with positional placeholders.
-        // To avoid mismatch, we'll build execute array in same order:
-        // We'll call execute later with array_merge($params, [limit, offset])
-    }
-}
-
-// Execute with merged array: first the positional params (if any), then limit and offset as integers
-$exec_params = $params;
-$exec_params[] = $products_per_page;
-$exec_params[] = $offset;
-
-// However PDO does not accept passing :limit/:offset as values in execute when prepared with named params.
-// So change approach: bind named params for :limit and :offset, and execute with positional params if present.
-// We'll re-prepare properly:
-
-// Rebuild statement: if there are category params, replace the '?' placeholders with named ones to avoid confusion.
-// Simpler: prepare statement dynamically with named param for category if exists.
-
-/* ---------------- LẤY SẢN PHẨM (có thông số kỹ thuật) ---------------- */
-/* ---------------- LẤY SẢN PHẨM (có thông số kỹ thuật) ---------------- */
+/* ---------------- LẤY SẢN PHẨM (có thông số kỹ thuật và lọc) ---------------- */
 
 // Rebuild WHERE condition with named parameter for category and filters
 $where_clauses2 = ['sp.trang_thai = 1'];
+$join_sql = '';
+$useRam = false;
+$useCpu = false;
+$useBrand = false;
+$useCategory = false;
+
 
 /* ----- FILTER GIÁ ----- */
 if (!empty($_GET['price'])) {
@@ -99,18 +96,22 @@ if (!empty($_GET['price'])) {
     }
 }
 
-/* ----- FILTER RAM ----- */
-$useRam = false;
+/* ----- FILTER RAM/CPU - Cần JOIN thong_so ----- */
 if (!empty($_GET['ram'])) {
     $where_clauses2[] = 'ts.ram LIKE :ram';
-    $useRam = true;
+    $useRam = true; // FIX: Định nghĩa biến cờ
 }
-
-/* ----- FILTER CPU ----- */
-$useCpu = false;
 if (!empty($_GET['cpu'])) {
     $where_clauses2[] = 'ts.cpu LIKE :cpu';
-    $useCpu = true;
+    $useCpu = true; // FIX: Định nghĩa biến cờ
+}
+
+/* ----- FILTER THƯƠNG HIỆU (Sử dụng bảng trung gian san_pham_thuong_hieu) ----- */
+if (!empty($_GET['brand_id']) && (int)$_GET['brand_id'] > 0) {
+    // Lọc qua bảng trung gian
+    $where_clauses2[] = 'spth.thuong_hieu_id = :brand_id';
+    $join_sql .= ' LEFT JOIN san_pham_thuong_hieu spth ON spth.san_pham_id = sp.id';
+    $useBrand = true;
 }
 
 if ($category_id > 0) {
@@ -131,8 +132,10 @@ $sql_products = "
     FROM san_pham sp
     LEFT JOIN san_pham_thong_so spts ON spts.san_pham_id = sp.id
     LEFT JOIN thong_so ts ON ts.id = spts.thong_so_id
+    $join_sql /* Thêm JOIN cho Brand nếu cần */
     WHERE $where_sql2
-    GROUP BY sp.id, sp.ten, sp.hinh_anh, sp.gia, sp.danh_muc_id, sp.mo_ta, sp.trang_thai
+    /* THAY ĐỔI: Bỏ sp.thuong_hieu_id khỏi GROUP BY */
+    GROUP BY sp.id, sp.ten, sp.hinh_anh, sp.gia, sp.danh_muc_id, sp.mo_ta, sp.trang_thai 
     ORDER BY sp.id DESC
     LIMIT :limit OFFSET :offset
 ";
@@ -141,7 +144,6 @@ $sql_products = "
 $stmt_products = $pdo->prepare($sql_products);
 if (!$stmt_products) {
     $err = $pdo->errorInfo();
-    // Debug friendly message (bỏ hoặc thay bằng logging trong production)
     die("Prepare products failed: " . htmlspecialchars($err[2] ?? 'Unknown error') . "<br>SQL: " . htmlspecialchars($sql_products));
 }
 
@@ -155,17 +157,20 @@ if ($useRam) {
 if ($useCpu) {
     $stmt_products->bindValue(':cpu', '%' . trim($_GET['cpu']) . '%', PDO::PARAM_STR);
 }
+/* ----- BIND THƯƠNG HIỆU ----- */
+if ($useBrand) {
+    $stmt_products->bindValue(':brand_id', (int)$_GET['brand_id'], PDO::PARAM_INT);
+}
 
 // Bind limit/offset as integers (PDO::PARAM_INT)
 $stmt_products->bindValue(':limit', (int)$products_per_page, PDO::PARAM_INT);
 $stmt_products->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
 
-// Execute and fetch with try/catch to show helpful error if something fails
+// Execute and fetch with try/catch 
 try {
     $stmt_products->execute();
     $products = $stmt_products->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $ex) {
-    // Debug friendly; trong production hãy log thay vì die
     die("Execute products failed: " . htmlspecialchars($ex->getMessage()));
 }
 
@@ -223,7 +228,8 @@ function format_price($p) {
         <?php endif; ?>
     </nav>    
 <h1 class="page-title"><?= htmlspecialchars($category_name) ?></h1>
-</div> <div class="main-content-layout">
+</div> 
+<div class="main-content-layout">
 
     <div class="sidebar-filters">
         <form method="GET" class="filter-bar">
@@ -233,18 +239,49 @@ function format_price($p) {
             <?php endif; ?>
 
             <div class="filter-box">
+                <h4 class="filter-title">Thương hiệu</h4>
+                <?php $current_brand_id = $_GET['brand_id'] ?? 0; ?>
+                
+                <div class="filter-option">
+                    <input type="radio" 
+                           id="brand_all" 
+                           name="brand_id" 
+                           value="0" 
+                           onchange="this.form.submit()" 
+                           <?= (int)$current_brand_id === 0 ? 'checked' : '' ?>>
+                    <label for="brand_all">Tất cả</label>
+                </div>
+
+                <?php foreach ($brands as $brand): ?>
+                    <div class="filter-option">
+                        <input type="radio" 
+                               id="brand_<?= $brand['id'] ?>" 
+                               name="brand_id" 
+                               value="<?= $brand['id'] ?>" 
+                               onchange="this.form.submit()" 
+                               <?= (int)$current_brand_id === (int)$brand['id'] ? 'checked' : '' ?>>
+                        <label for="brand_<?= $brand['id'] ?>"><?= htmlspecialchars($brand['ten']) ?></label>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            
+            <div class="filter-box">
                 <h4 class="filter-title">Lọc theo Giá</h4>
                 <?php $current_price = $_GET['price'] ?? ''; ?>
                 <div class="filter-option">
-                    <input type="checkbox" id="price_1" name="price" value="1" onchange="this.form.submit()" <?= $current_price=='1'?'checked':'' ?>>
+                    <input type="radio" id="price_all" name="price" value="" onchange="this.form.submit()" <?= $current_price==''?'checked':'' ?>>
+                    <label for="price_all">Tất cả</label>
+                </div>
+                <div class="filter-option">
+                    <input type="radio" id="price_1" name="price" value="1" onchange="this.form.submit()" <?= $current_price=='1'?'checked':'' ?>>
                     <label for="price_1">Dưới 10 triệu</label>
                 </div>
                 <div class="filter-option">
-                    <input type="checkbox" id="price_2" name="price" value="2" onchange="this.form.submit()" <?= $current_price=='2'?'checked':'' ?>>
+                    <input type="radio" id="price_2" name="price" value="2" onchange="this.form.submit()" <?= $current_price=='2'?'checked':'' ?>>
                     <label for="price_2">10 – 20 triệu</label>
                 </div>
                 <div class="filter-option">
-                    <input type="checkbox" id="price_3" name="price" value="3" onchange="this.form.submit()" <?= $current_price=='3'?'checked':'' ?>>
+                    <input type="radio" id="price_3" name="price" value="3" onchange="this.form.submit()" <?= $current_price=='3'?'checked':'' ?>>
                     <label for="price_3">Trên 20 triệu</label>
                 </div>
             </div>
@@ -253,15 +290,19 @@ function format_price($p) {
                 <h4 class="filter-title">Lọc theo RAM</h4>
                 <?php $current_ram = $_GET['ram'] ?? ''; ?>
                 <div class="filter-option">
-                    <input type="checkbox" id="ram_8" name="ram" value="8GB" onchange="this.form.submit()" <?= $current_ram=='8GB'?'checked':'' ?>>
+                    <input type="radio" id="ram_all" name="ram" value="" onchange="this.form.submit()" <?= $current_ram==''?'checked':'' ?>>
+                    <label for="ram_all">Tất cả</label>
+                </div>
+                <div class="filter-option">
+                    <input type="radio" id="ram_8" name="ram" value="8GB" onchange="this.form.submit()" <?= $current_ram=='8GB'?'checked':'' ?>>
                     <label for="ram_8">8GB</label>
                 </div>
                 <div class="filter-option">
-                    <input type="checkbox" id="ram_16" name="ram" value="16GB" onchange="this.form.submit()" <?= $current_ram=='16GB'?'checked':'' ?>>
+                    <input type="radio" id="ram_16" name="ram" value="16GB" onchange="this.form.submit()" <?= $current_ram=='16GB'?'checked':'' ?>>
                     <label for="ram_16">16GB</label>
                 </div>
                 <div class="filter-option">
-                    <input type="checkbox" id="ram_32" name="ram" value="32GB" onchange="this.form.submit()" <?= $current_ram=='32GB'?'checked':'' ?>>
+                    <input type="radio" id="ram_32" name="ram" value="32GB" onchange="this.form.submit()" <?= $current_ram=='32GB'?'checked':'' ?>>
                     <label for="ram_32">32GB</label>
                 </div>
             </div>
@@ -270,24 +311,30 @@ function format_price($p) {
                 <h4 class="filter-title">Lọc theo CPU</h4>
                 <?php $current_cpu = $_GET['cpu'] ?? ''; ?>
                 <div class="filter-option">
-                    <input type="checkbox" id="cpu_i5" name="cpu" value="i5" onchange="this.form.submit()" <?= $current_cpu=='i5'?'checked':'' ?>>
+                    <input type="radio" id="cpu_all" name="cpu" value="" onchange="this.form.submit()" <?= $current_cpu==''?'checked':'' ?>>
+                    <label for="cpu_all">Tất cả</label>
+                </div>
+                <div class="filter-option">
+                    <input type="radio" id="cpu_i5" name="cpu" value="i5" onchange="this.form.submit()" <?= $current_cpu=='i5'?'checked':'' ?>>
                     <label for="cpu_i5">Intel Core i5</label>
                 </div>
                 <div class="filter-option">
-                    <input type="checkbox" id="cpu_i7" name="cpu" value="i7" onchange="this.form.submit()" <?= $current_cpu=='i7'?'checked':'' ?>>
+                    <input type="radio" id="cpu_i7" name="cpu" value="i7" onchange="this.form.submit()" <?= $current_cpu=='i7'?'checked':'' ?>>
                     <label for="cpu_i7">Intel Core i7</label>
                 </div>
                 <div class="filter-option">
-                    <input type="checkbox" id="cpu_r5" name="cpu" value="Ryzen 5" onchange="this.form.submit()" <?= $current_cpu=='Ryzen 5'?'checked':'' ?>>
+                    <input type="radio" id="cpu_r5" name="cpu" value="Ryzen 5" onchange="this.form.submit()" <?= $current_cpu=='Ryzen 5'?'checked':'' ?>>
                     <label for="cpu_r5">Ryzen 5</label>
                 </div>
                 <div class="filter-option">
-                    <input type="checkbox" id="cpu_r7" name="cpu" value="Ryzen 7" onchange="this.form.submit()" <?= $current_cpu=='Ryzen 7'?'checked':'' ?>>
+                    <input type="radio" id="cpu_r7" name="cpu" value="Ryzen 7" onchange="this.form.submit()" <?= $current_cpu=='Ryzen 7'?'checked':'' ?>>
                     <label for="cpu_r7">Ryzen 7</label>
                 </div>
             </div>
         </form>
-    </div><div class="product-list-content">
+    </div>
+    
+    <div class="product-list-content">
         <?php if (!empty($products)): ?>
             <div class="product-grid">
     <?php foreach ($products as $p): 
@@ -296,10 +343,10 @@ function format_price($p) {
                     ? $img_folder . '/' . $p['hinh_anh'] 
                     : $default_img;
 
-        // 2. Lấy giá hiển thị (Ưu tiên giá biến thể thấp nhất nếu có, không thì lấy giá gốc)
+        // 2. Lấy giá hiển thị 
         $display_price = isset($p['gia_from']) && $p['gia_from'] > 0 ? (int)$p['gia_from'] : (int)$p['gia'];
 
-        // 3. Tính toán giảm giá (Query này nên tối ưu bằng JOIN ở câu SQL chính, nhưng tạm thời để đây cũng được)
+        // 3. Tính toán giảm giá
         $stmt_disc = $pdo->prepare("
             SELECT g.loai_giam_gia, g.gia_tri
             FROM san_pham_giam_gia spg
@@ -414,8 +461,19 @@ function format_price($p) {
 </div> <?php if ($total_pages > 1): ?>
         <nav class="pagination-nav">
             <ul class="pagination">
+                <?php 
+                // Xây dựng chuỗi query string hiện tại (giữ lại các bộ lọc khác)
+                $query_params = $_GET;
+                unset($query_params['p']); // Loại bỏ tham số trang hiện tại
+
+                function build_pagination_url($page_num, $params) {
+                    $params['p'] = $page_num;
+                    return 'index.php?page=product_list&' . http_build_query($params);
+                }
+                ?>
+
                 <?php if ($current_page > 1): ?>
-                    <li><a href="index.php?page=product_list&category_id=<?= $category_id ?>&p=<?= $current_page - 1 ?>">«</a></li>
+                    <li><a href="<?= build_pagination_url($current_page - 1, $query_params) ?>">«</a></li>
                 <?php endif; ?>
 
                 <?php
@@ -423,20 +481,20 @@ function format_price($p) {
                 $start = max(1, $current_page - 3);
                 $end = min($total_pages, $current_page + 3);
                 if ($start > 1) {
-                    echo '<li><a href="index.php?page=product_list&category_id='.$category_id.'&p=1">1</a></li>';
+                    echo '<li><a href="'.build_pagination_url(1, $query_params).'">1</a></li>';
                     if ($start > 2) echo '<li><span>…</span></li>';
                 }
                 for ($i = $start; $i <= $end; $i++) {
-                    echo '<li><a class="'.($i==$current_page?'active':'').'" href="index.php?page=product_list&category_id='.$category_id.'&p='.$i.'">'.$i.'</a></li>';
+                    echo '<li><a class="'.($i==$current_page?'active':'').'" href="'.build_pagination_url($i, $query_params).'">'.$i.'</a></li>';
                 }
                 if ($end < $total_pages) {
                     if ($end < $total_pages - 1) echo '<li><span>…</span></li>';
-                    echo '<li><a href="index.php?page=product_list&category_id='.$category_id.'&p='.$total_pages.'">'.$total_pages.'</a></li>';
+                    echo '<li><a href="'.build_pagination_url($total_pages, $query_params).'">'.$total_pages.'</a></li>';
                 }
                 ?>
 
                 <?php if ($current_page < $total_pages): ?>
-                    <li><a href="index.php?page=product_list&category_id=<?= $category_id ?>&p=<?= $current_page + 1 ?>">»</a></li>
+                    <li><a href="<?= build_pagination_url($current_page + 1, $query_params) ?>">»</a></li>
                 <?php endif; ?>
             </ul>
         </nav>
@@ -509,6 +567,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentSelectedVariant = null;
     let defaultProductImage = 'assets/img/no-image.png';
     let maxQuantity = 0;
+    let currentDiscount = null; // Thêm biến currentDiscount
 
 function openQuickModal(e) {
     e.preventDefault();
