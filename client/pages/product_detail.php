@@ -1,25 +1,51 @@
-    <?php
-    // FILE: client/pages/product_detail.php
-    require_once 'client/layouts/header.php';
+<?php
+// FILE: client/pages/product_detail.php
+require_once 'client/layouts/header.php';
 
-    // --- LOGIC PHP CƠ BẢN (GIỮ NGUYÊN) ---
-    $product_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-    if ($product_id <= 0) { echo "<div class='container' style='padding:50px 0; text-align:center;'><h3>Sản phẩm không tồn tại.</h3></div>"; require_once 'client/layouts/footer.php'; exit; }
+// --- LOGIC PHP CƠ BẢN (GIỮ NGUYÊN) ---
+$product_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+if ($product_id <= 0) { echo "<div class='container' style='padding:50px 0; text-align:center;'><h3>Sản phẩm không tồn tại.</h3></div>"; require_once 'client/layouts/footer.php'; exit; }
 
-    $stmt = $pdo->prepare("SELECT id, ten, hinh_anh, trang_thai, danh_muc_id, mo_ta, mo_ta_chi_tiet FROM san_pham WHERE id = ?");
-    $stmt->execute([$product_id]);
-    $product = $stmt->fetch(PDO::FETCH_ASSOC);
+// [THAY ĐỔI 1.1] TRUY VẤN SẢN PHẨM CHÍNH (KHÔNG JOIN THƯƠNG HIỆU 1:N)
+$stmt = $pdo->prepare("
+    SELECT
+        id, ten, hinh_anh, trang_thai, danh_muc_id, mo_ta, mo_ta_chi_tiet
+    FROM
+        san_pham
+    WHERE
+        id = ?
+");
+$stmt->execute([$product_id]);
+$product = $stmt->fetch(PDO::FETCH_ASSOC);
+if (!$product) { echo "<div class='container' style='padding:50px 0; text-align:center;'><h3>Không tìm thấy sản phẩm.</h3></div>"; require_once 'client/layouts/footer.php'; exit; }
 
-    if (!$product) { echo "<div class='container' style='padding:50px 0; text-align:center;'><h3>Không tìm thấy sản phẩm.</h3></div>"; require_once 'client/layouts/footer.php'; exit; }
+// [THAY ĐỔI 1.2] TRUY VẤN TẤT CẢ THƯƠNG HIỆU CỦA SẢN PHẨM HIỆN TẠI (M:N)
+$stmt_brands = $pdo->prepare("
+    SELECT 
+        th.id AS thuong_hieu_id, th.ten AS ten_thuong_hieu
+    FROM 
+        san_pham_thuong_hieu spth
+    JOIN 
+        thuong_hieu th ON spth.thuong_hieu_id = th.id
+    WHERE 
+        spth.san_pham_id = ?
+");
+$stmt_brands->execute([$product_id]);
+$product_brands = $stmt_brands->fetchAll(PDO::FETCH_ASSOC);
 
-    // --- LẤY BIẾN THỂ SẢN PHẨM CHÍNH ---
-    $stmt_variants = $pdo->prepare("SELECT * FROM bien_the_san_pham WHERE san_pham_id = ? ORDER BY gia ASC");
-    $stmt_variants->execute([$product_id]);
-    $variants = $stmt_variants->fetchAll(PDO::FETCH_ASSOC);
+// Thiết lập các biến cho logic liên quan và tiêu đề
+$current_brand_id = !empty($product_brands) ? $product_brands[0]['thuong_hieu_id'] : 0;
+$brand_name = !empty($product_brands) ? $product_brands[0]['ten_thuong_hieu'] : 'Khác';
+$product_brand_ids = array_column($product_brands, 'thuong_hieu_id'); // Mảng chứa tất cả ID thương hiệu liên kết
 
-    $variants_js_data = [];
-    $base_price = 0;
-    $today = date('Y-m-d H:i:s');
+// --- LẤY BIẾN THỂ SẢN PHẨM CHÍNH (GIỮ NGUYÊN) ---
+$stmt_variants = $pdo->prepare("SELECT * FROM bien_the_san_pham WHERE san_pham_id = ? ORDER BY gia ASC");
+$stmt_variants->execute([$product_id]);
+$variants = $stmt_variants->fetchAll(PDO::FETCH_ASSOC);
+
+$variants_js_data = [];
+$base_price = 0;
+$today = date('Y-m-d H:i:s');
 
 if (!empty($variants)) {
     foreach ($variants as &$variant) {
@@ -63,7 +89,7 @@ if (!empty($variants)) {
         $base_price = $product['gia'] ?? 0;
     }
 
-    // --- LẤY THÔNG TIN DANH MỤC & THÔNG SỐ ---
+    // --- LẤY THÔNG TIN DANH MỤC & THÔNG SỐ (GIỮ NGUYÊN) ---
     $category = 'Không xác định';
     if (!empty($product['danh_muc_id'])) {
         $stmt_cat = $pdo->prepare("SELECT ten FROM danh_muc WHERE id = ?");
@@ -76,12 +102,43 @@ if (!empty($variants)) {
     $stmt_specs->execute([$product_id]);
     $specs = $stmt_specs->fetch(PDO::FETCH_ASSOC);
 
-    // --- LẤY SẢN PHẨM LIÊN QUAN ---
-    $stmt_related = $pdo->prepare("SELECT sp.id, sp.ten, sp.gia, sp.hinh_anh, ts.cpu, ts.ram FROM san_pham sp LEFT JOIN san_pham_thong_so spts ON sp.id = spts.san_pham_id LEFT JOIN thong_so ts ON spts.thong_so_id = ts.id WHERE sp.danh_muc_id = ? AND sp.id != ? LIMIT 4");
-    $stmt_related->execute([$product['danh_muc_id'], $product_id]);
-    $related_products = $stmt_related->fetchAll(PDO::FETCH_ASSOC);
+// [THAY ĐỔI 2] LOGIC LẤY SẢN PHẨM LIÊN QUAN (M:N - CÙNG THƯƠNG HIỆU)
+$related_products = [];
+// $current_brand_id và $product_brand_ids đã được xác định ở trên
 
-    // [MỚI] LẤY BIẾN THỂ CHO SẢN PHẨM LIÊN QUAN (Để phục vụ Modal Quick Add)
+if (!empty($product_brand_ids)) {
+    // Tạo placeholders cho IN clause
+    $placeholders = implode(',', array_fill(0, count($product_brand_ids), '?'));
+    
+    $sql_related = "
+        SELECT 
+            sp.id, sp.ten, sp.gia, sp.hinh_anh, ts.cpu, ts.ram 
+        FROM 
+            san_pham sp 
+        JOIN 
+            san_pham_thuong_hieu spth ON sp.id = spth.san_pham_id -- Join qua bảng trung gian
+        LEFT JOIN 
+            san_pham_thong_so spts ON sp.id = spts.san_pham_id 
+        LEFT JOIN 
+            thong_so ts ON spts.thong_so_id = ts.id 
+        WHERE 
+            spth.thuong_hieu_id IN ({$placeholders}) -- Kiểm tra xem sản phẩm có bất kỳ TH ID nào trong danh sách không
+            AND sp.id != ? 
+            AND sp.trang_thai = 1
+        GROUP BY sp.id -- Đảm bảo mỗi sản phẩm chỉ xuất hiện 1 lần nếu nó có nhiều TH trùng
+        ORDER BY RAND() 
+        LIMIT 4
+    ";
+
+    // Chuẩn bị mảng tham số: ID Thương hiệu + ID Sản phẩm hiện tại
+    $params = array_merge($product_brand_ids, [$product_id]);
+    
+    $stmt_related = $pdo->prepare($sql_related);
+    $stmt_related->execute($params);
+    $related_products = $stmt_related->fetchAll(PDO::FETCH_ASSOC);
+}
+
+    // [MỚI] LẤY BIẾN THỂ CHO SẢN PHẨM LIÊN QUAN (Để phục vụ Modal Quick Add) (GIỮ NGUYÊN)
     if (!empty($related_products)) {
         $r_ids = array_column($related_products, 'id');
         $placeholders = implode(',', array_fill(0, count($r_ids), '?'));
@@ -238,9 +295,9 @@ if (!empty($variants)) {
             </div>
         </div>
 
-        <div class="section">
-            <h2 class="section-title" style="margin: 40px 0 20px 0; font-size: 24px; color:#333;">Sản phẩm liên quan</h2>
-            <div class="related-grid">
+<div class="section">
+    <h2 class="section-title" style="margin: 40px 0 20px 0; font-size: 24px; color:#333;">Sản phẩm khác từ <?= htmlspecialchars($brand_name) ?></h2>
+    <div class="related-grid">
                 <?php foreach ($related_products as $r): 
                     $r_img = (!empty($r['hinh_anh']) && file_exists($img_folder . '/' . $r['hinh_anh'])) ? $img_folder . '/' . $r['hinh_anh'] : $default_img;
                     $r_link = "index.php?page=product_detail&id=" . $r['id'];
