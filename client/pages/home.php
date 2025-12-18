@@ -5,16 +5,38 @@ $discountProducts = getDiscountProducts($pdo);
 <link rel="stylesheet" href="assets/css/client/home.css">
 <link rel="stylesheet" href="assets/css/client/product-list.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
-<section class="hero">
-    <div class="container">
-        <div class="hero-content">
-            <h1>Giải pháp công nghệ<br>hiện đại & đáng tin cậy</h1>
-            <p>Hỗ trợ doanh nghiệp và cá nhân tiếp cận sản phẩm tốt nhất.</p>
-            <div class="btn-group">
-                <a href="index.php?page=product_list" class="btn btn-primary">Xem sản phẩm</a>
-                <a href="index.php?page=contact" class="btn btn-outline">Liên hệ tư vấn</a>
+<section class="hero-slider-section">
+    <div class="swiper hero-swiper">
+        <div class="swiper-wrapper">
+            <div class="swiper-slide">
+                <a href="index.php?page=product_list&category_id=1">
+                    <img src="assets/img/banner/banner1.png" alt="Gaming">
+                </a>
+            </div>
+            <div class="swiper-slide">
+                <a href="index.php?page=product_list">
+                    <img src="assets/img/banner/banner2.png" alt="Công nghệ">
+                </a>
+            </div>
+            <div class="swiper-slide">
+                <a href="index.php?page=product_list&category_id=2">
+                    <img src="assets/img/banner/banner3.png" alt="Đồ họa">
+                </a>
+            </div>
+             <div class="swiper-slide">
+                <a href="index.php?page=product_list&category_id=4">
+                    <img src="assets/img/banner/banner4.png" alt="Học tập">
+                </a>
+            </div>
+             <div class="swiper-slide">
+                <a href="index.php?page=product_list&category_id=5">
+                    <img src="assets/img/banner/banner5.png" alt="Doanh nhân">
+                </a>
             </div>
         </div>
+        <div class="swiper-pagination"></div>
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
     </div>
 </section>
 
@@ -43,26 +65,35 @@ $discountProducts = getDiscountProducts($pdo);
         </div>
     </div>
 </section>
-<section class="category-section">
+<section class="category-section" style="background-color: #f9fafb;">
     <div class="container">
         <span class="section-subtitle">DANH MỤC SẢN PHẨM</span>
-        <h2 class="section-title">Khám phá theo danh mục</h2>
+        <h2 class="section-title">Khám phá theo nhu cầu</h2>
 
         <div class="category-pills">
-            <a href="index.php?page=product_list&category_id=5" class="pill-btn blue">
-                Laptop Doanh Nhân
+            <a href="index.php?page=product_list&category_id=5" class="modern-cat-card">
+                <div class="cat-icon-placeholder"><i class="fa-solid fa-briefcase"></i></div>
+                <span>Doanh Nhân</span>
             </a>
-            <a href="index.php?page=product_list&category_id=2" class="pill-btn purple">
-                Laptop Đồ Họa
+            
+            <a href="index.php?page=product_list&category_id=2" class="modern-cat-card">
+                <div class="cat-icon-placeholder"><i class="fa-solid fa-pen-nib"></i></div>
+                <span>Đồ Họa & Kỹ Thuật</span>
             </a>
-            <a href="index.php?page=product_list&category_id=1" class="pill-btn pink">
-                Laptop Gaming
+
+            <a href="index.php?page=product_list&category_id=1" class="modern-cat-card">
+                <div class="cat-icon-placeholder" style="color: #ec4899;"><i class="fa-solid fa-gamepad"></i></div>
+                <span>Gaming Gear</span>
             </a>
-            <a href="index.php?page=product_list&category_id=4" class="pill-btn cyan">
-                Laptop Học Sinh, Sinh Viên
+
+            <a href="index.php?page=product_list&category_id=4" class="modern-cat-card">
+                <div class="cat-icon-placeholder"><i class="fa-solid fa-graduation-cap"></i></div>
+                <span>Học Tập, Sinh Viên</span>
             </a>
-            <a href="index.php?page=product_list&category_id=3" class="pill-btn blue">
-                Laptop Văn Phòng
+
+            <a href="index.php?page=product_list&category_id=3" class="modern-cat-card">
+                <div class="cat-icon-placeholder"><i class="fa-solid fa-building"></i></div>
+                <span>Văn Phòng</span>
             </a>
         </div>
     </div>
@@ -724,6 +755,27 @@ modalAddBtn.addEventListener('click', async function () {
         qtyInput.value = currentVal;
         selectedQty = currentVal;
     });
+    /* Thêm vào cuối file home.php, trong thẻ <script> */
 
+    var swiperHero = new Swiper(".hero-swiper", {
+        slidesPerView: 1,
+        loop: true, // Lặp vô tận
+        effect: "fade", // Hiệu ứng mờ dần (sang hơn trượt ngang cho banner lớn)
+        fadeEffect: {
+            crossFade: true
+        },
+        autoplay: {
+            delay: 5000, // Tự chuyển sau 5 giây
+            disableOnInteraction: false, // Vẫn tiếp tục auto sau khi người dùng chạm vào
+        },
+        pagination: {
+            el: ".swiper-pagination",
+            clickable: true, // Cho phép bấm vào dấu chấm
+        },
+        navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
+        },
+    });
 });
 </script>

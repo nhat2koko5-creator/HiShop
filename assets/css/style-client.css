@@ -70,6 +70,143 @@ ul {
   list-style: none;
 }
 
+/* =======================================================
+   HEADER GLASSMORPHISM (HIỆU ỨNG KÍNH MỜ)
+   ======================================================= */
+
+/* 1. Nền Header: Trắng mờ + Hiệu ứng Blur */
+.site-header-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+    
+    /* Hiệu ứng kính mờ sang trọng */
+    background-color: rgba(255, 255, 255, 0.85); /* Trắng 85% */
+    backdrop-filter: blur(12px); /* Làm mờ nội dung phía sau */
+    -webkit-backdrop-filter: blur(12px); /* Hỗ trợ Safari */
+    
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05); /* Viền siêu mờ */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03); /* Bóng đổ rất nhẹ */
+    transition: all 0.3s ease;
+}
+
+/* 2. Menu Navigation (Liên kết giữa) */
+.nav-center-links {
+    display: flex;
+    gap: 30px; /* Tăng khoảng cách cho thoáng */
+    align-items: center;
+}
+
+.nav-center-links a {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    text-transform: uppercase; /* Chữ in hoa cho chuyên nghiệp */
+    letter-spacing: 0.5px;
+    position: relative;
+    padding: 5px 0;
+}
+
+/* Hiệu ứng gạch chân khi hover */
+.nav-center-links a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: var(--color-primary);
+    transition: width 0.3s ease;
+}
+
+.nav-center-links a:hover::after {
+    width: 100%;
+}
+
+.nav-center-links a:hover {
+    color: var(--color-primary);
+}
+
+/* 3. Thanh tìm kiếm: Bo tròn & Tinh tế hơn */
+.nav-search-form {
+    border: 1px solid transparent; /* Bỏ viền đen cũ */
+    background-color: #f3f4f6; /* Nền xám nhạt */
+    border-radius: 10px; /* Bo tròn hoàn toàn */
+    padding: 2px 15px; /* Padding gọn gàng */
+    width: 280px;
+    transition: all 0.3s ease;
+}
+
+/* Khi bấm vào tìm kiếm thì sáng lên */
+.nav-search-form:focus-within {
+    background-color: #fff;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2); /* Viền light blue */
+    width: 230px; /* Dài ra một chút */
+}
+
+.nav-search-input {
+    background: transparent;
+    border: none;
+    font-size: 14px;
+    width: 100%;
+    color: #333;
+}
+.nav-search-input:focus {
+    width: 100%; /* Fix lỗi input bị co lại */
+}
+
+.nav-search-btn {
+    background: transparent;
+    border: none;
+    border-left: none; /* Bỏ vạch ngăn cách cũ */
+    color: #666;
+    font-size: 16px;
+}
+.nav-search-btn:hover {
+    background: transparent;
+    color: var(--color-primary);
+    transform: scale(1.1);
+}
+
+/* 4. Auth Buttons (Đăng ký / Đăng nhập) - STYLE MỚI */
+/* Biến nút to đùng thành text link sang trọng */
+.auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.auth-buttons .btn {
+    padding: 8px 20px;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+/* Nút Đăng ký: Nền trong suốt, chữ đậm */
+.auth-buttons .btn-register {
+    background: transparent;
+    color: #333;
+    border: 1px solid transparent;
+}
+.auth-buttons .btn-register:hover {
+    color: var(--color-primary);
+}
+
+/* Nút Đăng nhập: Nền màu chủ đạo, đổ bóng nhẹ */
+.auth-buttons .btn-login {
+    background: var(--color-primary); /* Màu Indigo */
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+}
+.auth-buttons .btn-login:hover {
+    background: #4338ca; /* Đậm hơn chút khi hover */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4);
+}
+
 /* === 3. CÁC THÀNH PHẦN (COMPONENTS) (ĐÃ VIẾT LẠI) === */
 .btn {
   display: inline-block;
@@ -121,12 +258,99 @@ ul {
 }
 
 /* === 4. HEADER & FOOTER (ĐÃ VIẾT LẠI) === */
+/* =======================================================
+   CHỈNH SỬA HEADER COMPACT (GỌN GÀNG)
+   ======================================================= */
+
+/* 1. Giảm padding trên dưới của thanh điều hướng */
 .header-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-16) 0;
-  border-bottom: 1px solid var(--color-border);
+  /* Cũ là 16px -> Giảm xuống 8px để header mỏng lại */
+  padding: 8px 0; 
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  height: 65px; /* Chiều cao cố định chuẩn */
+}
+
+/* 2. Kiểm soát kích thước Logo bằng CSS (thay vì style cứng trong HTML) */
+.logo img {
+  height: 35px; /* Chiều cao vừa vặn */
+  width: auto;  /* Tự động chỉnh chiều ngang theo tỷ lệ */
+  display: block;
+  object-fit: contain;
+}
+
+/* 3. Chỉnh lại thanh tìm kiếm cho gọn hơn */
+.nav-search-form {
+    display: flex;
+    align-items: center;
+    border: 1px solid black;
+    border-radius: 10px;
+    overflow: hidden;
+    width: 230px;
+}
+
+.nav-search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0 15px;
+  font-size: 13px;
+  width: 100%;
+  height: 100%; /* Full chiều cao form */
+}
+
+.nav-search-btn {
+  border: none;
+  background: transparent;
+  padding: 0 15px;
+  cursor: pointer;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+}
+
+.nav-center-links {
+    display: flex;
+    align-items: center;
+    
+    /* 1. Giảm khoảng cách giữa các menu để tiết kiệm chỗ */
+    gap: 20px; /* Trước đây là 30px, giảm xuống cho gọn */
+    
+    /* 2. Tuyệt đối không cho menu nhảy xuống dòng */
+    flex-wrap: nowrap; 
+}
+
+.nav-center-links a {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #333;
+    
+    /* 3. QUAN TRỌNG: Giữ chữ luôn nằm trên 1 dòng ngang */
+    white-space: nowrap; 
+    
+    /* Đảm bảo link không bị co rúm lại khi thiếu chỗ */
+    flex-shrink: 0; 
+}
+
+/* Tinh chỉnh lại phần bên phải (Tìm kiếm + Nút) để không chiếm quá nhiều chỗ */
+.nav-right-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Giảm gap nếu cần */
+    flex-shrink: 0; /* Không cho phần này bị co lại */
+}
+
+/* Nếu màn hình nhỏ (Laptop nhỏ 13 inch), giảm độ rộng thanh tìm kiếm đi chút */
+@media (max-width: 1200px) {
+    .nav-search-form {
+        width: 200px; /* Thu nhỏ thanh tìm kiếm lại */
+    }
+    .nav-center-links {
+        gap: 15px; /* Thu hẹp khoảng cách menu hơn nữa */
+    }
 }
 /* === (MỚI) CSS CHO HEADER CỐ ĐỊNH === */
 .site-header-sticky {
@@ -257,48 +481,75 @@ ul {
   color: var(--color-fg-base);
 }
 
-/* Footer mới (nền trắng) */
+/* =======================================================
+   5. FOOTER DARK THEME (GIAO DIỆN TỐI CHUYÊN NGHIỆP)
+   ======================================================= */
 .footer {
-  padding-top: var(--spacing-48);
-  background-color: var(--color-white);
-  color: var(--color-fg-muted);
   margin-top: var(--spacing-64);
-  border-top: 1px solid var(--color-border);
+  padding-top: 60px;
+  background-color: #111827; /* Màu xanh đen đậm */
+  color: #d1d5db; /* Màu chữ xám sáng */
+  border-top: 4px solid var(--color-primary); /* Điểm nhấn viền trên */
 }
 
 .footer-main {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: var(--spacing-48);
-  padding-bottom: var(--spacing-48);
+  gap: 40px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid #374151; /* Đường kẻ mờ */
 }
 
+/* Cột đầu tiên (Logo + Info) */
+.footer-col .logo {
+  color: #fff !important;
+  font-size: 24px;
+  margin-bottom: 15px;
+  display: block;
+}
+.footer-col p {
+  line-height: 1.6;
+  opacity: 0.8;
+}
+
+/* Tiêu đề cột */
 .footer-col h5 {
-  font: var(--font-body-m);
+  color: #fff;
+  font-size: 16px;
   font-weight: 700;
-  color: var(--color-fg-base);
-  margin-bottom: var(--spacing-16);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  letter-spacing: 0.5px;
 }
 
-.footer-col ul li {
-  margin-bottom: var(--spacing-12);
-}
-
+/* Link trong footer */
 .footer-col ul li a {
-  font: var(--font-body-s);
-  color: var(--color-fg-muted);
+  color: #9ca3af;
+  transition: all 0.3s ease;
+  font-size: 14px;
 }
-
 .footer-col ul li a:hover {
   color: var(--color-primary);
+  padding-left: 5px; /* Hiệu ứng đẩy nhẹ sang phải */
 }
 
+/* Social Icons */
+.social-icons a {
+  background-color: #374151;
+  color: #fff;
+}
+.social-icons a:hover {
+  background-color: var(--color-primary);
+  transform: translateY(-3px);
+}
+
+/* Footer Bottom */
 .footer-bottom {
+  padding: 20px 0;
   text-align: center;
-  padding: var(--spacing-24) 0;
-  border-top: 1px solid var(--color-border);
-  font: var(--font-body-s);
-  color: var(--color-fg-muted);
+  font-size: 13px;
+  color: #6b7280;
+  border-top: none;
 }
 
 /* === 6. STYLES CÁC TRANG CON (ĐÃ CẬP NHẬT THEO SKIN MỚI) === */
@@ -420,16 +671,6 @@ ul {
   background-color: var(--color-bg-subtle);
   color: var(--color-primary);
 }
-/* === (FORM TÌM KIẾM HEADER) === */
-.nav-search-form {
-  display: flex; /* Xếp input và button ngang hàng */
-  align-items: center; /* Căn giữa theo chiều dọc */
-  border: 1px solid black;
-  border-radius:100px;
-  overflow: hidden; 
-  width:300px; 
-}
-
 .nav-search-input {
   padding: var(--spacing-8) var(--spacing-12);
   font: var(--font-body-s);
@@ -442,7 +683,7 @@ ul {
 
 /* Khi focus (bấm) vào ô tìm kiếm */
 .nav-search-input:focus {
-  width: 240px; /* Mở rộng ô input ra */
+  width: 170px; /* Mở rộng ô input ra */
 }
 
 .nav-search-btn {

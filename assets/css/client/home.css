@@ -27,71 +27,181 @@
     }
 }
 
-/* --- HERO SECTION --- */
-.hero {
-    text-align: center;
-    padding: var(--spacing-64) 0;
-    margin-top: var(--spacing-32);
-    position: relative;
-    overflow: hidden;
-    /* Ảnh nền mặc định - bạn có thể thay đổi đường dẫn */
-    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("../../img/banner.jpg");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+
+/* --- HERO SLIDER STYLE --- */
+.hero-slider-section {
+    margin-top: 0; /* Bỏ khoảng cách trên để banner dính liền header (nếu muốn giống ảnh mẫu) */
+    padding-bottom: 20px;
 }
 
-.hero h1 {
-    font: var(--font-h1);
-    color: var(--color-white);
-    margin-bottom: var(--spacing-16);
-    position: relative;
-    z-index: 1;
+/* =========================================
+   FIX LỖI CĂN CHỈNH SẢN PHẨM (CARD)
+   ========================================= */
+
+/* 1. Đảm bảo Card luôn full chiều cao */
+.swiper-slide {
+    height: auto; /* Để slide co giãn theo nội dung lớn nhất */
+    display: flex; /* Flex để con bên trong giãn ra */
 }
 
-.hero p {
-    font: var(--font-body-m);
-    font-size: 18px;
-    color: rgba(255, 255, 255, 0.9);
-    margin-bottom: var(--spacing-32);
-    position: relative;
-    z-index: 1;
-}
-
-.hero .container {
-    position: relative;
-}
-
-.hero-content {
-    position: relative;
-    z-index: 1;
-}
-
-.hero .btn-group {
+.product-card {
     display: flex;
+    flex-direction: column; /* Xếp dọc từ trên xuống */
+    width: 100%;
+    height: 100%; /* Chiếm hết chiều cao slide */
+    padding: 16px;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #f3f4f6;
+    transition: all 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* 2. Phần nội dung chữ (Tên, giá, cấu hình) */
+.card-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Tự động giãn ra để lấp đầy khoảng trống */
+}
+
+/* Tên sản phẩm cố định 2 dòng */
+.card-title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+    height: 42px; /* 1.4 * 2 dòng * font-size ~ 42px */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    margin-bottom: 8px;
+}
+
+/* 3. Đẩy nút xuống đáy (QUAN TRỌNG NHẤT) */
+.btn-group-vertical {
+    margin-top: auto; /* Lệnh này đẩy nút xuống đáy cùng của khung */
+    display: flex;
+    flex-direction: row !important;
+    gap: 10px;
+    width: 100%;
+}
+
+/* =========================================
+   NÂNG CẤP GIAO DIỆN DANH MỤC (MODERN CARD)
+   ========================================= */
+/* Thay thế kiểu cũ pill-btn */
+
+.category-pills {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* Chia 5 cột đều nhau */
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.modern-cat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
-    gap: var(--spacing-16);
-    position: relative;
-    z-index: 1;
+    padding: 20px 10px;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    text-align: center;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: #333;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
 }
 
-/* Hiệu ứng Floating Icons (nếu có sử dụng) */
-.floating-icon {
-    position: absolute;
+/* Icon giả lập (nếu bạn chưa có ảnh icon) */
+.cat-icon-placeholder {
+    width: 50px;
+    height: 50px;
+    background: #f3f4f6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 24px;
-    opacity: 0;
-    animation: float 10s infinite linear;
-    z-index: 0;
+    margin-bottom: 12px;
+    color: var(--color-primary);
+    transition: all 0.3s;
 }
-@keyframes float {
-    0% { transform: translateY(-50px); opacity: 0; }
-    10% { opacity: 0.8; }
-    90% { opacity: 0.8; }
-    100% { transform: translateY(400px); opacity: 0; }
-}
-.floating-icon.icon-cube { top: -10%; left: 40%; animation-delay: 0s; font-size: 18px; }
-.floating-icon.icon-star { top: 0%; right: 45%; animation-delay: 1.5s; font-size: 20px; }
 
+.modern-cat-card span {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Hiệu ứng Hover */
+.modern-cat-card:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+.modern-cat-card:hover .cat-icon-placeholder {
+    background: var(--color-primary);
+    color: #fff;
+}
+
+/* Responsive cho danh mục */
+@media (max-width: 992px) {
+    .category-pills { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 600px) {
+    .category-pills { grid-template-columns: repeat(2, 1fr); }
+}
+
+.hero-swiper .swiper-slide img {
+    width: 100%;
+    /* height: auto;  <-- Nếu muốn giữ tỉ lệ gốc */
+    /* Hoặc dùng dòng dưới nếu muốn ép chiều cao cố định (ví dụ 500px) */
+    height: 450px; 
+    object-fit: cover; /* Đảm bảo ảnh luôn đẹp, lấp đầy không gian */
+    margin-top: 50px;
+    display: block;
+}
+
+/* Điều chỉnh lại nút mũi tên cho phù hợp với kích thước mới */
+.hero-swiper .swiper-button-prev,
+.hero-swiper .swiper-button-next {
+    width: 35px; /* Nhỏ lại xíu cho tinh tế */
+    height: 35px;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.hero-swiper .swiper-button-prev:after,
+.hero-swiper .swiper-button-next:after {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.hero-swiper .swiper-button-prev:hover,
+.hero-swiper .swiper-button-next:hover {
+    background: var(--color-primary); /* Hover vào đổi màu chủ đạo */
+    color: #fff;
+}
+
+/* Tùy chỉnh dấu chấm tròn Pagination */
+.hero-swiper .swiper-pagination-bullet {
+    background: #fff;
+    opacity: 0.6;
+    width: 10px;
+    height: 10px;
+}
+
+.hero-swiper .swiper-pagination-bullet-active {
+    background: var(--color-primary);
+    opacity: 1;
+    width: 24px; /* Kéo dài chấm khi active nhìn xịn hơn */
+    border-radius: 5px;
+}
 /* --- WHY US SECTION (Tại sao chọn chúng tôi) --- */
 .why-us-section {
     padding: var(--spacing-64) 0;
