@@ -1,121 +1,77 @@
 <?php
 // FILE: client/auth/register.php
+
 $errors = [];
 
-// 1. KIỂM TRA NẾU NGƯỜI DÙNG NHẤN NÚT "ĐĂNG KÝ"
+// Khởi tạo biến rỗng để tránh lỗi nếu form chưa submit
+$ho_ten = '';
+$email = '';
+$sdt = '';
+$ngay_sinh = '';
+$gioi_tinh = '';
+
+// 1. XỬ LÝ KHI NGƯỜI DÙNG BẤM ĐĂNG KÝ
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    // 2. LẤY DỮ LIỆU TỪ FORM (và làm sạch)
+    // Lấy dữ liệu từ form
     $ho_ten = trim($_POST['ho_ten'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $sdt = trim($_POST['so_dien_thoai'] ?? '');
     $ngay_sinh = $_POST['ngay_sinh'] ?? null;
-    $gioi_tinh = $_POST['gioi_tinh'] ?? null;
+    $gioi_tinh = $_POST['gioi_tinh'] ?? 'other';
     $mat_khau = $_POST['mat_khau'] ?? '';
     $mat_khau_nhap_lai = $_POST['mat_khau_nhap_lai'] ?? '';
 
-    // 3. KIỂM TRA (VALIDATE) DỮ LIỆU
+    // --- VALIDATE DỮ LIỆU ---
+    if (empty($ho_ten)) $errors[] = 'Họ và tên là bắt buộc.';
+    if (empty($email)) $errors[] = 'Email là bắt buộc.';
+    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Email không hợp lệ.';
     
-    // Kiểm tra các trường bắt buộc
-    if (empty($ho_ten)) {
-        $errors[] = 'Họ và tên là bắt buộc.';
-    }
-    if (empty($email)) {
-        $errors[] = 'Email là bắt buộc.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Email không hợp lệ.';
-    }
-    if (empty($mat_khau)) {
-        $errors[] = 'Mật khẩu là bắt buộc.';
-    } elseif (strlen($mat_khau) < 6) {
-        $errors[] = 'Mật khẩu phải có ít nhất 6 ký tự.';
-    }
-    if ($mat_khau !== $mat_khau_nhap_lai) {
-        $errors[] = 'Mật khẩu nhập lại không khớp.';
-    }
+    if (empty($mat_khau)) $errors[] = 'Mật khẩu là bắt buộc.';
+    elseif (strlen($mat_khau) < 6) $errors[] = 'Mật khẩu phải có ít nhất 6 ký tự.';
     
-    // --- [MỚI] XỬ LÝ & VALIDATE NGÀY SINH (16+) ---
-    if (empty($ngay_sinh)) {
-        $ngay_sinh = null;
-        // Nếu bạn muốn bắt buộc nhập ngày sinh để kiểm tra tuổi, hãy bỏ comment dòng dưới:
-        // $errors[] = 'Vui lòng nhập ngày sinh để xác minh độ tuổi.';
-    } else {
-        // Tính toán độ tuổi
-        $dateOfBirth = new DateTime($ngay_sinh);
-        $today = new DateTime();
+    if ($mat_khau !== $mat_khau_nhap_lai) $errors[] = 'Mật khẩu nhập lại không khớp.';
+
+    // --- KIỂM TRA EMAIL ĐÃ TỒN TẠI CHƯA ---
+    if (empty($errors)) {
+        $stmt = $pdo->prepare("SELECT id FROM nguoi_dung WHERE email = ?");
+        $stmt->execute([$email]);
+        if ($stmt->fetch()) {
+            $errors[] = 'Email này đã được đăng ký.';
+        }
+    }
+
+    // --- [ĐÂY LÀ CHỖ THAY ĐỔI CHÍNH] ---
+    // Thay vì INSERT vào DB ngay, ta lưu vào Session và gửi OTP
+    if (empty($errors)) {
+        // 1. Tạo mã OTP
+        $otp = (string) rand(100000, 999999);
+
+        // 2. Gửi Email
+        $subject = "[HIShop] Xác thực đăng ký";
+        $body = "Xin chào <b>$ho_ten</b>,<br>Mã xác thực (OTP) của bạn là: <b style='font-size:20px;color:blue'>$otp</b>.<br>Mã này có hiệu lực trong 10 phút.";
         
-        // Kiểm tra xem người dùng có nhập ngày tương lai không
-        if ($dateOfBirth > $today) {
-            $errors[] = 'Bạn phải từ 16 tuổi trở lên mới được đăng ký tài khoản.';
-        } else {
-            // Tính khoảng cách năm
-            $age = $today->diff($dateOfBirth)->y;
-            
-            // Kiểm tra đủ 16 tuổi
-            if ($age < 16) {
-                $errors[] = 'Bạn phải từ 16 tuổi trở lên mới được đăng ký tài khoản.';
-            }
-        }
-    }
-    
-    // Xử lý giới tính
-    if (!in_array($gioi_tinh, ['male', 'female', 'other'])) {
-        $gioi_tinh = 'other'; // Mặc định
-    }
+        if (sendMail($email, $subject, $body)) {
+            // 3. Lưu toàn bộ thông tin đăng ký vào Session (tạm thời)
+            $_SESSION['reg_temp_data'] = [
+                'ho_ten' => $ho_ten,
+                'email' => $email,
+                'so_dien_thoai' => $sdt,
+                'ngay_sinh' => $ngay_sinh,
+                'gioi_tinh' => $gioi_tinh,
+                'mat_khau' => password_hash($mat_khau, PASSWORD_DEFAULT), // Mã hóa luôn
+                'otp' => $otp,
+                'otp_time' => time() + 600 // Hết hạn sau 10 phút
+            ];
 
-    // 4. KIỂM TRA TRÙNG LẶP (Email/SĐT) - NẾU KHÔNG CÓ LỖI VALIDATE
-    if (empty($errors)) {
-        try {
-            $stmt = $pdo->prepare("SELECT * FROM nguoi_dung WHERE email = ? OR so_dien_thoai = ?");
-            $stmt->execute([$email, $sdt]);
-            $existingUser = $stmt->fetch();
-
-            if ($existingUser) {
-                if ($existingUser['email'] === $email) {
-                    $errors[] = 'Email này đã được sử dụng.';
-                }
-                if ($existingUser['so_dien_thoai'] === $sdt && !empty($sdt)) {
-                    $errors[] = 'Số điện thoại này đã được sử dụng.';
-                }
-            }
-        } catch (PDOException $e) {
-            $errors[] = "Lỗi truy vấn CSDL: " . $e->getMessage();
-        }
-    }
-
-    // 5. TẠO TÀI KHOẢN (NẾU TẤT CẢ ĐỀU ỔN)
-    if (empty($errors)) {
-        try {
-            // Băm mật khẩu
-            $hashed_password = password_hash($mat_khau, PASSWORD_DEFAULT);
-            
-            // Vai trò Khách hàng = 2
-            $vai_tro_id = 2; 
-
-            $sql = "INSERT INTO nguoi_dung (ho_ten, email, so_dien_thoai, ngay_sinh, gioi_tinh, mat_khau, vai_tro_id, trang_thai) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 1)";
-            
-            $stmt = $pdo->prepare($sql);
-            
-            $stmt->execute([
-                $ho_ten,
-                $email,
-                $sdt,
-                $ngay_sinh,
-                $gioi_tinh,
-                $hashed_password,
-                $vai_tro_id
-            ]);
-
-            // 6. CHUYỂN HƯỚNG
-            header("Location: index.php?page=login&register=success");
+            // 4. Chuyển hướng sang trang nhập OTP
+            header("Location: index.php?page=verify_register");
             exit;
-
-        } catch (PDOException $e) {
-            $errors[] = "Lỗi khi tạo tài khoản: " . $e->getMessage();
+        } else {
+            $errors[] = "Không thể gửi email. Vui lòng kiểm tra lại kết nối mạng hoặc email.";
         }
     }
-} 
+}
 ?>
 
 <!DOCTYPE html>

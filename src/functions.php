@@ -391,45 +391,48 @@ function getUserAddresses(PDO $pdo, $user_id) {
     }
 }
 
+
 /**
- * (ĐÃ SỬA LỖI) Hàm gửi email chung cho dự án
+ * Hàm gửi Email chung cho toàn hệ thống
  */
-function sendEmail($to_email, $to_name, $subject, $body) {
-    // Giờ đây chỉ cần gọi 'new PHPMailer' (không cần '\')
-    $mail = new PHPMailer(true); 
-    
+function sendMail($to, $subject, $content) {
+    // [SỬA LỖI] Vì đầu file đã có "use PHPMailer\PHPMailer\PHPMailer;" 
+    // nên ở đây chỉ cần gọi ngắn gọn là PHPMailer
+    $mail = new PHPMailer(true);
+
     try {
-        // Cấu hình Server (SMTP)
-        // $mail->SMTPDebug = SMTP::DEBUG_SERVER; // Dùng hằng số 'SMTP' (không cần '\')
+        // 1. Cấu hình Server (SMTP)
         $mail->isSMTP();
-        $mail->Host       = MAIL_HOST;
+        $mail->Host       = defined('MAIL_HOST') ? MAIL_HOST : 'smtp.gmail.com'; 
         $mail->SMTPAuth   = true;
-        $mail->Username   = MAIL_USERNAME;
-        $mail->Password   = MAIL_PASSWORD;
-        // Dùng hằng số 'PHPMailer' (không cần '\')
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; 
-        $mail->Port       = 465;             
+        
+        // Lấy thông tin từ config
+        $mail->Username   = defined('MAIL_USERNAME') ? MAIL_USERNAME : 'nhat2koko5@gmail.com'; 
+        $mail->Password   = defined('MAIL_PASSWORD') ? MAIL_PASSWORD : ''; // Mật khẩu ứng dụng
+        
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // [SỬA] Dùng hằng số ngắn gọn
+        $mail->Port       = 587;
         $mail->CharSet    = 'UTF-8';
-        // Người gửi
-        $mail->setFrom(MAIL_USERNAME, MAIL_FROM_NAME);
 
-        // Người nhận
-        $mail->addAddress($to_email, $to_name);
+        // 2. Người gửi & Người nhận
+        $mail->setFrom($mail->Username, 'HIShop Notification');
+        $mail->addAddress($to);
 
-        // Nội dung Email
-        $mail->isHTML(true); 
+        // 3. Nội dung Email
+        $mail->isHTML(true);
         $mail->Subject = $subject;
-        $mail->Body    = $body;
-        $mail->AltBody = strip_tags($body);
+        $mail->Body    = $content;
+        $mail->AltBody = strip_tags($content);
 
         $mail->send();
-        return true; // Gửi thành công
-    } catch (Exception $e) { // QUAN TRỌNG: 'Exception' này giờ đã được 'use' ở đầu file
-        error_log("Lỗi gửi mail: {$mail->ErrorInfo}");
-        return false; // Gửi thất bại
+        return true;
+
+    } catch (Exception $e) {
+        // Ghi log lỗi vào file error_log của server để debug thay vì hiện ra màn hình
+        error_log("Gửi mail thất bại: {$mail->ErrorInfo}");
+        return false;
     }
 }
-
 /**
  * (MỚI) LẤY THỐNG KÊ TỔNG QUAN CHO ADMIN DASHBOARD
  * CẬP NHẬT: Logic tính doanh thu theo trạng thái tiếng Việt

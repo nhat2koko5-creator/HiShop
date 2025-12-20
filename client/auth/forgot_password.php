@@ -8,6 +8,7 @@ $success_message = null;
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST['email'] ?? '');
 
+    // 1. Validate Email
     if (empty($email)) {
         $errors[] = "Vui lòng nhập email của bạn.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -16,51 +17,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (empty($errors)) {
         try {
+            // 2. Kiểm tra Email có tồn tại trong hệ thống không
             $stmt = $pdo->prepare("SELECT id, ho_ten FROM nguoi_dung WHERE email = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch();
 
             if ($user) {
+                // 3. Tạo mã OTP
                 $otp = (string) rand(100000, 999999);
                 
-                // (XÓA DÒNG NÀY) $expires_at = date('Y-m-d H:i:s', time() + 600); 
-
-                // 4. (ĐÃ SỬA LỖI) Lưu OTP vào CSDL
+                // 4. Xóa mã OTP cũ (nếu có) để tránh rác DB
                 $pdo->prepare("DELETE FROM dat_lai_mat_khau WHERE email = ?")->execute([$email]);
                 
-                // (ĐÃ SỬA LỖI) Dùng hàm DATE_ADD(NOW(), INTERVAL 10 MINUTE) của MySQL
-                $sql = "INSERT INTO dat_lai_mat_khau (email, token, expires_at) 
-                        VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE))";
+                // 5. Lưu mã OTP mới vào CSDL (Hết hạn sau 10 phút)
+                $stmt_insert = $pdo->prepare("INSERT INTO dat_lai_mat_khau (email, token, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE))");
+                $stmt_insert->execute([$email, $otp]);
+
+                // --- [ĐOẠN MỚI THÊM] GỬI EMAIL OTP ---
+                $subject = "[HIShop] Mã xác thực lấy lại mật khẩu";
+                $body = "Xin chào <b>" . htmlspecialchars($user['ho_ten']) . "</b>,<br>Bạn vừa yêu cầu lấy lại mật khẩu.<br>Mã xác thực (OTP) của bạn là: <b style='font-size:20px;color:red'>$otp</b>.<br>Mã này có hiệu lực trong 10 phút.";
                 
-                $stmt = $pdo->prepare($sql);
-                // (Chỉ cần truyền $email và $otp)
-                $stmt->execute([$email, $otp]); 
-
-                // 5. GỬI EMAIL CHỨA OTP
-                $subject = "HIShop - Mã Xác Nhận Đặt Lại Mật Khẩu";
-                $body = "
-                    <p>Chào bạn " . htmlspecialchars($user['ho_ten']) . ",</p>
-                    <p>Mã OTP để đặt lại mật khẩu của bạn là:</p>
-                    <h1 style='font-size: 32px; letter-spacing: 5px; background-color: #f4f7fc; padding: 10px 20px; display: inline-block; border-radius: 8px;'>
-                        " . $otp . "
-                    </h1>
-                    <p>Mã này sẽ hết hạn sau 10 phút. Vui lòng không chia sẻ mã này.</p>
-                ";
-
-                // Giả sử hàm sendEmail tồn tại
-                if (!function_exists('sendEmail') || !sendEmail($email, $user['ho_ten'], $subject, $body)) {
-                    // Nếu không có hàm sendEmail, hoặc gửi lỗi, ta sẽ báo lỗi và không chuyển hướng
-                    // Tạm thời bỏ qua kiểm tra này để đảm bảo logic ứng dụng chạy được
-                    // $errors[] = "Không thể gửi email. Vui lòng thử lại sau.";
+                if (sendMail($email, $subject, $body)) {
+                    // Gửi thành công -> Chuyển hướng sang trang nhập OTP
+                    header("Location: index.php?page=verify_otp&email=" . urlencode($email));
+                    exit;
+                } else {
+                    $errors[] = "Lỗi: Không thể gửi email. Vui lòng kiểm tra lại cấu hình server.";
                 }
-            }
+                // -------------------------------------
 
-            if (empty($errors)) {
-                // Chuyển hướng đến trang nhập OTP
-                header("Location: index.php?page=verify_otp&email=" . urlencode($email));
-                exit;
+            } else {
+                // Để bảo mật, có thể thông báo chung chung hoặc báo lỗi email không tồn tại
+                $errors[] = "Email này chưa được đăng ký trong hệ thống.";
             }
-
         } catch (PDOException $e) {
             $errors[] = "Lỗi hệ thống: " . $e->getMessage();
         }
@@ -73,31 +62,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quên Mật Khẩu - CodingLab</title>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title>Quên Mật Khẩu - HIShop</title>
     <link rel="stylesheet" href="assets/css/style-auth.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
     
     <header class="navbar">
         <div class="logo"><img src="assets/img/logo.png" alt="Hishop" class="brand-logo"></div>
         <nav class="nav-links">
-            <a href="index.php?page=home">Home</a>
-            <a href="#">Product</a>
-            <a href="#">Services</a>
-            <a href="#">Contact</a>
+            <a href="index.php?page=home">Trang chủ</a>
+            <a href="index.php?page=product_list">Sản Phẩm</a>
         </nav>
-        <a href="index.php?page=login"><button class="login-btn">Đăng nhập</button></a>
     </header>
 
     <div class="background-container">
-        <div class="forgot-modal-container">
-            <div class="auth-card">
-                <div class="modal-header">
-                    <h2>Quên Mật Khẩu</h2>
-                    <span class="close-btn">&times;</span>
-                </div>
+        <div class="login-modal-container">
+            <div class="login-modal" style="max-width: 450px;">
                 
+                <div class="modal-header">
+                    <h2>QUÊN MẬT KHẨU</h2>
+                    <p style="font-size: 14px; color: #666; margin-top: 5px;">
+                        Nhập email đã đăng ký để nhận mã xác thực.
+                    </p>
+                </div>
+
                 <?php if (!empty($errors)): ?>
                     <div class="error-message">
                         <ul>
@@ -108,11 +97,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                 <?php endif; ?>
 
-                <form class="auth-form" method="POST" action="index.php?page=forgot_password">
+                <form class="login-form" method="POST" action="index.php?page=forgot_password">
                     
                     <div class="input-group">
                         <span class="material-icons">mail_outline</span>
-                        <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email" required
+                        <input type="email" id="email" name="email" class="form-input" placeholder="Nhập email của bạn" required
                                value="<?= htmlspecialchars($email ?? '') ?>">
                     </div>
 
@@ -120,18 +109,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </form>
 
                 <div class="signup-link">
-                    Nhớ mật khẩu? <a href="index.php?page=login">Đăng nhập</a>
+                    Nhớ mật khẩu? <a href="index.php?page=login">Đăng nhập ngay</a>
                 </div>
-
-                <div class="auth-header-hidden" style="display: none;">
-                    <a href="index.php?page=home" class="logo-hidden">HIShop</a>
-                    <h1>Quên Mật Khẩu</h1>
-                    <p>Nhập email của bạn và chúng tôi sẽ gửi mã OTP gồm 6 số.</p>
-                </div>
-                <div class="auth-footer-hidden" style="display: none;">
-                    Nhớ mật khẩu? <a href="index.php?page=login" class="form-link">Đăng nhập</a>
-                </div>
-                </div>
+            </div>
         </div>
     </div>
 </body>

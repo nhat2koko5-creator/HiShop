@@ -8,31 +8,70 @@ $discountProducts = getDiscountProducts($pdo);
 <section class="hero-slider-section">
     <div class="swiper hero-swiper">
         <div class="swiper-wrapper">
+            
             <div class="swiper-slide">
-                <a href="index.php?page=product_list&category_id=1">
+                <a href="index.php?page=product_list&category_id=1" class="banner-link">
                     <img src="assets/img/banner/banner1.png" alt="Gaming">
+                    
+                    <div class="simple-content content-center">
+                        <h2 class="simple-title">GIẢI PHÁP CÔNG NGHỆ<br>HIỆN ĐẠI & ĐÁNG TIN CẬY</h2>
+                        <p class="simple-desc">Hỗ trợ doanh nghiệp và cá nhân tiếp cận sản phẩm tốt nhất</p>
+                        <span class="btn-basic primary">MUA NGAY</span>
+                    </div>
                 </a>
             </div>
+
             <div class="swiper-slide">
-                <a href="index.php?page=product_list">
+                <a href="index.php?page=product_list" class="banner-link">
                     <img src="assets/img/banner/banner2.png" alt="Công nghệ">
+                    
+                    <div class="simple-content content-right">
+                        <h2 class="simple-title">CÔNG NGHỆ<br>DẪN ĐẦU</h2>
+                        <p class="simple-desc">Trải nghiệm sức mạnh vượt trội</p>
+                        <div class="btn-group">
+                            <span class="btn-basic primary">Xem sản phẩm</span>
+                            <span class="btn-basic outline">Liên hệ tư vấn</span>
+                        </div>
+                    </div>
                 </a>
             </div>
+
             <div class="swiper-slide">
-                <a href="index.php?page=product_list&category_id=2">
+                <a href="index.php?page=product_list&category_id=2" class="banner-link">
                     <img src="assets/img/banner/banner3.png" alt="Đồ họa">
+                    
+                    <div class="simple-content content-left">
+                        <h2 class="simple-title text-yellow">ĐỒ HỌA<br>CHUYÊN NGHIỆP</h2>
+                        <p class="simple-desc">Màu sắc chuẩn xác - Sáng tạo không giới hạn</p>
+                        <span class="btn-basic primary">Xem Chi Tiết</span>
+                    </div>
                 </a>
             </div>
-             <div class="swiper-slide">
-                <a href="index.php?page=product_list&category_id=4">
+
+            <div class="swiper-slide">
+                <a href="index.php?page=product_list&category_id=4" class="banner-link">
                     <img src="assets/img/banner/banner4.png" alt="Học tập">
+                    
+                    <div class="simple-content content-right">
+                        <h2 class="simple-title">BACK TO SCHOOL<br>ƯU ĐÃI SINH VIÊN</h2>
+                        <p class="simple-desc">Giảm thêm 5% - Tặng Balo xịn</p>
+                        <span class="btn-basic primary">Săn Deal Ngay</span>
+                    </div>
                 </a>
             </div>
-             <div class="swiper-slide">
-                <a href="index.php?page=product_list&category_id=5">
+
+            <div class="swiper-slide">
+                <a href="index.php?page=product_list&category_id=5" class="banner-link">
                     <img src="assets/img/banner/banner5.png" alt="Doanh nhân">
+                    
+                    <div class="simple-content content-right">
+                        <h2 class="simple-title">KHẲNG ĐỊNH ĐẲNG CẤP<br>DOANH NHÂN</h2>
+                        <p class="simple-desc">Thiết kế tinh xảo hiệu năng vượt trội</p>
+                        <span class="btn-basic primary">Xem Ngay</span>
+                    </div>
                 </a>
             </div>
+
         </div>
         <div class="swiper-pagination"></div>
         <div class="swiper-button-next"></div>

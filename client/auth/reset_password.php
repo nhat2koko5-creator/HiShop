@@ -5,9 +5,9 @@
 $errors = [];
 
 // 1. (BACK-END) BẢO VỆ TRANG
-// Kiểm tra xem người dùng đã xác thực OTP chưa
+// Kiểm tra xem người dùng đã xác thực OTP thành công ở bước trước chưa
 if (!isset($_SESSION['email_verified_for_reset'])) {
-    // Nếu chưa, đá về trang 1
+    // Nếu chưa, đá về trang nhập email ban đầu
     header('Location: index.php?page=forgot_password');
     exit;
 }
@@ -16,40 +16,43 @@ if (!isset($_SESSION['email_verified_for_reset'])) {
 $email_to_update = $_SESSION['email_verified_for_reset'];
 
 
-// 2. (BACK-END) XỬ LÝ KHI NGƯỜI DÙNG NHẬP MẬT KHẨU MỚI
+// 2. (BACK-END) XỬ LÝ KHI NGƯỜI DÙNG SUBMIT MẬT KHẨU MỚI
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $mat_khau = $_POST['mat_khau'] ?? '';
     $mat_khau_nhap_lai = $_POST['mat_khau_nhap_lai'] ?? '';
 
-    // Validate mật khẩu
+    // Validate dữ liệu
     if (empty($mat_khau)) {
-        $errors[] = 'Mật khẩu là bắt buộc.';
+        $errors[] = 'Vui lòng nhập mật khẩu mới.';
     } elseif (strlen($mat_khau) < 6) {
         $errors[] = 'Mật khẩu phải có ít nhất 6 ký tự.';
     }
+    
     if ($mat_khau !== $mat_khau_nhap_lai) {
         $errors[] = 'Mật khẩu nhập lại không khớp.';
     }
 
-    // 3. NẾU MỌI THỨ OK, CẬP NHẬT MẬT KHẨU
     if (empty($errors)) {
         try {
-            // Băm mật khẩu mới
+            // A. Mã hóa mật khẩu
             $hashed_password = password_hash($mat_khau, PASSWORD_DEFAULT);
 
-            // Cập nhật bảng nguoi_dung
-            $stmt_update = $pdo->prepare("UPDATE nguoi_dung SET mat_khau = ? WHERE email = ?");
-            $stmt_update->execute([$hashed_password, $email_to_update]);
+            // B. Cập nhật mật khẩu mới vào bảng nguoi_dung
+            $stmt = $pdo->prepare("UPDATE nguoi_dung SET mat_khau = ? WHERE email = ?");
+            $stmt->execute([$hashed_password, $email_to_update]);
 
-            // (Xóa session xác thực)
+            // C. Xóa mã OTP cũ trong bảng dat_lai_mat_khau để không dùng lại được
+            $pdo->prepare("DELETE FROM dat_lai_mat_khau WHERE email = ?")->execute([$email_to_update]);
+
+            // D. Xóa session xác thực
             unset($_SESSION['email_verified_for_reset']);
 
-            // Chuyển hướng về trang Login với thông báo thành công
+            // E. Chuyển hướng về trang Login với thông báo thành công
             header("Location: index.php?page=login&reset=success");
             exit;
 
         } catch (PDOException $e) {
-            $errors[] = "Lỗi khi cập nhật mật khẩu: " . $e->getMessage();
+            $errors[] = "Lỗi hệ thống: " . $e->getMessage();
         }
     }
 }
@@ -62,39 +65,60 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đặt Lại Mật Khẩu - HIShop</title>
     <link rel="stylesheet" href="assets/css/style-auth.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
-    <div class="auth-card">
-        <div class="auth-header">
-            <a href="index.php?page=home" class="logo">HIShop</a>
-            <h1>Tạo Mật Khẩu Mới</h1>
-            <p>Tài khoản: <strong><?php echo htmlspecialchars($email_to_update); ?></strong></p>
+    
+    <header class="navbar">
+        <div class="logo"><img src="assets/img/logo.png" alt="Hishop" class="brand-logo"></div>
+        <nav class="nav-links">
+            <a href="index.php?page=home">Trang chủ</a>
+            <a href="index.php?page=product_list">Sản Phẩm</a>
+        </nav>
+    </header>
+
+    <div class="background-container">
+        <div class="login-modal-container">
+            <div class="login-modal" style="max-width: 450px;">
+                
+                <div class="modal-header">
+                    <h2>TẠO MẬT KHẨU MỚI</h2>
+                    <p style="font-size: 14px; color: #666; margin-top: 5px;">
+                        Tài khoản: <strong style="color: #6A0DAD;"><?php echo htmlspecialchars($email_to_update); ?></strong>
+                    </p>
+                </div>
+
+                <?php if (!empty($errors)): ?>
+                    <div class="error-message">
+                        <ul>
+                            <?php foreach ($errors as $error): ?>
+                                <li><?php echo $error; ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+
+                <form class="login-form" method="POST" action="index.php?page=reset_password">
+                    
+                    <div class="input-group">
+                        <span class="material-icons">lock_outline</span>
+                        <input type="password" name="mat_khau" placeholder="Mật khẩu mới (Min 6 ký tự)" required autofocus>
+                    </div>
+
+                    <div class="input-group">
+                        <span class="material-icons">lock</span>
+                        <input type="password" name="mat_khau_nhap_lai" placeholder="Nhập lại mật khẩu mới" required>
+                    </div>
+                    
+                    <button type="submit" class="login-now-btn">Đổi Mật Khẩu</button>
+                </form>
+
+                <div class="signup-link">
+                    <a href="index.php?page=login">Quay lại Đăng nhập</a>
+                </div>
+            </div>
         </div>
-
-        <?php if (!empty($errors)): ?>
-            <div class="error-message">
-                <ul>
-                    <?php foreach ($errors as $error): ?>
-                        <li><?php echo $error; ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-        <?php endif; ?>
-        
-        <form class="auth-form" method="POST" action="index.php?page=reset_password">
-            <div class="form-group">
-                <label for="mat_khau" class="form-label">Mật khẩu mới</label>
-                <input type="password" id="mat_khau" name="mat_khau" class="form-input" placeholder="Tạo mật khẩu mới" required>
-            </div>
-
-            <div class="form-group">
-                <label for="mat_khau_nhap_lai" class="form-label">Nhập lại mật khẩu mới</label>
-                <input type="password" id="mat_khau_nhap_lai" name="mat_khau_nhap_lai" class="form-input" placeholder="Nhập lại mật khẩu mới" required>
-            </div>
-            
-            <button type="submit" class="btn btn-primary">Lưu Mật Khẩu Mới</button>
-        </form>
-
     </div>
+
 </body>
 </html>

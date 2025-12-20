@@ -43,7 +43,7 @@ if ($page === 'logout') {
 }
 
 // Auth pages
-$auth_pages = ['login', 'register', 'forgot_password', 'reset_password', 'verify_otp'];
+$auth_pages = ['login', 'register', 'forgot_password', 'reset_password', 'verify_otp','verify_register'];
 
 if (in_array($page, $auth_pages)) {
     $auth_file = "client/auth/{$page}.php";

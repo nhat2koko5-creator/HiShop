@@ -35,10 +35,16 @@ if (isset($_GET['toggle'])) {
     $current = $stmt->fetchColumn();
 
     $newStatus = ($current == 1) ? 0 : 1;
+    
+    // Cập nhật trạng thái danh mục
     $update = $pdo->prepare("UPDATE danh_muc SET trang_thai = ? WHERE id = ?");
     $update->execute([$newStatus, $id]);
+    
+    // Cập nhật trạng thái tất cả sản phẩm trong danh mục
+    $updateProducts = $pdo->prepare("UPDATE san_pham SET trang_thai = ? WHERE danh_muc_id = ?");
+    $updateProducts->execute([$newStatus, $id]);
 
-    $msg = ($newStatus == 1) ? 'Đã hiển thị danh mục.' : 'Đã ẩn danh mục.';
+    $msg = ($newStatus == 1) ? 'Đã hiển thị danh mục và sản phẩm.' : 'Đã ẩn danh mục và sản phẩm.';
     $_SESSION['toast'] = ['type' => 'success', 'message' => $msg];
     
     echo "<script>window.location.href='index.php?page=categories_list';</script>";

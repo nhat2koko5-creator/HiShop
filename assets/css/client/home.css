@@ -158,6 +158,119 @@
     .category-pills { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* =========================================
+   STYLE BANNER BASIC (LINH HOẠT VỊ TRÍ)
+   ========================================= */
+
+.hero-swiper {
+    width: 100%;
+    overflow: hidden;
+}
+
+.hero-swiper .swiper-slide {
+    position: relative;
+}
+
+.hero-swiper .swiper-slide img {
+    width: 100%;
+    height: 500px;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+/* --- KHUNG CHỨA CHUNG (Cấu hình cơ bản) --- */
+.simple-content {
+    position: absolute;
+    top: 50%; /* Luôn bắt đầu từ giữa theo chiều dọc */
+    transform: translateY(-50%); /* Căn giữa chiều dọc chuẩn xác */
+    z-index: 10;
+    width: 90%;
+    max-width: 600px;
+    color: #fff;
+    display: flex;
+    flex-direction: column; /* Xếp dọc: Tiêu đề -> Mô tả -> Nút */
+}
+
+/* --- 3 KIỂU ĐỊNH VỊ (QUAN TRỌNG) --- */
+
+/* 1. Căn Giữa (CENTER) */
+.content-center {
+    left: 50%;
+    transform: translate(-50%, -50%); /* Căn giữa tuyệt đối cả ngang và dọc */
+    text-align: center;
+    align-items: center; /* Căn giữa nút bấm */
+}
+
+/* 2. Căn Trái (LEFT) */
+.content-left {
+    left: 8%; /* Cách lề trái 8% */
+    text-align: left;
+    align-items: flex-start; /* Căn nút sang trái */
+}
+
+/* 3. Căn Phải (RIGHT) */
+.content-right {
+    right: 8%; /* Cách lề phải 8% */
+    text-align: right;
+    align-items: flex-end; /* Căn nút sang phải */
+}
+
+
+/* --- TYPOGRAPHY & BUTTON --- */
+.simple-title {
+    font-size: 42px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    line-height: 1.2;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.simple-title.text-yellow { color: #ffc107; }
+
+.simple-desc {
+    font-size: 18px;
+    font-weight: 400;
+    margin-bottom: 25px;
+    text-shadow: 0 1px 5px rgba(0,0,0,0.5);
+}
+
+.btn-basic {
+    display: inline-block;
+    padding: 12px 30px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    background-color: #0f62fe;
+    color: #fff;
+    border: 2px solid #0f62fe;
+}
+.btn-basic:hover {
+    background-color: #0043ce;
+    border-color: #0043ce;
+}
+
+/* Responsive Mobile */
+@media (max-width: 576px) {
+    .hero-swiper .swiper-slide img { height: 300px; }
+    /* Mobile thì auto về giữa hết cho đẹp */
+    .simple-content {
+        left: 50% !important;
+        right: auto !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        text-align: center !important;
+        align-items: center !important;
+        width: 100%;
+    }
+    .simple-title { font-size: 24px; }
+    .simple-desc { display: none; }
+}
+
 .hero-swiper .swiper-slide img {
     width: 100%;
     /* height: auto;  <-- Nếu muốn giữ tỉ lệ gốc */
