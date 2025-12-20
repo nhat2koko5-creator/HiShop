@@ -35,15 +35,16 @@ switch ($page) {
         $page_file = 'pages/product_sale.php';
         break;
 
+
     case 'orders_list':
         $page_title = 'Quản lý Đơn Hàng';
         $page_file = 'pages/orders_list.php';
         break;
     case 'reports':
-        $page_title = 'Thống kê';
+        $page_title = 'Báo cáo';
         $page_file = 'pages/reports.php';
         break;
-        
+
     case 'order_detail':
         $page_title = 'Chi tiết Đơn Hàng';
         $page_file = 'pages/order_detail.php';
@@ -87,16 +88,15 @@ switch ($page) {
         $page_title = 'Tạo Phiếu Xuất Kho';
         $page_file = 'pages/warehouse_export.php';
         break;
-   case 'warehouse_history':
+    case 'warehouse_history':
         $page_title = 'Lịch Sử Nhập/Xuất Kho';
         $page_file = 'pages/warehouse_history.php'; // Đúng: Gán đường dẫn vào biến để index xử lý layout sau
         break;
 
-    case 'settings':
-        $page_title = 'Cài đặt';
-        $page_file = 'pages/settings.php';
+    case 'repost_revenue':
+        $page_title = 'Báo Cáo Doanh Thu';
+        $page_file = 'pages/repost_revenue.php'; // Đúng: Gán đường dẫn vào biến để index xử lý layout sau
         break;
-
     case 'dashboard':
     default:
         $page_title = 'Trang chủ';

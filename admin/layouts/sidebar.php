@@ -116,21 +116,35 @@ $is_system_group = in_array($page, $system_pages);
             </li>
         </ul>
 
-        <div class="nav-group-title">Hệ thống</div>
-        <ul class="nav-group">
+<div class="nav-group-title">Hệ thống</div>
+<ul class="nav-group">
+    <li>
+        <a href="index.php?page=users_list" class="nav-link <?php echo isActive('users_list', $page); ?>">
+            <div class="nav-icon"><i class="fas fa-users"></i></div>
+            <span class="nav-text">Người Dùng</span>
+        </a>
+    </li>
+
+    <li class="has-submenu <?php echo $is_report_group ? 'open' : ''; ?>">
+        <a href="javascript:void(0)" class="nav-link toggle-submenu <?php echo $is_report_group ? 'active-parent' : ''; ?>">
+            <div class="nav-icon"><i class="fas fa-chart-line"></i></div>
+            <span class="nav-text">Báo cáo</span>
+            <i class="fas fa-chevron-right arrow-icon"></i>
+        </a>
+        <ul class="submenu">
             <li>
-                <a href="index.php?page=users_list" class="nav-link <?php echo isActive('users_list', $page); ?>">
-                    <div class="nav-icon"><i class="fas fa-users"></i></div>
-                    <span class="nav-text">Người Dùng</span>
+                <a href="index.php?page=reports" class="<?php echo isActive('reports', $page); ?>">
+                    Doanh thu
                 </a>
             </li>
             <li>
-                <a href="index.php?page=reports" class="nav-link <?php echo isActive('reports', $page); ?>">
-                    <div class="nav-icon"><i class="fas fa-chart-line"></i></div>
-                    <span class="nav-text">Báo cáo doanh thu</span>
+                <a href="index.php?page=repost_revenue" class="<?php echo isActive('reports_revenue', $page); ?>">
+                    Kho hàng
                 </a>
             </li>
         </ul>
+    </li>
+</ul>
     </div>
 
     <div class="admin-user">
