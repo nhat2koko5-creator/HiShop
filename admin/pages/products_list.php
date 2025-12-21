@@ -191,28 +191,49 @@ require_once 'layouts/header.php';
 
 <?php
 // =================================================================
-// 3. LẤY DỮ LIỆU (GET) - ĐÃ FIX LỌC TỒN KHO THỰC TẾ
+// 3. LẤY DỮ LIỆU (GET) - ĐÃ CẬP NHẬT BỘ LỌC
 // =================================================================
+
+// 1. Lấy danh sách danh mục để đổ vào dropdown
+$categories = $pdo->query("SELECT * FROM danh_muc ORDER BY ten ASC")->fetchAll(PDO::FETCH_ASSOC);
+
 $stats = [
     'total' => $pdo->query("SELECT COUNT(*) FROM san_pham")->fetchColumn(),
     'active' => $pdo->query("SELECT COUNT(*) FROM san_pham WHERE trang_thai = 1")->fetchColumn(),
-    'hidden' => $pdo->query("SELECT COUNT(*) FROM san_pham WHERE trang_thai = 0")->fetchColumn()
+    'hidden' => $pdo->query("SELECT COUNT(*) FROM san_pham WHERE trang_thai = 0")->fetchColumn(),
+    'low_stock' => $pdo->query("SELECT COUNT(*) FROM bien_the_san_pham WHERE so_luong_ton <= 5")->fetchColumn(),
+
 ];
 
+// 2. Lấy các tham số lọc từ URL
 $keyword = $_GET['keyword'] ?? '';
-$stock_filter = $_GET['stock'] ?? ''; // Lấy tham số lọc
+$stock_filter = $_GET['stock'] ?? '';
+$cat_filter = isset($_GET['cat_id']) && $_GET['cat_id'] !== '' ? intval($_GET['cat_id']) : '';
+$status_filter = isset($_GET['status']) && $_GET['status'] !== '' ? intval($_GET['status']) : '';
 
 $limit = 10;
 $page = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
 $offset = ($page - 1) * $limit;
 
-// Xây dựng câu query
+// 3. Xây dựng câu query động
 $sql_base = "FROM san_pham sp LEFT JOIN danh_muc dm ON sp.danh_muc_id = dm.id WHERE 1=1";
 
+// Lọc theo từ khóa
 if (!empty($keyword)) {
     $sql_base .= " AND sp.ten LIKE :kw";
 }
 
+// Lọc theo danh mục
+if (!empty($cat_filter)) {
+    $sql_base .= " AND sp.danh_muc_id = :cat_id";
+}
+
+// Lọc theo trạng thái
+if ($status_filter !== '') {
+    $sql_base .= " AND sp.trang_thai = :status";
+}
+
+// Lọc theo tồn kho (Logic cũ của bạn)
 if ($stock_filter === 'low') {
     $sql_base .= " AND (
         (SELECT COUNT(*) FROM bien_the_san_pham bt WHERE bt.san_pham_id = sp.id AND bt.so_luong_ton < 5) > 0
@@ -220,22 +241,34 @@ if ($stock_filter === 'low') {
         (SELECT COUNT(*) FROM bien_the_san_pham bt WHERE bt.san_pham_id = sp.id) = 0
     )";
 }
-// Đếm tổng để phân trang
+
+// 4. Đếm tổng để phân trang
 $stmtCount = $pdo->prepare("SELECT COUNT(*) " . $sql_base);
 if (!empty($keyword)) $stmtCount->bindValue(':kw', "%$keyword%");
+if (!empty($cat_filter)) $stmtCount->bindValue(':cat_id', $cat_filter, PDO::PARAM_INT);
+if ($status_filter !== '') $stmtCount->bindValue(':status', $status_filter, PDO::PARAM_INT);
 $stmtCount->execute();
+
 $totalRecords = $stmtCount->fetchColumn();
 $totalPages = ceil($totalRecords / $limit);
 
-// Lấy dữ liệu
+// 5. Lấy dữ liệu sản phẩm
+// [ĐÃ SỬA] Thêm dòng lấy tổng tồn kho (tong_ton)
 $sql = "SELECT sp.*, dm.ten AS ten_danh_muc,
-        (SELECT COALESCE(SUM(so_luong_ton), 0) FROM bien_the_san_pham WHERE san_pham_id = sp.id) AS tong_bien_the
+        (SELECT COALESCE(SUM(so_luong_ton), 0) FROM bien_the_san_pham WHERE san_pham_id = sp.id) AS tong_ton
         " . $sql_base . "
         ORDER BY sp.id DESC
         LIMIT :limit OFFSET :offset";
 
-$stmt = $pdo->prepare($sql);
+// --- [THÊM DÒNG NÀY VÀO ĐÂY] ---
+$stmt = $pdo->prepare($sql); 
+// ------------------------------
+
+// Bind các tham số
 if (!empty($keyword)) $stmt->bindValue(':kw', "%$keyword%");
+if (!empty($cat_filter)) $stmt->bindValue(':cat_id', $cat_filter, PDO::PARAM_INT);
+if ($status_filter !== '') $stmt->bindValue(':status', $status_filter, PDO::PARAM_INT);
+
 $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
 $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
@@ -272,14 +305,47 @@ if (!empty($products)) {
             <div class="stat-icon bg-gray"><i class="fa-solid fa-eye-slash"></i></div>
             <div class="stat-info"><span class="stat-label">Sản phẩm bị ẩn</span><span class="stat-number"><?= $stats['hidden'] ?></span></div>
         </div>
+        <div class="stat-card" style="border-left: 4px solid #e74a3b;">
+            <div class="stat-icon" style="background: #ffebeb; color: #e74a3b;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="stat-info">
+                <span class="stat-label" style="color: #e74a3b; font-weight: 700;">Sắp hết hàng</span>
+                <span class="stat-number" style="color: #e74a3b;"><?= $stats['low_stock'] ?></span>
+            </div>
+        </div>
     </div>
 
     <div class="main-card-box">
-        <div class="toolbar-section">
-            <form method="GET" action="index.php" class="search-form">
+       <div class="toolbar-section">
+            <form method="GET" action="index.php" class="search-form" style="flex: 1; display: flex; gap: 10px; flex-wrap: wrap;">
                 <input type="hidden" name="page" value="products_list">
-                <input type="text" name="keyword" class="search-input" placeholder="Tìm kiếm sản phẩm..." value="<?= htmlspecialchars($keyword) ?>">
-                <button type="submit" class="btn-search-icon"><i class="fa-solid fa-magnifying-glass"></i></button>
+                
+                <div style="position: relative;">
+                    <input type="text" name="keyword" class="search-input" placeholder="Tìm tên sản phẩm..." value="<?= htmlspecialchars($keyword) ?>">
+                    <button type="submit" class="btn-search-icon"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+
+                <select name="cat_id" class="filter-select" onchange="this.form.submit()">
+                    <option value="">-- Tất cả Danh mục --</option>
+                    <?php foreach ($categories as $cat): ?>
+                        <option value="<?= $cat['id'] ?>" <?= $cat_filter == $cat['id'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($cat['ten']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <select name="status" class="filter-select" onchange="this.form.submit()">
+                    <option value="">-- Trạng thái --</option>
+                    <option value="1" <?= $status_filter === 1 ? 'selected' : '' ?>>Đang hoạt động</option>
+                    <option value="0" <?= $status_filter === 0 ? 'selected' : '' ?>>Đã ẩn</option>
+                </select>
+
+                <select name="stock" class="filter-select" onchange="this.form.submit()">
+                    <option value="">-- Tồn kho --</option>
+                    <option value="low" <?= $stock_filter === 'low' ? 'selected' : '' ?>>Sắp hết hàng (< 5)</option>
+                    </select>
+                <?php if(!empty($keyword) || !empty($cat_filter) || $status_filter !== '' || !empty($stock_filter)): ?>
+                    <a href="index.php?page=products_list" class="btn-reset" title="Xóa bộ lọc"><i class="fa-solid fa-rotate-right"></i></a>
+                <?php endif; ?>
             </form>
             
             <a href="index.php?page=product_form" class="btn-add-new">
@@ -293,11 +359,11 @@ if (!empty($products)) {
                     <tr>
                         <th width="60" class="text-center">ID</th>
                         <th width="80">Ảnh</th>
-                        <th>Tên sản phẩm</th> <th width="140">Giá (Min)</th>
-                        <th width="100">Kho</th>
-                        <th>Danh mục</th>
-                        <th width="120">Trạng thái</th>
-                        <th width="180" class="text-end">Hành động</th>
+                        <th Width="200">Tên sản phẩm</th> 
+                        <th width="140">Giá (Min)</th>
+                        <th width="15%">Danh mục</th>
+                        <th width="10%" class="text-center">Kho hàng</th> <th width="120">Trạng thái</th>
+                        <th width="180" class="text-end" style="text-align: center;">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -329,12 +395,20 @@ if (!empty($products)) {
                         </td>
 
                         <td style="font-weight:700; color:#4e73df;"><?= number_format($minPrice) ?>đ</td>
-                        <td>
-                            <span style="font-weight:600; color: <?= ($p['tong_bien_the'] < 10) ? '#e74a3b' : '#333' ?>">
-                                <?= number_format($p['tong_bien_the']) ?>
-                            </span>
-                        </td>
                         <td><?= htmlspecialchars($p['ten_danh_muc']) ?></td>
+
+                        <td class="text-center">
+                            <?php if ($p['tong_ton'] > 0): ?>
+                                <span style="background: #1cc88a; color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold;">
+                                    Còn <?= $p['tong_ton'] ?>
+                                </span>
+                            <?php else: ?>
+                                <span style="background: #e74a3b; color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold;">
+                                    Hết hàng
+                                </span>
+                            <?php endif; ?>
+                        </td>
+
                         <td>
                             <?php if($p['trang_thai'] == 1): ?>
                                 <span class="badge-status active">Hoạt động</span>
@@ -384,30 +458,57 @@ if (!empty($products)) {
         </div>
 
         <?php if ($totalPages > 1): ?>
-        <div style="margin-top: 25px; display: flex; justify-content: flex-end;">
-            <div style="display: flex; gap: 5px;">
-                <?php if ($page > 1): ?>
-                    <a href="index.php?page=products_list&p=<?= $page - 1 ?>&keyword=<?= htmlspecialchars($keyword) ?>" 
-                       style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 6px; color: #4e73df; text-decoration: none; background: white;">&laquo;</a>
-                <?php endif; ?>
-                
-                <?php 
-                $start = max(1, $page - 2); $end = min($totalPages, $page + 2);
-                for ($i = $start; $i <= $end; $i++): 
-                ?>
-                    <a href="index.php?page=products_list&p=<?= $i ?>&keyword=<?= htmlspecialchars($keyword) ?>" 
-                       style="padding: 6px 12px; border: 1px solid <?= ($i == $page) ? '#4e73df' : '#ddd' ?>; border-radius: 6px; text-decoration: none; 
-                              background: <?= ($i == $page) ? '#4e73df' : 'white' ?>; color: <?= ($i == $page) ? 'white' : '#4e73df' ?>;">
-                       <?= $i ?>
-                    </a>
-                <?php endfor; ?>
-                
-                <?php if ($page < $totalPages): ?>
-                    <a href="index.php?page=products_list&p=<?= $page + 1 ?>&keyword=<?= htmlspecialchars($keyword) ?>" 
-                       style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 6px; color: #4e73df; text-decoration: none; background: white;">&raquo;</a>
-                <?php endif; ?>
+            <?php 
+            // Tạo chuỗi tham số URL để giữ lại các lựa chọn lọc khi chuyển trang
+            // Lưu ý: Các biến $cat_filter, $status_filter... phải được định nghĩa ở phần PHP đầu file như hướng dẫn trước
+            $queryParams = "&keyword=" . urlencode($keyword) . 
+                        "&cat_id=" . urlencode($cat_filter) . 
+                        "&status=" . urlencode($status_filter);
+            ?>
+
+            <div style="margin-top: 25px; display: flex; justify-content: flex-end;">
+                <div style="display: flex; gap: 5px;">
+                    <?php if ($page > 1): ?>
+                        <a href="index.php?page=products_list&p=<?= $page - 1 ?><?= $queryParams ?>" 
+                        class="pagination-btn">&laquo;</a>
+                    <?php endif; ?>
+                    
+                    <?php 
+                    $start = max(1, $page - 2); $end = min($totalPages, $page + 2);
+                    for ($i = $start; $i <= $end; $i++): 
+                    ?>
+                        <a href="index.php?page=products_list&p=<?= $i ?><?= $queryParams ?>" 
+                        class="pagination-btn <?= ($i == $page) ? 'active' : '' ?>">
+                        <?= $i ?>
+                        </a>
+                    <?php endfor; ?>
+                    
+                    <?php if ($page < $totalPages): ?>
+                        <a href="index.php?page=products_list&p=<?= $page + 1 ?><?= $queryParams ?>" 
+                        class="pagination-btn">&raquo;</a>
+                    <?php endif; ?>
+                </div>
             </div>
-        </div>
+
+            <style>
+                .pagination-btn {
+                    padding: 6px 12px;
+                    border: 1px solid #ddd;
+                    border-radius: 6px;
+                    color: #4e73df;
+                    text-decoration: none;
+                    background: white;
+                    transition: all 0.2s;
+                }
+                .pagination-btn:hover {
+                    background-color: #f1f1f1;
+                }
+                .pagination-btn.active {
+                    background: #4e73df;
+                    color: white;
+                    border-color: #4e73df;
+                }
+            </style>
         <?php endif; ?>
     </div>
 </div>

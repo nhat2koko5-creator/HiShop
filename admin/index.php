@@ -92,7 +92,10 @@ switch ($page) {
         $page_title = 'Lịch Sử Nhập/Xuất Kho';
         $page_file = 'pages/warehouse_history.php'; // Đúng: Gán đường dẫn vào biến để index xử lý layout sau
         break;
-
+    case 'warehouse_receipt_detail':
+        $page_title = 'Chi Tiết Phiếu Kho';
+        $page_file = 'pages/warehouse_receipt_detail.php'; // Trỏ đến file vừa tạo
+        break;
     case 'repost_revenue':
         $page_title = 'Báo Cáo Doanh Thu';
         $page_file = 'pages/repost_revenue.php'; // Đúng: Gán đường dẫn vào biến để index xử lý layout sau

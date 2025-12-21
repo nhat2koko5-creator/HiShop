@@ -346,12 +346,14 @@
   background: #fff;
 }
 .btn-search-icon {
-  position: absolute;
-  right: 10px;
-  background: none;
-  border: none;
-  color: #888;
-  cursor: pointer;
+    position: absolute;
+    right: 6px;
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    margin-top: 9px;
+    font-size: 20px;
 }
 
 /* Nút Thêm mới */
@@ -411,11 +413,13 @@
 
 /* TRẠNG THÁI & HÀNH ĐỘNG */
 .badge-status {
-  padding: 5px 12px;
-  border-radius: 20px;
+  padding: 4px 8px;      /* Thu hẹp chiều ngang lại cho gọn */
+  border-radius: 6px;    /* Bo góc nhẹ (vuông hơn) thay vì tròn vo */
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;      /* Giảm độ đậm một chút cho thanh thoát */
   display: inline-block;
+  min-width: 80px;       /* (Tuỳ chọn) Để các badge có độ rộng bằng nhau */
+  text-align: center;
 }
 .badge-status.active {
   background: #d4edda;
@@ -505,4 +509,108 @@
 .clickable-row {
   cursor: pointer;
   transition: background-color 0.2s;
+}
+/* CSS CHO BỘ LỌC MỚI */
+.filter-select {
+    padding: 10px 15px;
+    border: 1px solid #e3e6f0;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+    background: #fff;
+    color: #5a5c69;
+    min-width: 160px;
+    cursor: pointer;
+    transition: border 0.2s;
+}
+
+.filter-select:focus {
+    border-color: #4e73df;
+}
+
+.btn-reset {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: #eaecf4;
+    color: #5a5c69;
+    border-radius: 8px;
+    text-decoration: none;
+    border: 1px solid #d1d3e2;
+    transition: all 0.2s;
+}
+
+.btn-reset:hover {
+    background: #e74a3b;
+    color: white;
+    border-color: #e74a3b;
+}
+
+/* Badge Kho hàng */
+.badge-stock {
+    padding: 4px 10px;
+    border-radius: 30px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.badge-stock.in {
+    background: #e6fffa;
+    color: #047857; /* Xanh lá đậm */
+    border: 1px solid #b7eb8f;
+}
+.badge-stock.out {
+    background: #fff1f0;
+    color: #cf1322; /* Đỏ đậm */
+    border: 1px solid #ffa39e;
+}
+
+/* Checkbox lọc ẩn hết hàng */
+.filter-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 12px;
+    background: #fff;
+    border: 1px solid #d1d3e2;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+.filter-checkbox:hover {
+    background: #f8f9fc;
+    border-color: #4e73df;
+}
+.filter-checkbox input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* Pagination Link Style (Nếu chưa có) */
+.pagination-link {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    color: #4e73df;
+    text-decoration: none;
+    background: white;
+}
+.pagination-link.active {
+    background: #4e73df;
+    color: white;
+    border-color: #4e73df;
+}
+
+/* Responsive cho bộ lọc trên màn hình nhỏ */
+@media (max-width: 768px) {
+    .search-form {
+        flex-direction: column;
+        width: 100%;
+    }
+    .search-input, .filter-select {
+        width: 100%;
+    }
 }

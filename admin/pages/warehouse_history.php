@@ -5,7 +5,16 @@ require_once '../src/config.php';
 require_once '../src/functions.php';
 
 // =================================================================
-// 1. XỬ LÝ BỘ LỌC & PHÂN TRANG
+// 1. LẤY THỐNG KÊ (STATS) - ĐỂ HIỂN THỊ ICON PHÍA TRÊN
+// =================================================================
+$stats = [
+    'nhap' => $pdo->query("SELECT COUNT(*) FROM phieu_kho WHERE loai_phieu = 'nhap'")->fetchColumn(),
+    'xuat' => $pdo->query("SELECT COUNT(*) FROM phieu_kho WHERE loai_phieu = 'xuat'")->fetchColumn(),
+    'today' => $pdo->query("SELECT COUNT(*) FROM phieu_kho WHERE DATE(ngay_tao) = CURDATE()")->fetchColumn()
+];
+
+// =================================================================
+// 2. XỬ LÝ BỘ LỌC & PHÂN TRANG CHO BẢNG DỮ LIỆU
 // =================================================================
 $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
 $filter_kho = isset($_GET['kho_id']) ? $_GET['kho_id'] : '';
@@ -15,7 +24,7 @@ $limit = 10;
 $page = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
 $offset = ($page - 1) * $limit;
 
-// Xây dựng Query cơ sở
+// Query cơ sở
 $base_sql = "
     FROM phieu_kho pk
     LEFT JOIN kho_hang k ON pk.kho_hang_id = k.id
@@ -38,161 +47,176 @@ if ($filter_loai) {
     $params[] = $filter_loai;
 }
 
-// Đếm tổng dòng
-$sql_count = "SELECT COUNT(*) " . $base_sql;
-$stmt_count = $pdo->prepare($sql_count);
-$stmt_count->execute($params);
-$total_records = $stmt_count->fetchColumn();
+// Đếm tổng số bản ghi
+$stmtCount = $pdo->prepare("SELECT COUNT(*) " . $base_sql);
+$stmtCount->execute($params);
+$total_records = $stmtCount->fetchColumn();
 $total_pages = ceil($total_records / $limit);
 
-// Lấy dữ liệu hiển thị (ĐÃ SỬA: Tính tổng số lượng sản phẩm thực tế)
-$sql_data = "
-    SELECT 
-        pk.*,
-        k.ten_kho,
-        nd.ho_ten AS nguoi_thuc_hien,
-        -- Tính tổng số lượng hàng hóa trong phiếu (SUM thay vì COUNT)
-        (SELECT COALESCE(SUM(so_luong), 0) FROM chi_tiet_phieu_kho WHERE phieu_kho_id = pk.id) as tong_sl_hang
+// Lấy dữ liệu chi tiết
+$sql = "
+    SELECT pk.*, k.ten_kho, nd.ho_ten as nguoi_tao,
+    (SELECT SUM(so_luong) FROM chi_tiet_phieu_kho WHERE phieu_kho_id = pk.id) as tong_sl_hang
     " . $base_sql . "
-    ORDER BY pk.ngay_tao DESC 
+    ORDER BY pk.ngay_tao DESC
     LIMIT $limit OFFSET $offset
 ";
-
-$stmt = $pdo->prepare($sql_data);
+$stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $history = $stmt->fetchAll();
 
-// Lấy danh sách kho cho Select box
-$all_warehouses = $pdo->query("SELECT id, ten_kho FROM kho_hang")->fetchAll();
-
-// Thống kê nhanh cho Stats Row
-$stats = $pdo->query("SELECT 
-    COUNT(*) as total,
-    SUM(CASE WHEN loai_phieu = 'nhap' THEN 1 ELSE 0 END) as total_nhap,
-    SUM(CASE WHEN loai_phieu = 'xuat' THEN 1 ELSE 0 END) as total_xuat
-FROM phieu_kho")->fetch();
+// Lấy danh sách kho để đổ vào dropdown
+$ds_kho = $pdo->query("SELECT id, ten_kho FROM kho_hang")->fetchAll();
 ?>
-
 <link rel="stylesheet" href="../assets/css/admin/warehouse_history.css">
-
 <div class="admin-page-container">
-    
     <div class="page-header-title">
-        <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử Nhập / Xuất Kho
+        <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử Nhập / Xuất kho
     </div>
 
     <div class="stats-row">
         <div class="stat-card">
-            <div class="stat-icon bg-blue"><i class="fa-solid fa-file-invoice"></i></div>
-            <div class="stat-info">
-                <span class="stat-label">Tổng phiếu</span>
-                <span class="stat-number"><?= number_format($stats['total']) ?></span>
+            <div class="stat-icon" style="background: #e0e7ff; color: #4338ca;">
+                <i class="fa-solid fa-download"></i>
+            </div>
+            <div>
+                <div style="font-size: 13px; color: #888;">Tổng phiếu Nhập</div>
+                <div style="font-size: 20px; font-weight: 700; color: #333;"><?= number_format($stats['nhap']) ?></div>
             </div>
         </div>
+
         <div class="stat-card">
-            <div class="stat-icon bg-green"><i class="fa-solid fa-dolly"></i></div>
-            <div class="stat-info">
-                <span class="stat-label">Phiếu Nhập</span>
-                <span class="stat-number"><?= number_format($stats['total_nhap']) ?></span>
+            <div class="stat-icon" style="background: #ffedd5; color: #c2410c;">
+                <i class="fa-solid fa-upload"></i>
+            </div>
+            <div>
+                <div style="font-size: 13px; color: #888;">Tổng phiếu Xuất</div>
+                <div style="font-size: 20px; font-weight: 700; color: #333;"><?= number_format($stats['xuat']) ?></div>
             </div>
         </div>
+
         <div class="stat-card">
-            <div class="stat-icon bg-orange"><i class="fa-solid fa-truck-ramp-box"></i></div>
-            <div class="stat-info">
-                <span class="stat-label">Phiếu Xuất</span>
-                <span class="stat-number"><?= number_format($stats['total_xuat']) ?></span>
+            <div class="stat-icon" style="background: #dcfce7; color: #15803d;">
+                <i class="fa-regular fa-calendar-check"></i>
+            </div>
+            <div>
+                <div style="font-size: 13px; color: #888;">Hoạt động hôm nay</div>
+                <div style="font-size: 20px; font-weight: 700; color: #333;"><?= number_format($stats['today']) ?></div>
             </div>
         </div>
     </div>
 
+    <div class="filter-bar">
+        <form method="GET" action="index.php" class="d-flex flex-wrap gap-2 w-100" style="display: flex; gap: 10px; width: 100%;">
+            <input type="hidden" name="page" value="warehouse_history">
+            
+            <div class="search-box">
+                <input type="text" name="keyword" placeholder="Tìm mã phiếu, ghi chú..." value="<?= htmlspecialchars($keyword) ?>">
+                <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+
+            <select name="kho_id" class="form-select-custom" onchange="this.form.submit()">
+                <option value="">-- Tất cả kho --</option>
+                <?php foreach ($ds_kho as $k): ?>
+                    <option value="<?= $k['id'] ?>" <?= $filter_kho == $k['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($k['ten_kho']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+
+            <select name="loai_phieu" class="form-select-custom" onchange="this.form.submit()">
+                <option value="">-- Loại phiếu --</option>
+                <option value="nhap" <?= $filter_loai == 'nhap' ? 'selected' : '' ?>>Nhập kho</option>
+                <option value="xuat" <?= $filter_loai == 'xuat' ? 'selected' : '' ?>>Xuất kho</option>
+            </select>
+
+            <?php if($keyword || $filter_kho || $filter_loai): ?>
+                <a href="index.php?page=warehouse_history" class="btn-reset-filter" title="Xóa bộ lọc">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </a>
+            <?php endif; ?>
+        </form>
+    </div>
+
     <div class="main-card-box">
-        
-        <div class="toolbar-section">
-            <form action="" method="GET" class="search-form-wrapper">
-                <input type="hidden" name="page" value="warehouse_history">
-                
-                <div class="filter-wrapper">
-                    <select name="kho_id" class="form-select-custom" onchange="this.form.submit()">
-                        <option value="">-- Tất cả kho --</option>
-                        <?php foreach ($all_warehouses as $w): ?>
-                            <option value="<?= $w['id'] ?>" <?= $filter_kho == $w['id'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($w['ten_kho']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-
-                    <select name="loai_phieu" class="form-select-custom" onchange="this.form.submit()">
-                        <option value="">-- Loại phiếu --</option>
-                        <option value="nhap" <?= $filter_loai == 'nhap' ? 'selected' : '' ?>>Phiếu Nhập</option>
-                        <option value="xuat" <?= $filter_loai == 'xuat' ? 'selected' : '' ?>>Phiếu Xuất</option>
-                    </select>
-                </div>
-
-                <div class="search-wrapper">
-                    <input type="text" name="keyword" class="search-input" placeholder="Tìm mã phiếu, ghi chú..." value="<?= htmlspecialchars($keyword) ?>">
-                    <button type="submit" class="btn-search-icon"><i class="fa-solid fa-magnifying-glass"></i></button>
-                </div>
-            </form>
-        </div>
-
         <div class="table-responsive">
-            <table class="table-custom">
+            <table class="table">
                 <thead>
                     <tr>
-                        <th width="15%">Mã phiếu</th>
-                        <th width="12%">Loại</th>
-                        <th width="15%">Kho hàng</th>
-                        <th width="18%">Người thực hiện</th>
-                        <th width="15%">Thời gian</th>
-                        <th width="10%" class="text-center">Số lượng SP</th>
+                        <th width="50" class="text-center">STT</th>
+                        <th>Mã phiếu</th>
+                        <th>Kho hàng</th>
+                        <th>Loại phiếu</th>
+                        <th>Người tạo</th> <th>Ngày tạo</th>
+                        <th class="text-center">Tổng SL</th>
                         <th>Ghi chú</th>
+                        <th class="text-center" width="120">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (count($history) > 0): ?>
-                        <?php foreach ($history as $h): ?>
+                        <?php 
+                        $i = $offset + 1;
+                        foreach ($history as $h): 
+                        ?>
                         <tr>
+                            <td class="text-center text-muted"><?= $i++ ?></td>
+                            
                             <td>
                                 <span style="font-weight: 700; color: #4e73df;">
                                     <?= htmlspecialchars($h['ma_phieu']) ?>
                                 </span>
                             </td>
-                            
+
+                            <td>
+                                <div style="font-weight: 600; font-size: 13px;"><?= htmlspecialchars($h['ten_kho']) ?></div>
+                            </td>
+
                             <td>
                                 <?php if ($h['loai_phieu'] == 'nhap'): ?>
-                                    <span class="badge-type import"><i class="fa-solid fa-arrow-down"></i> Nhập</span>
+                                    <span class="badge-type import"><i class="fa-solid fa-arrow-down"></i> Nhập kho</span>
                                 <?php else: ?>
-                                    <span class="badge-type export"><i class="fa-solid fa-arrow-up"></i> Xuất</span>
+                                    <span class="badge-type export"><i class="fa-solid fa-arrow-up"></i> Xuất kho</span>
                                 <?php endif; ?>
                             </td>
 
                             <td>
-                                <div style="font-weight: 500; color: #333;"><?= htmlspecialchars($h['ten_kho']) ?></div>
-                            </td>
-
-                            <td>
-                                <div class="user-cell">
-                                    <div class="avatar-circle-sm"><?= strtoupper(substr($h['nguoi_thuc_hien'], 0, 1)) ?></div>
-                                    <span style="font-size: 13px;"><?= htmlspecialchars($h['nguoi_thuc_hien']) ?></span>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <i class="fa-solid fa-user-shield" style="color: #4e73df; font-size: 14px;"></i>
+                                    <span style="font-weight: 600; font-size: 13px; color: #333;">
+                                     <?= htmlspecialchars($h['nguoi_tao']) ?>
+                                    </span>
                                 </div>
                             </td>
 
-                            <td style="color: #64748b; font-size: 13px;">
-                                <?= date('d/m/Y - H:i', strtotime($h['ngay_tao'])) ?>
+                            <td>
+                                <div style="font-weight: 600; font-size: 13px; color: #333;">
+                                    <?= date('d/m/Y', strtotime($h['ngay_tao'])) ?>
+                                </div>
+                                <div style="font-size: 11px; color: #888;">
+                                    <?= date('H:i', strtotime($h['ngay_tao'])) ?>
+                                </div>
                             </td>
 
                             <td class="text-center">
                                 <span class="qty-pill"><?= number_format($h['tong_sl_hang']) ?></span>
                             </td>
 
-                            <td style="color: #94a3b8; font-style: italic; font-size: 13px;">
+                            <td style="color: #94a3b8; font-style: italic; font-size: 13px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                 <?= htmlspecialchars($h['ghi_chu']) ?>
+                            </td>
+
+                            <td class="text-center">
+                                <a href="index.php?page=warehouse_receipt_detail&id=<?= $h['id'] ?>" class="btn-detail-view" title="Xem chi tiết phiếu">
+                                    <i class="fa-solid fa-eye"></i> Chi tiết
+                                </a>
                             </td>
                         </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="7" class="text-center" style="padding: 40px; color: #888;">
+                            <td colspan="9" class="text-center" style="padding: 40px; color: #888;">
+                                <i class="fa-solid fa-box-open" style="font-size: 40px; margin-bottom: 10px; display: block; color: #d1d3e2;"></i>
                                 Không tìm thấy dữ liệu phù hợp.
                             </td>
                         </tr>

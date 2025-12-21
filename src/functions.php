@@ -395,30 +395,42 @@ function getUserAddresses(PDO $pdo, $user_id) {
 /**
  * Hàm gửi Email chung cho toàn hệ thống
  */
+// FILE: src/functions.php
+
 function sendMail($to, $subject, $content) {
-    // [SỬA LỖI] Vì đầu file đã có "use PHPMailer\PHPMailer\PHPMailer;" 
-    // nên ở đây chỉ cần gọi ngắn gọn là PHPMailer
+    
+    // --- [CODE ĐƯỜNG DẪN CHÍNH XÁC THEO ẢNH CỦA BẠN] ---
+    
+    // Cách 1: Ưu tiên dùng Autoload của Composer (Chuẩn nhất)
+    if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+        require_once __DIR__ . '/../vendor/autoload.php';
+    } 
+    // Cách 2: Nếu Autoload lỗi, trỏ thủ công vào thư mục vendor
+    else {
+        // Đi ngược ra ngoài 1 cấp (../) rồi vào vendor -> phpmailer
+        require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/Exception.php';
+        require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/PHPMailer.php';
+        require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/SMTP.php';
+    }
+    // ----------------------------------------------------
+
+
     $mail = new PHPMailer(true);
 
     try {
-        // 1. Cấu hình Server (SMTP)
+        // Cấu hình Server (Giữ nguyên code cũ của bạn)
         $mail->isSMTP();
         $mail->Host       = defined('MAIL_HOST') ? MAIL_HOST : 'smtp.gmail.com'; 
         $mail->SMTPAuth   = true;
-        
-        // Lấy thông tin từ config
         $mail->Username   = defined('MAIL_USERNAME') ? MAIL_USERNAME : 'nhat2koko5@gmail.com'; 
-        $mail->Password   = defined('MAIL_PASSWORD') ? MAIL_PASSWORD : ''; // Mật khẩu ứng dụng
-        
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // [SỬA] Dùng hằng số ngắn gọn
+        $mail->Password   = defined('MAIL_PASSWORD') ? MAIL_PASSWORD : ''; 
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; 
         $mail->Port       = 587;
         $mail->CharSet    = 'UTF-8';
 
-        // 2. Người gửi & Người nhận
         $mail->setFrom($mail->Username, 'HIShop Notification');
         $mail->addAddress($to);
 
-        // 3. Nội dung Email
         $mail->isHTML(true);
         $mail->Subject = $subject;
         $mail->Body    = $content;
@@ -428,7 +440,6 @@ function sendMail($to, $subject, $content) {
         return true;
 
     } catch (Exception $e) {
-        // Ghi log lỗi vào file error_log của server để debug thay vì hiện ra màn hình
         error_log("Gửi mail thất bại: {$mail->ErrorInfo}");
         return false;
     }

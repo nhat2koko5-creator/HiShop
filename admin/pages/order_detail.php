@@ -48,6 +48,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              $pdo->prepare("UPDATE don_hang SET trang_thai_thanh_toan = 'Chưa thanh toán' WHERE id = ? AND phuong_thuc_thanh_toan != 'VNPAY'")->execute([$order_id]);
         }
 
+        // ========================================================================
+        // [MỚI] TÍCH HỢP GỬI EMAIL THÔNG BÁO CHO KHÁCH HÀNG
+        // ========================================================================
+        
+        // 1. Lấy thông tin khách hàng
+        $stmtUser = $pdo->prepare("
+            SELECT u.email, u.ho_ten 
+            FROM don_hang dh 
+            JOIN nguoi_dung u ON dh.nguoi_dung_id = u.id 
+            WHERE dh.id = ?
+        ");
+        $stmtUser->execute([$order_id]);
+        $user = $stmtUser->fetch();
+
+        // 2. Cấu hình nội dung Email
+        if ($user && !empty($user['email'])) {
+            $subject = "";
+            $content = "";
+            $send_email = true; // Cờ kiểm tra có gửi hay không
+
+            switch ($new_status) {
+                case 'Đã xác nhận':
+                    $subject = "✅ Đơn hàng #$order_id đã được xác nhận";
+                    $content = "Xin chào <b>{$user['ho_ten']}</b>,<br><br>Đơn hàng #$order_id của bạn đã được Admin xác nhận và đang được chuẩn bị đóng gói.";
+                    break;
+                
+                case 'Đang giao hàng':
+                    $subject = "🚚 Đơn hàng #$order_id đang được giao";
+                    $content = "Xin chào <b>{$user['ho_ten']}</b>,<br><br>Đơn hàng #$order_id đã được bàn giao cho đơn vị vận chuyển. Vui lòng chú ý điện thoại để nhận hàng.";
+                    break;
+
+                case 'Đã giao hàng':
+                    $subject = "🎉 Giao hàng thành công đơn #$order_id";
+                    $content = "Xin chào <b>{$user['ho_ten']}</b>,<br><br>Đơn hàng #$order_id đã được giao thành công. Cảm ơn bạn đã mua sắm tại HiShop!";
+                    break;
+
+                case 'Đã hủy':
+                    $subject = "❌ Thông báo hủy đơn hàng #$order_id";
+                    $reason_text = htmlspecialchars($cancel_reason);
+                    $content = "Xin chào <b>{$user['ho_ten']}</b>,<br><br>Rất tiếc, đơn hàng #$order_id đã bị hủy.<br><b>Lý do:</b> $reason_text.<br>Vui lòng liên hệ CSKH nếu có thắc mắc.";
+                    break;
+
+                default:
+                    $send_email = false; // Các trạng thái khác (như Chờ xử lý) thì không gửi mail làm phiền khách
+            }
+
+            // 3. Gọi hàm sendMail (đã có trong functions.php)
+            if ($send_email && !empty($subject)) {
+                // Thêm footer chung cho email
+                $final_content = $content . "<br><br>Trân trọng,<br><b>Đội ngũ HiShop</b>";
+                
+                // Gọi hàm sendMail
+                sendMail($user['email'], $subject, $final_content);
+            }
+        }
+        // ========================================================================
+
         echo "<script>window.location.href='index.php?page=order_detail&id=$order_id';</script>";
     }
 }

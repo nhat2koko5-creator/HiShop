@@ -1,0 +1,283 @@
+/* CSS RIÊNG CHO TRANG CHI TIẾT PHIẾU */
+.invoice-wrapper {
+  max-width: 1000px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+  padding: 40px;
+  font-family: "Inter", sans-serif;
+  position: relative;
+}
+
+/* Header Section */
+.invoice-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #f3f4f6;
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+}
+.brand-section h1 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #4e73df;
+  margin: 0 0 5px 0;
+  text-transform: uppercase;
+}
+.invoice-meta {
+  text-align: right;
+}
+.invoice-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+.invoice-title.import {
+  color: #1cc88a;
+}
+.invoice-title.export {
+  color: #f6c23e;
+}
+
+.meta-row {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 3px;
+}
+.meta-row strong {
+  color: #333;
+}
+
+/* Info Grid */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 40px;
+  background: #f8f9fc;
+  padding: 20px;
+  border-radius: 8px;
+}
+.info-col h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.info-col div {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+.note-text {
+  font-style: italic;
+  color: #555;
+  background: #fff;
+  padding: 8px;
+  border: 1px dashed #ddd;
+  border-radius: 4px;
+}
+
+/* Table Styling */
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+.invoice-table th {
+  background: #4e73df;
+  color: #fff;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+  padding: 12px 15px;
+  text-align: left;
+}
+.invoice-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #e3e6f0;
+  font-size: 14px;
+  vertical-align: middle;
+  color: #333;
+}
+.invoice-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+.prod-thumb {
+  width: 35px;
+  height: 35px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #eee;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+.variant-badge {
+  background: #eff2f7;
+  color: #555;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Summary Section */
+.summary-container {
+  display: flex;
+  justify-content: flex-end;
+}
+.summary-box {
+  width: 350px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #555;
+}
+.summary-row.total {
+  border-top: 2px solid #4e73df;
+  padding-top: 15px;
+  margin-top: 15px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #4e73df;
+}
+
+/* Signatures */
+.signature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 60px;
+  text-align: center;
+  page-break-inside: avoid;
+}
+.sign-title {
+  font-weight: 700;
+  margin-bottom: 60px;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+/* Action Bar */
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  max-width: 1000px;
+  margin: 0 auto 20px auto;
+}
+.btn-action {
+  padding: 10px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+.btn-back {
+  background: #858796;
+  color: white;
+}
+.btn-print {
+  background: #4e73df;
+  color: white;
+}
+.btn-print:hover {
+  background: #2e59d9;
+}
+
+/* Pagination */
+.pagination-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+.page-link-custom {
+  display: inline-block;
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  margin: 0 2px;
+  border-radius: 4px;
+  color: #4e73df;
+  text-decoration: none;
+  font-size: 13px;
+}
+.page-link-custom.active {
+  background: #4e73df;
+  color: white;
+  border-color: #4e73df;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm; /* Lề giấy 10mm */
+  }
+
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Ẩn tất cả các thành phần Admin thừa */
+  .admin-sidebar,
+  .admin-header,
+  .page-header-title,
+  .action-bar,
+  .pagination-area,
+  footer,
+  #toast-container {
+    display: none !important;
+  }
+
+  /* Reset layout để full khổ giấy */
+  .admin-page-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+    width: 100% !important;
+  }
+
+  .invoice-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Đảm bảo bảng không bị ngắt dòng xấu */
+  tr {
+    page-break-inside: avoid;
+  }
+
+  /* Ẩn đường dẫn link khi in */
+  a {
+    text-decoration: none !important;
+    color: inherit !important;
+  }
+}

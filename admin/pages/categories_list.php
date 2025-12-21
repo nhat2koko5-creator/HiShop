@@ -143,11 +143,11 @@ $stat_hidden = $stats['hidden'] ?? 0;
         <table class="table-list">
             <thead>
                 <tr>
-                    <th width="80" class="text-center">ID</th>
-                    <th>Tên danh mục</th>
-                    <th>Số sản phẩm</th>
-                    <th>Trạng thái</th>
-                    <th class="text-right">Hành động</th>
+                    <th width="80" class="">ID</th>
+                    <th width="200">Tên danh mục</th>
+                    <th width="100">Số sản phẩm</th>
+                    <th width="200">Trạng thái</th>
+                    <th width="10" class="text-right" style="text-align: center;">Hành động</th>
                 </tr>
             </thead>
             <tbody>
