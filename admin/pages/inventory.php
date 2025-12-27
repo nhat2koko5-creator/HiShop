@@ -6,21 +6,21 @@ require_once '../src/functions.php';
 $inventory = []; // Khởi tạo mảng rỗng để tránh lỗi foreach
 
 try {
-    $sql = "
-        SELECT 
-            k.ten_kho,
-            sp.ten,
-            bt.mau_sac,
-            bt.dung_luong_ssd,
-            sptk.so_luong,
-            sptk.vi_tri,
-            bt.gia
-        FROM san_pham_ton_kho sptk
-        JOIN kho_hang k ON sptk.kho_id = k.id
-        JOIN san_pham sp ON sptk.san_pham_id = sp.id
-        JOIN bien_the_san_pham bt ON sptk.bien_the_id = bt.id
-        ORDER BY sptk.so_luong DESC
-    ";
+    // 1. Cập nhật SQL để lọc sản phẩm có số lượng > 20
+$sql = "
+    SELECT 
+        sp.ten,
+        bt.mau_sac,
+        bt.dung_luong_ssd,
+        sptk.so_luong,
+        sptk.ngay_cap_nhat, -- Cột mới thêm
+        bt.gia
+    FROM san_pham_ton_kho sptk
+    JOIN san_pham sp ON sptk.san_pham_id = sp.id
+    JOIN bien_the_san_pham bt ON sptk.bien_the_id = bt.id
+    WHERE sptk.so_luong > 20
+    ORDER BY sptk.so_luong DESC
+";
 
     $stmt = $pdo->query($sql);
     $inventory = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -30,7 +30,7 @@ try {
     echo "<div style='background:#fee2e2; color:#991b1b; padding:15px; border-radius:8px; margin:20px; border:1px solid #f87171;'>
             <strong>Lỗi truy vấn:</strong> " . htmlspecialchars($e->getMessage()) . "
             <br><small>Gợi ý: Hãy kiểm tra xem bạn đã chạy lệnh SQL đồng bộ dữ liệu chưa.</small>
-          </div>";
+        </div>";
 }
 
 // Khởi tạo các biến thống kê
@@ -100,38 +100,55 @@ if (!empty($inventory)) {
                 <i class="fa-solid fa-print"></i> Xuất báo cáo (PDF)
             </button>
         </div>
-        <div class="table-responsive">
-            <table class="table-custom">
-                <thead>
-                    <tr>
-                        <th>Kho</th>
-                        <th>Tên sản phẩm</th>
-                        <th class="text-center">Biến thể</th>
-                        <th class="text-center">Vị trí kệ</th>
-                        <th class="text-center">Số lượng</th>
-                        <th class="text-end">Giá trị tồn</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($inventory)): ?>
-                        <tr><td colspan="6" class="text-center">Dữ liệu kho hiện đang trống.</td></tr>
-                    <?php else: ?>
-                        <?php foreach ($inventory as $row): ?>
-                        <tr>
-                            <td><span class="badge" style="background:#f3e8ff; color:#7e22ce; border:1px solid #d8b4fe;"><?= htmlspecialchars($row['ten_kho']) ?></span></td>
-                            <td><strong><?= htmlspecialchars($row['ten']) ?></strong></td>
-                            <td class="text-center small"><?= htmlspecialchars($row['mau_sac']) ?> / <?= htmlspecialchars($row['dung_luong_ssd']) ?></td>
-                            <td class="text-center text-muted"><?= htmlspecialchars($row['vi_tri']) ?></td>
-                            <td class="text-center <?= $row['so_luong'] <= 5 ? 'text-danger fw-bold' : '' ?>">
-                                <?= number_format($row['so_luong']) ?>
-                            </td>
-                            <td class="text-end fw-bold"><?= number_format($row['so_luong'] * $row['gia']) ?>đ</td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
+       <div class="table-responsive">
+<table class="table-custom">
+    <thead>
+        <tr>
+            <th style="text-align: left; padding-left: 20px;">Thông tin sản phẩm</th>
+            <th style="text-align: center;">Số lượng</th>
+            <th style="text-align: center;">Ngày nhập dự kiến (+2th)</th>
+            <th style="text-align: right; padding-right: 20px;">Đơn giá</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php if (empty($inventory)): ?>
+            <tr><td colspan="4" class="text-center">Không có sản phẩm nào có số lượng trên 20.</td></tr>
+        <?php else: ?>
+            <?php foreach ($inventory as $item): 
+                // Xử lý ngày: Nếu không có ngày cập nhật thì lấy ngày hiện tại
+                $ngay_goc = !empty($item['ngay_cap_nhat']) ? $item['ngay_cap_nhat'] : date('Y-m-d');
+                $date = new DateTime($ngay_goc);
+                $ngay_du_kien = $date->modify('+2 months')->format('d/m/Y');
+            ?>
+                <tr>
+                    <td style="text-align: left; padding-left: 20px;">
+                        <div style="font-weight: 600; color: #1e293b;">
+                            <?= htmlspecialchars($item['ten']) ?>
+                        </div>
+                        <div style="font-size: 12px; color: #64748b;">
+                            <?= htmlspecialchars($item['mau_sac']) ?> | <?= htmlspecialchars($item['dung_luong_ssd']) ?>
+                        </div>
+                    </td>
+
+                    <td style="text-align: center;">
+                        <span style="background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 13px;">
+                            <?= number_format($item['so_luong']) ?>
+                        </span>
+                    </td>
+
+                    <td style="text-align: center; font-weight: bold; color: #7e22ce;">
+                        <?= $ngay_du_kien ?>
+                    </td>
+
+                    <td style="text-align: right; padding-right: 20px; font-weight: 500; color: #0f172a;">
+                        <?= number_format($item['gia'], 0, ',', '.') ?>đ
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </tbody>
+</table>
+</div>
     </div>
 </div>
 
