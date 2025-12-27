@@ -142,6 +142,11 @@ $is_system_group = in_array($page, $system_pages);
                     Kho hàng
                 </a>
             </li>
+            <li>
+                <a href="index.php?page=inventory" class="<?php echo isActive('inventory', $page); ?>">
+                    Tồn kho
+                </a>
+            </li>
         </ul>
     </li>
 </ul>

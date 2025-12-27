@@ -40,11 +40,16 @@ switch ($page) {
         $page_title = 'Quản lý Đơn Hàng';
         $page_file = 'pages/orders_list.php';
         break;
+        
+    case 'inventory':
+        $page_title = 'Tồn kho';
+        $page_file = 'pages/inventory.php';
+        break;
+        
     case 'reports':
-        $page_title = 'Báo cáo';
+        $page_title = 'Báo cáo doanh thu';
         $page_file = 'pages/reports.php';
         break;
-
     case 'order_detail':
         $page_title = 'Chi tiết Đơn Hàng';
         $page_file = 'pages/order_detail.php';
@@ -97,7 +102,7 @@ switch ($page) {
         $page_file = 'pages/warehouse_receipt_detail.php'; // Trỏ đến file vừa tạo
         break;
     case 'repost_revenue':
-        $page_title = 'Báo Cáo Doanh Thu';
+        $page_title = 'Báo Cáo Kho Hàng';
         $page_file = 'pages/repost_revenue.php'; // Đúng: Gán đường dẫn vào biến để index xử lý layout sau
         break;
     case 'dashboard':
