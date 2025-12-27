@@ -69,7 +69,6 @@ if (!isset($page_title)) {
                     <a href="index.php?page=static_about">Về Chúng Tôi</a>
                     <a href="index.php?page=contact">Liên Hệ</a>
                 </div>
-
                 <div class="nav-right-actions">
                     
                     <form action="index.php" method="GET" class="nav-search-form">
@@ -108,8 +107,8 @@ if (!isset($page_title)) {
                         </div>
                     <?php else: ?>
                         <div class="auth-buttons" >
-                            <a href="index.php?page=register" class="btn btn-primary" >Đăng Ký</a>
-                            <a href="index.php?page=login" class="btn btn-primary">Đăng Nhập</a>
+                            <a href="index.php?page=register" class="btn btn-register" >Đăng Ký</a>
+                            <a href="index.php?page=login" class="btn btn-login">Đăng Nhập</a>
                         </div>
                     <?php endif; ?>
                 </div>

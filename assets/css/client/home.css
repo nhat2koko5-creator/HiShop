@@ -190,6 +190,7 @@
     color: #fff;
     display: flex;
     flex-direction: column; /* Xếp dọc: Tiêu đề -> Mô tả -> Nút */
+    justify-content: ;
 }
 
 /* --- 3 KIỂU ĐỊNH VỊ (QUAN TRỌNG) --- */
@@ -212,7 +213,7 @@
 /* 3. Căn Phải (RIGHT) */
 .content-right {
     right: 8%; /* Cách lề phải 8% */
-    text-align: right;
+    text-align: center;
     align-items: flex-end; /* Căn nút sang phải */
 }
 
@@ -234,6 +235,8 @@
     font-weight: 400;
     margin-bottom: 25px;
     text-shadow: 0 1px 5px rgba(0,0,0,0.5);
+    margin-right:16%;
+
 }
 
 .btn-basic {
@@ -995,3 +998,22 @@
 
 /* ... và .spec-item, .spec-label, .spec-value ... */
 /* Hết CSS Variant Combo */
+.hero-swiper .swiper-slide img {
+    filter: brightness(50%); /* Giảm độ sáng còn 70% */
+    transition: filter 0.3s ease; /* Hiệu ứng mượt khi chuyển động */
+}
+
+/* Hiệu ứng: Khi di chuột vào thì ảnh sáng lên một chút */
+.hero-swiper .swiper-slide:hover img {
+    filter: brightness(85%);
+}
+.hero-slider-section .hero-swiper {
+    height: 70vh; /* 60% chiều cao trình duyệt */
+    min-height: 300px; /* Chiều cao tối thiểu để không bị quá nhỏ trên mobile */
+}
+
+.hero-slider-section .swiper-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

@@ -19,17 +19,17 @@ $discountProducts = getDiscountProducts($pdo);
                         <span class="btn-basic primary">MUA NGAY</span>
                     </div>
                 </a>
-            </div>
+            </div>  
 
             <div class="swiper-slide">
-                <a href="index.php?page=product_list" class="banner-link">
+                <a href="index.php?page=product_list&category_id=1" class="banner-link">
                     <img src="assets/img/banner/banner2.png" alt="Công nghệ">
                     
                     <div class="simple-content content-right">
-                        <h2 class="simple-title">CÔNG NGHỆ<br>DẪN ĐẦU</h2>
-                        <p class="simple-desc">Trải nghiệm sức mạnh vượt trội</p>
+                        <h2 class="simple-title">GIẢI PHÁP CÔNG NGHỆ<br>SANG TRỌNG & ĐẲNG CẤP</h2>
+                        <p class="simple-desc">Đỉnh cao hội tụ - Tuyệt tác doanh nhân</p>
                         <div class="btn-group">
-                            <span class="btn-basic primary">Xem sản phẩm</span>
+                            <span class="btn-basic primary" style="margin-right:10px;">Xem sản phẩm</span>
                             <span class="btn-basic outline">Liên hệ tư vấn</span>
                         </div>
                     </div>
@@ -78,31 +78,120 @@ $discountProducts = getDiscountProducts($pdo);
         <div class="swiper-button-prev"></div>
     </div>
 </section>
+<section class="product-section container" id="discount-products">
 
-<section class="why-us-section container">
-    <h2 class="section-title">Tại sao chọn chúng tôi?</h2>
-    <div class="feature-grid">
-        <div class="feature-card">
-            <div class="feature-icon">✔</div>
-            <h3>Sản phẩm uy tín</h3>
-            <p>Cam kết 100% hàng chính hãng.</p>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">💻</div>
-            <h3>Đa dạng Laptop</h3>
-            <p>Đầy đủ các dòng máy mới nhất.</p>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">💰</div>
-            <h3>Giá cả cạnh tranh</h3>
-            <p>Luôn có ưu đãi tốt nhất thị trường.</p>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">💬</div>
-            <h3>Hỗ trợ 24/7</h3>
-            <p>Giải đáp mọi thắc mắc của bạn.</p>
-        </div>
-    </div>
+    <span class="section-subtitle">SẢN PHẨM GIẢM GIÁ</span>
+    <h2 class="section-title">Ưu đãi hot trong tuần</h2>
+
+    <div class="product-carousel-wrapper">
+        <div class="swiper discount-carousel">
+<div class="swiper-wrapper">
+    <?php if (!empty($discountProducts)): ?>
+        <?php foreach ($discountProducts as $sp): ?>
+            <div class="swiper-slide"> <?php
+                // Xử lý giá
+                $percent   = isset($sp['giam_phan_tram']) ? (int)$sp['giam_phan_tram'] : 0;
+                $newPrice  = $sp['gia_da_giam'] ?? $sp['gia'];
+                $origPrice = $sp['gia'] ?? 0;
+                $is_discount = ($newPrice < $origPrice);
+
+                // Xử lý ảnh
+                $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
+                if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
+                    $img_path = 'assets/img/no-image.png';
+                }
+                ?>
+
+                <div class="product-card">
+                    <?php if ($percent > 0): ?>
+                        <div class="product-sale-tag">-<?= $percent ?>%</div>
+                    <?php endif; ?>
+
+                    <div class="product-image">
+                        <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>">
+                            <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
+                        </a>
+                    </div>
+
+                    <div class="card-content">
+                        <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
+
+                        <?php 
+                            $cpu_show = $sp['cpu'] ?? null;
+                            $ram_show = $sp['ram'] ?? null;
+                            if (empty($cpu_show) || empty($ram_show)) {
+                                $stmt_specs = $pdo->prepare("SELECT ts.ten, ts.gia_tri FROM thong_so ts JOIN san_pham_thong_so spts ON spts.thong_so_id = ts.id WHERE spts.san_pham_id = ?");
+                                $stmt_specs->execute([$sp['id']]);
+                                $all_specs = $stmt_specs->fetchAll(PDO::FETCH_ASSOC);
+                                foreach ($all_specs as $s) {
+                                    $ten = mb_strtolower($s['ten'], 'UTF-8');
+                                    if (empty($cpu_show) && preg_match('/cpu|vi xử lý|chip/u', $ten)) $cpu_show = $s['gia_tri'];
+                                    if (empty($ram_show) && preg_match('/ram|bộ nhớ/u', $ten)) $ram_show = $s['gia_tri'];
+                                }
+                                if (empty($cpu_show) && isset($all_specs[0])) $cpu_show = $all_specs[0]['gia_tri'];
+                                if (empty($ram_show) && isset($all_specs[1])) $ram_show = $all_specs[1]['gia_tri'];
+                            }
+                        ?>
+                        <div class="product-specs">
+                            <?php if ($cpu_show): ?>
+                                <span class="spec-pill"><?= htmlspecialchars($cpu_show) ?></span>
+                            <?php endif; ?>
+                            <?php if ($cpu_show && $ram_show): ?><span style="color:#ccc">|</span><?php endif; ?>
+                            <?php if ($ram_show): ?>
+                                <span class="spec-pill"><?= htmlspecialchars($ram_show) ?></span>
+                            <?php endif; ?>
+                            <?php if (!$cpu_show && !$ram_show): ?><span style="height:24px; display:block"></span><?php endif; ?>
+                        </div>
+
+                        <div class="card-price">
+                            <?php if ($is_discount): ?>
+                                <span class="card-price-old"><?= number_format($origPrice) ?>₫</span>
+                                <span class="card-price-new"><?= number_format($newPrice) ?>₫</span>
+                            <?php else: ?>
+                                <span class="card-price-new"><?= number_format($origPrice) ?>₫</span>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="btn-group-vertical">
+                            <?php if (!empty($sp['variants'])): ?>
+                                <a href="javascript:void(0);" class="btn-view btn-buy-now btn-quick-add"
+                                   data-product-id="<?= $sp['id']; ?>"
+                                   data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
+                                   data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
+                                   data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'
+                                   data-action="buy">
+                                    🔥 Mua ngay
+                                </a>
+                            <?php else: ?>
+                                <a href="index.php?page=checkout&action=buy_now&variant_id=<?= $sp['id']; ?>&quantity=1" class="btn-view btn-buy-now">
+                                    🔥 Mua ngay
+                                </a>
+                            <?php endif; ?>
+
+                            <?php if (!empty($sp['variants'])): ?>
+                                <a href="javascript:void(0);" class="btn-cart btn-quick-add"
+                                   title="Thêm vào giỏ"
+                                   data-product-id="<?= $sp['id']; ?>"
+                                   data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
+                                   data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
+                                   data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'
+                                   data-action="add">
+                                    🛒
+                                </a>
+                            <?php else: ?>
+                                <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart" title="Thêm vào giỏ">
+                                    🛒
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div> </div> <?php endforeach; ?>
+    <?php else: ?>
+        <p style="text-align:center;width:100%;">Không có sản phẩm giảm giá.</p>
+<?php endif; ?>
+</div> </div> <div class="swiper-button-prev discount-prev"></div>
+        <div class="swiper-button-next discount-next"></div>
+    </div> 
 </section>
 <section class="category-section" style="background-color: #f9fafb;">
     <div class="container">
@@ -137,6 +226,7 @@ $discountProducts = getDiscountProducts($pdo);
         </div>
     </div>
 </section>
+
 <section class="product-section container">
     <span class="section-subtitle">SẢN PHẨM NỔI BẬT</span>
     <h2 class="section-title">Laptop được yêu thích nhất</h2>
@@ -260,6 +350,31 @@ $discountProducts = getDiscountProducts($pdo);
         <div class="swiper-button-next featured-next"></div>
     </div>
 </section>
+<section class="why-us-section container">
+    <h2 class="section-title">Tại sao chọn chúng tôi?</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-icon">✔</div>
+            <h3>Sản phẩm uy tín</h3>
+            <p>Cam kết 100% hàng chính hãng.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">💻</div>
+            <h3>Đa dạng Laptop</h3>
+            <p>Đầy đủ các dòng máy mới nhất.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">💰</div>
+            <h3>Giá cả cạnh tranh</h3>
+            <p>Luôn có ưu đãi tốt nhất thị trường.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">💬</div>
+            <h3>Hỗ trợ 24/7</h3>
+            <p>Giải đáp mọi thắc mắc của bạn.</p>
+        </div>
+    </div>
+</section>
     <div class="variant-modal-overlay" id="quick-add-modal" style="display: none;">
         <div class="variant-modal-box">
             <div class="variant-modal-header">
@@ -304,121 +419,6 @@ $discountProducts = getDiscountProducts($pdo);
         </div>
     </div>
     </section>
-
-<section class="product-section container" id="discount-products">
-
-    <span class="section-subtitle">SẢN PHẨM GIẢM GIÁ</span>
-    <h2 class="section-title">Ưu đãi hot trong tuần</h2>
-
-    <div class="product-carousel-wrapper">
-        <div class="swiper discount-carousel">
-<div class="swiper-wrapper">
-    <?php if (!empty($discountProducts)): ?>
-        <?php foreach ($discountProducts as $sp): ?>
-            <div class="swiper-slide"> <?php
-                // Xử lý giá
-                $percent   = isset($sp['giam_phan_tram']) ? (int)$sp['giam_phan_tram'] : 0;
-                $newPrice  = $sp['gia_da_giam'] ?? $sp['gia'];
-                $origPrice = $sp['gia'] ?? 0;
-                $is_discount = ($newPrice < $origPrice);
-
-                // Xử lý ảnh
-                $img_path = 'assets/img/products/' . htmlspecialchars($sp['hinh_anh']);
-                if (empty($sp['hinh_anh']) || !file_exists($img_path)) {
-                    $img_path = 'assets/img/no-image.png';
-                }
-                ?>
-
-                <div class="product-card">
-                    <?php if ($percent > 0): ?>
-                        <div class="product-sale-tag">-<?= $percent ?>%</div>
-                    <?php endif; ?>
-
-                    <div class="product-image">
-                        <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>">
-                            <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
-                        </a>
-                    </div>
-
-                    <div class="card-content">
-                        <h3 class="card-title"><?= htmlspecialchars($sp['ten']); ?></h3>
-
-                        <?php 
-                            $cpu_show = $sp['cpu'] ?? null;
-                            $ram_show = $sp['ram'] ?? null;
-                            if (empty($cpu_show) || empty($ram_show)) {
-                                $stmt_specs = $pdo->prepare("SELECT ts.ten, ts.gia_tri FROM thong_so ts JOIN san_pham_thong_so spts ON spts.thong_so_id = ts.id WHERE spts.san_pham_id = ?");
-                                $stmt_specs->execute([$sp['id']]);
-                                $all_specs = $stmt_specs->fetchAll(PDO::FETCH_ASSOC);
-                                foreach ($all_specs as $s) {
-                                    $ten = mb_strtolower($s['ten'], 'UTF-8');
-                                    if (empty($cpu_show) && preg_match('/cpu|vi xử lý|chip/u', $ten)) $cpu_show = $s['gia_tri'];
-                                    if (empty($ram_show) && preg_match('/ram|bộ nhớ/u', $ten)) $ram_show = $s['gia_tri'];
-                                }
-                                if (empty($cpu_show) && isset($all_specs[0])) $cpu_show = $all_specs[0]['gia_tri'];
-                                if (empty($ram_show) && isset($all_specs[1])) $ram_show = $all_specs[1]['gia_tri'];
-                            }
-                        ?>
-                        <div class="product-specs">
-                            <?php if ($cpu_show): ?>
-                                <span class="spec-pill"><?= htmlspecialchars($cpu_show) ?></span>
-                            <?php endif; ?>
-                            <?php if ($cpu_show && $ram_show): ?><span style="color:#ccc">|</span><?php endif; ?>
-                            <?php if ($ram_show): ?>
-                                <span class="spec-pill"><?= htmlspecialchars($ram_show) ?></span>
-                            <?php endif; ?>
-                            <?php if (!$cpu_show && !$ram_show): ?><span style="height:24px; display:block"></span><?php endif; ?>
-                        </div>
-
-                        <div class="card-price">
-                            <?php if ($is_discount): ?>
-                                <span class="card-price-old"><?= number_format($origPrice) ?>₫</span>
-                                <span class="card-price-new"><?= number_format($newPrice) ?>₫</span>
-                            <?php else: ?>
-                                <span class="card-price-new"><?= number_format($origPrice) ?>₫</span>
-                            <?php endif; ?>
-                        </div>
-
-                        <div class="btn-group-vertical">
-                            <?php if (!empty($sp['variants'])): ?>
-                                <a href="javascript:void(0);" class="btn-view btn-buy-now btn-quick-add"
-                                   data-product-id="<?= $sp['id']; ?>"
-                                   data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
-                                   data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
-                                   data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'
-                                   data-action="buy">
-                                    🔥 Mua ngay
-                                </a>
-                            <?php else: ?>
-                                <a href="index.php?page=checkout&action=buy_now&variant_id=<?= $sp['id']; ?>&quantity=1" class="btn-view btn-buy-now">
-                                    🔥 Mua ngay
-                                </a>
-                            <?php endif; ?>
-
-                            <?php if (!empty($sp['variants'])): ?>
-                                <a href="javascript:void(0);" class="btn-cart btn-quick-add"
-                                   title="Thêm vào giỏ"
-                                   data-product-id="<?= $sp['id']; ?>"
-                                   data-product-name="<?= htmlspecialchars($sp['ten']); ?>"
-                                   data-product-image="assets/img/products/<?= htmlspecialchars($sp['hinh_anh']); ?>"
-                                   data-variants='<?= htmlspecialchars(json_encode($sp['variants']), ENT_QUOTES, "UTF-8"); ?>'
-                                   data-action="add">
-                                    🛒
-                                </a>
-                            <?php else: ?>
-                                <a href="index.php?page=cart&action=add&id=<?= $sp['id']; ?>" class="btn-cart" title="Thêm vào giỏ">
-                                    🛒
-                                </a>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div> </div> <?php endforeach; ?>
-    <?php else: ?>
-        <p style="text-align:center;width:100%;">Không có sản phẩm giảm giá.</p>
-<?php endif; ?>
-</div> </div> <div class="swiper-button-prev discount-prev"></div>
-        <div class="swiper-button-next discount-next"></div>
-    </div> </section>
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script>
     var swiperDiscount = new Swiper(".discount-carousel", {

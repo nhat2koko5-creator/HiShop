@@ -85,13 +85,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body>
     
-    <header class="navbar">
+    <<header class="navbar">
         <div class="logo"><img src="assets/img/logo.png" alt="Hishop" class="brand-logo"></div>
         <nav class="nav-links">
-            <a href="index.php?page=home">Home</a>
-            <a href="#">Product</a>
-            <a href="#">Services</a>
-            <a href="#">Contact</a>
+            <a href="index.php?page=home">Trang chủ</a>
+            <a href="index.php?page=product_list">Sản Phẩm</a>
         </nav>
         <a href="index.php?page=login"><button class="login-btn">Đăng nhập</button></a>
     </header>
