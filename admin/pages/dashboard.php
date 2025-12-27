@@ -11,7 +11,11 @@ require_once '../src/functions.php';
 // A. Các thẻ KPI
 $pending_count = $pdo->query("SELECT COUNT(*) FROM don_hang WHERE trang_thai_don_hang = 'Chờ xử lý'")->fetchColumn();
 
-$sql_low = "SELECT COUNT(*) FROM bien_the_san_pham WHERE so_luong_ton < 5";
+$sql_low = "SELECT COUNT(*) FROM bien_the_san_pham bt 
+            WHERE COALESCE((SELECT SUM(CASE WHEN kh.trang_thai = 1 THEN ckt.so_luong_ton ELSE 0 END) 
+                          FROM chi_tiet_kho_hang ckt 
+                          JOIN kho_hang kh ON ckt.kho_hang_id = kh.id 
+                          WHERE ckt.bien_the_id = bt.id), 0) < 5";
 $low_stock = $pdo->query($sql_low)->fetchColumn() + $pdo->query("SELECT COUNT(*) FROM san_pham WHERE id NOT IN (SELECT DISTINCT san_pham_id FROM bien_the_san_pham)")->fetchColumn();
 
 $today_revenue = $pdo->query("SELECT COALESCE(SUM(tong_tien), 0) FROM don_hang WHERE trang_thai_thanh_toan = 'Đã thanh toán' AND DATE(ngay_dat) = CURDATE()")->fetchColumn();

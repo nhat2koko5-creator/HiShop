@@ -18,7 +18,13 @@ if (!$kho) {
     exit;
 }
 
-// 3. XỬ LÝ TÌM KIẾM & PHÂN TRANG
+// 3. Kiểm tra kho có bị khóa không
+$is_warehouse_locked = $kho['trang_thai'] == 0;
+if ($is_warehouse_locked) {
+    $warning_msg = "⚠️ Cảnh báo: Kho hàng này đang bị tạm khóa. Bạn chỉ có thể xem thông tin, không thể nhập/xuất hàng!";
+}
+
+// 4. XỬ LÝ TÌM KIẾM & PHÂN TRANG
 $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
 $limit = 10; // Giới hạn 10 sản phẩm/trang
 $page = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
@@ -117,14 +123,24 @@ $inventory_page = $stmt_table->fetchAll();
         </div>
         
         <div style="display: flex; gap: 10px;">
-            <a href="index.php?page=warehouse_export&id=<?= $kho_id ?>" class="btn-action-top btn-out">
+            <a href="index.php?page=warehouse_export&id=<?= $kho_id ?>" class="btn-action-top btn-out" <?php echo $is_warehouse_locked ? 'style="opacity:0.5; pointer-events:none;" disabled' : ''; ?> title="<?php echo $is_warehouse_locked ? 'Kho bị khóa - không thể xuất hàng' : ''; ?>">
                 <i class="fa-solid fa-boxes-packing"></i> Xuất kho
             </a>
-            <a href="index.php?page=warehouse_import&id=<?= $kho_id ?>" class="btn-action-top btn-in">
+            <a href="index.php?page=warehouse_import&id=<?= $kho_id ?>" class="btn-action-top btn-in" <?php echo $is_warehouse_locked ? 'style="opacity:0.5; pointer-events:none;" disabled' : ''; ?> title="<?php echo $is_warehouse_locked ? 'Kho bị khóa - không thể nhập hàng' : ''; ?>">
                 <i class="fa-solid fa-dolly"></i> Nhập hàng
             </a>
         </div>
     </div>
+
+    <?php if ($is_warehouse_locked): ?>
+    <div style="background-color: #fef2f2; border: 2px solid #fca5a5; border-radius: 8px; padding: 16px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+        <i class="fa-solid fa-triangle-exclamation" style="color: #dc2626; font-size: 24px;"></i>
+        <div>
+            <strong style="color: #991b1b; font-size: 16px;">Cảnh báo: Kho hàng bị tạm khóa</strong>
+            <p style="color: #7f1d1d; margin: 4px 0 0 0; font-size: 14px;">Kho hàng này đang tạm khóa. Bạn chỉ có thể xem thông tin, không thể thực hiện các thao tác nhập/xuất hàng.</p>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <div class="detail-grid">
         <div class="info-card">

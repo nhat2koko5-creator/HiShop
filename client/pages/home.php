@@ -1,5 +1,9 @@
 <?php
 $featuredProducts = getFeaturedProducts($pdo);
+$wishlistIDs = [];
+if (isset($_SESSION['user_id'])) {
+    $wishlistIDs = getUserWishlistIDs($pdo, $_SESSION['user_id']);
+}
 $discountProducts = getDiscountProducts($pdo);
 ?>
 <link rel="stylesheet" href="assets/css/client/home.css">
@@ -258,9 +262,16 @@ $discountProducts = getDiscountProducts($pdo);
                                     <div class="product-sale-tag">-<?= $percent ?>%</div>
                                 <?php endif; ?>
 
-                                <div class="product-image">
+                                <div class="product-image" style="position: relative;"> <?php 
+                                        $isLiked = in_array($sp['id'], $wishlistIDs); 
+                                        $heartClass = $isLiked ? 'fa-solid text-danger' : 'fa-regular';
+                                    ?>
+                                    <button class="btn-wishlist" onclick="toggleWishlist(this, <?= $sp['id'] ?>)" 
+                                            style="position: absolute; top: 10px; right: 10px; z-index: 10; background: white; border: none; border-radius: 50%; width: 35px; height: 35px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer;">
+                                        <i class="<?= $heartClass ?> fa-heart" style="color: <?= $isLiked ? '#dc3545' : '#ccc' ?>; font-size: 18px;"></i>
+                                    </button>
                                     <a href="index.php?page=product_detail&id=<?= $sp['id']; ?>">
-                                        <img src="<?= $img_path ?>" alt="<?= htmlspecialchars($sp['ten']); ?>">
+                                        <img src="<?= $img_path ?>" alt="...">
                                     </a>
                                 </div>
 
@@ -817,4 +828,45 @@ modalAddBtn.addEventListener('click', async function () {
         },
     });
 });
+async function toggleWishlist(btn, productId) {
+    // Kiểm tra đăng nhập (dựa trên session PHP in ra biến JS global hoặc check redirect)
+    // Cách đơn giản: Gọi API, nếu API báo lỗi chưa đăng nhập thì chuyển hướng
+    
+    const icon = btn.querySelector('i');
+    
+    const formData = new FormData();
+    formData.append('action', 'toggle');
+    formData.append('product_id', productId);
+
+    try {
+        const response = await fetch('wishlist_handler.php', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            if (data.state === 'liked') {
+                icon.classList.remove('fa-regular');
+                icon.classList.add('fa-solid', 'text-danger');
+                icon.style.color = '#dc3545';
+                showPopup('❤️ Đã thêm vào yêu thích');
+            } else {
+                icon.classList.remove('fa-solid', 'text-danger');
+                icon.classList.add('fa-regular');
+                icon.style.color = '#ccc';
+                showPopup('💔 Đã bỏ yêu thích');
+            }
+        } else {
+            // Nếu chưa đăng nhập
+            if (data.message.includes('đăng nhập')) {
+                window.location.href = 'index.php?page=login';
+            } else {
+                alert(data.message);
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
 </script>

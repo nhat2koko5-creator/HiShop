@@ -79,5 +79,67 @@
             },
         });
     </script>
+    <script>
+async function toggleWishlist(btn, productId) {
+    // 1. Hiệu ứng UX tức thời (Optimistic UI) - Bấm cái đổi màu ngay cho sướng tay
+    const icon = btn.querySelector('i');
+    const isDetailBtn = btn.classList.contains('btn-wishlist-detail');
+    const spanText = btn.querySelector('span'); // Cho trang chi tiết
+
+    // Chặn click liên tục
+    if(btn.disabled) return;
+    btn.disabled = true;
+
+    try {
+        // 2. Gửi request lên server
+        const formData = new FormData();
+        formData.append('product_id', productId);
+        formData.append('action', 'toggle');
+
+        const response = await fetch('wishlist_handler.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        // 3. Xử lý kết quả
+        if (response.status === 401) {
+            // Nếu chưa đăng nhập -> Chuyển hướng login
+            if(confirm('Bạn cần đăng nhập để lưu sản phẩm yêu thích. Đi đến trang đăng nhập?')) {
+                window.location.href = 'index.php?page=login';
+            }
+            btn.disabled = false;
+            return;
+        }
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            // Cập nhật giao diện dựa trên kết quả thật từ Server
+            if (data.state === 'liked') {
+                // Đổi thành tim đặc (đỏ)
+                icon.classList.remove('fa-regular');
+                icon.classList.add('fa-solid', 'text-danger');
+                if(isDetailBtn && spanText) spanText.textContent = "Đã thích";
+                
+                // (Tùy chọn) Hiện thông báo nhỏ
+                // showToast('Đã thêm vào yêu thích ❤️'); 
+            } else {
+                // Đổi thành tim rỗng
+                icon.classList.remove('fa-solid', 'text-danger');
+                icon.classList.add('fa-regular');
+                if(isDetailBtn && spanText) spanText.textContent = "Yêu thích";
+            }
+        } else {
+            alert('Lỗi: ' + data.message);
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Có lỗi xảy ra, vui lòng thử lại.');
+    } finally {
+        btn.disabled = false;
+    }
+}
+</script>
 </body>
 </html>

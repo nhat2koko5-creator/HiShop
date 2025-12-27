@@ -77,6 +77,10 @@ switch ($page) {
         $page_title = 'Giỏ Hàng';
         $page_file = 'client/pages/cart.php';
         break;
+    case 'wishlist':
+        $page_title = 'Sản phẩm yêu thích';
+        $page_file = 'client/pages/wishlist.php';
+        break;
     case 'checkout':
         $page_title = 'Thanh Toán';
         $page_file = 'client/pages/checkout.php';

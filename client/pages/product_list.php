@@ -2,6 +2,13 @@
 // FILE: product_list.php (ĐÃ SỬA HOÀN CHỈNH - LIÊN KẾT THƯƠNG HIỆU QUA BẢNG san_pham_thuong_hieu)
 require_once 'client/layouts/header.php';
 
+$user_id = $_SESSION['user_id'] ?? 0;
+$liked_products = []; // Mặc định là rỗng
+
+// Nếu đã đăng nhập thì lấy danh sách ID đã like từ DB
+if ($user_id > 0) {
+    $liked_products = getUserLikedProductIds($pdo, $user_id);
+}
 /* ------------ HÀM HỖ TRỢ: LẤY GIẢM GIÁ CHO 1 SẢN PHẨM ------------- */
 /* (Code hàm discount không đổi, giữ nguyên) */
 
@@ -179,10 +186,21 @@ if (!empty($products)) {
     $product_ids = array_column($products, 'id');
     $placeholders = implode(',', array_fill(0, count($product_ids), '?'));
 
+    // [FIX] LẤY SỐ LƯỢNG TỒN CHỈ TỪ CÁC KHO HOẠT ĐỘNG
     $sql_variants = "
-        SELECT id, san_pham_id, gia, so_luong_ton, mau_sac, dung_luong_ssd, hinh_anh
-        FROM bien_the_san_pham
-        WHERE san_pham_id IN ($placeholders)
+        SELECT 
+            bt.id, 
+            bt.san_pham_id, 
+            bt.gia, 
+            COALESCE(SUM(CASE WHEN k.trang_thai = 1 THEN ckt.so_luong_ton ELSE 0 END), 0) as so_luong_ton,
+            bt.mau_sac, 
+            bt.dung_luong_ssd, 
+            bt.hinh_anh
+        FROM bien_the_san_pham bt
+        LEFT JOIN chi_tiet_kho_hang ckt ON bt.id = ckt.bien_the_id
+        LEFT JOIN kho_hang k ON ckt.kho_hang_id = k.id
+        WHERE bt.san_pham_id IN ($placeholders)
+        GROUP BY bt.id, bt.san_pham_id, bt.gia, bt.mau_sac, bt.dung_luong_ssd, bt.hinh_anh
     ";
     $stmt_variants = $pdo->prepare($sql_variants);
     $stmt_variants->execute($product_ids);
@@ -379,9 +397,20 @@ function format_price($p) {
             <?php endif; ?>
 
 <div class="product-image">
+<div class="product-thumb">
     <a href="index.php?page=product_detail&id=<?= $p['id'] ?>">
-        <img src="<?= htmlspecialchars($img_path) ?>" alt="<?= htmlspecialchars($p['ten']) ?>">
+        <img src="assets/img/products/<?= $p['hinh_anh'] ?>" ... >
     </a>
+    
+    <?php 
+        // Kiểm tra: Nếu ID sản phẩm này nằm trong danh sách đã like -> Tim đỏ, ngược lại -> Tim rỗng
+        $is_liked = in_array($p['id'], $liked_products);
+        $heart_icon = $is_liked ? 'fa-solid fa-heart text-danger' : 'fa-regular fa-heart';
+    ?>
+    <button class="btn-wishlist" onclick="toggleWishlist(this, <?= $p['id'] ?>)">
+        <i class="<?= $heart_icon ?>"></i>
+    </button>
+    </div>
 </div>
 
 <div class="card-content">

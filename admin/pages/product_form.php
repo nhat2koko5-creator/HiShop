@@ -27,17 +27,22 @@ if (isset($_GET['id'])) {
 if($product) {
     $isEdit = true;
     
-    // [SỬA] Lấy biến thể KÈM GIÁ NHẬP GẦN NHẤT
+    // [SỬA] Lấy biến thể KÈM GIÁ NHẬP GẦN NHẤT VÀ SỐ LƯỢNG TỪ KHO HOẠT ĐỘNG
     $stmt2 = $pdo->prepare("
-        SELECT bt.*, 
-        COALESCE((
-            SELECT don_gia FROM chi_tiet_phieu_kho ctpk 
-            JOIN phieu_kho pk ON ctpk.phieu_kho_id = pk.id 
-            WHERE ctpk.bien_the_id = bt.id AND pk.loai_phieu = 'nhap' 
-            ORDER BY pk.ngay_tao DESC LIMIT 1
-        ), 0) as gia_nhap_gan_nhat
-        FROM bien_the_san_pham bt 
+        SELECT 
+            bt.id, bt.san_pham_id, bt.gia, bt.mau_sac, bt.dung_luong_ssd, bt.hinh_anh,
+            COALESCE(SUM(CASE WHEN kh.trang_thai = 1 THEN ckt.so_luong_ton ELSE 0 END), 0) as so_luong_ton,
+            COALESCE((
+                SELECT don_gia FROM chi_tiet_phieu_kho ctpk 
+                JOIN phieu_kho pk ON ctpk.phieu_kho_id = pk.id 
+                WHERE ctpk.bien_the_id = bt.id AND pk.loai_phieu = 'nhap' 
+                ORDER BY pk.ngay_tao DESC LIMIT 1
+            ), 0) as gia_nhap_gan_nhat
+        FROM bien_the_san_pham bt
+        LEFT JOIN chi_tiet_kho_hang ckt ON bt.id = ckt.bien_the_id
+        LEFT JOIN kho_hang kh ON ckt.kho_hang_id = kh.id
         WHERE bt.san_pham_id=?
+        GROUP BY bt.id, bt.san_pham_id, bt.gia, bt.mau_sac, bt.dung_luong_ssd, bt.hinh_anh
     ");
     $stmt2->execute([$id]);
     $variants = $stmt2->fetchAll(PDO::FETCH_ASSOC);

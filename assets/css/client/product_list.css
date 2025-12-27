@@ -532,7 +532,40 @@
     width: 16px;
     height: 16px;
 }
+/* Nút tim bay trên ảnh */
+.product-thumb {
+    position: relative; /* Để làm mốc tọa độ */
+}
 
+.btn-wishlist {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #555;
+    transition: all 0.2s;
+}
+
+.btn-wishlist:hover {
+    transform: scale(1.1);
+    background: white;
+}
+
+/* Màu đỏ cho tim đã like */
+.text-danger {
+    color: #dc3545 !important;
+}
 /* --- 4. Responsive (Chuyển sidebar xuống dưới ở màn hình nhỏ) --- */
 @media (max-width: 992px) {
     .main-content-layout {

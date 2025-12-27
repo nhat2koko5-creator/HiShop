@@ -67,8 +67,10 @@ foreach ($warehouse_data as $row) {
     $chart_export[] = $row['sl_xuat'];
 }
 
-// Lấy tổng tồn kho hiện tại (tất cả sản phẩm)
-$sql_stock = "SELECT SUM(so_luong_ton) as ton_tong FROM bien_the_san_pham";
+// Lấy tổng tồn kho hiện tại (chỉ từ kho hoạt động)
+$sql_stock = "SELECT COALESCE(SUM(CASE WHEN kh.trang_thai = 1 THEN ckt.so_luong_ton ELSE 0 END), 0) as ton_tong 
+              FROM chi_tiet_kho_hang ckt 
+              JOIN kho_hang kh ON ckt.kho_hang_id = kh.id";
 $total_stock = $pdo->query($sql_stock)->fetchColumn() ?: 0;
 ?>
 

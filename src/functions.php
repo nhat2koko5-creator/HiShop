@@ -167,7 +167,17 @@ function calcDiscountPrice($gia, $loai, $gia_tri) {
     return $gia;
 }
 function getProductVariants(PDO $pdo, $productId) {
-    $sql = "SELECT * FROM bien_the_san_pham WHERE san_pham_id = ?";
+    // [FIX] Lấy biến thể với số lượng từ kho hoạt động
+    $sql = "
+        SELECT 
+            bt.id, bt.san_pham_id, bt.gia, bt.mau_sac, bt.dung_luong_ssd, bt.hinh_anh,
+            COALESCE(SUM(CASE WHEN kh.trang_thai = 1 THEN ckt.so_luong_ton ELSE 0 END), 0) as so_luong_ton
+        FROM bien_the_san_pham bt
+        LEFT JOIN chi_tiet_kho_hang ckt ON bt.id = ckt.bien_the_id
+        LEFT JOIN kho_hang kh ON ckt.kho_hang_id = kh.id
+        WHERE bt.san_pham_id = ?
+        GROUP BY bt.id, bt.san_pham_id, bt.gia, bt.mau_sac, bt.dung_luong_ssd, bt.hinh_anh
+    ";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$productId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -263,6 +273,35 @@ function getUserProfile(PDO $pdo, $user_id) {
         error_log($e->getMessage());
         return null;
     }
+}
+
+/**
+ * Lấy danh sách ID sản phẩm user đã thích (Để tô đỏ trái tim)
+ */
+function getUserWishlistIDs(PDO $pdo, $user_id) {
+    $stmt = $pdo->prepare("SELECT san_pham_id FROM san_pham_yeu_thich WHERE nguoi_dung_id = ?");
+    $stmt->execute([$user_id]);
+    return $stmt->fetchAll(PDO::FETCH_COLUMN); // Trả về mảng [1, 5, 9...]
+}
+
+/**
+ * Lấy danh sách chi tiết sản phẩm yêu thích (Để hiển thị trang Wishlist)
+ */
+function getUserWishlistProducts(PDO $pdo, $user_id) {
+    $sql = "
+        SELECT sp.*, 
+               MIN(bt.gia) as gia_min, -- Lấy giá thấp nhất từ biến thể
+               MAX(bt.gia) as gia_max
+        FROM san_pham_yeu_thich wl
+        JOIN san_pham sp ON wl.san_pham_id = sp.id
+        LEFT JOIN bien_the_san_pham bt ON sp.id = bt.san_pham_id
+        WHERE wl.nguoi_dung_id = ? AND sp.trang_thai = 1
+        GROUP BY sp.id
+        ORDER BY wl.ngay_tao DESC
+    ";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$user_id]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 /**
@@ -732,6 +771,18 @@ function updateUserAddress(PDO $pdo, $user_id, $address_id, $new_address) {
     }
 }
 
+// FILE: src/functions.php (Thêm vào cuối file)
+
+function getUserLikedProductIds($pdo, $user_id) {
+    if (!$user_id) return [];
+    try {
+        $stmt = $pdo->prepare("SELECT san_pham_id FROM san_pham_yeu_thich WHERE nguoi_dung_id = ?");
+        $stmt->execute([$user_id]);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN); // Trả về mảng [1, 5, 9...]
+    } catch (Exception $e) {
+        return [];
+    }
+}
 
 function getProductsWithDiscount($pdo, $category_id = null) {
     // SỬA LỖI: Thay product_id -> san_pham_id, sale_id -> giam_gia_id

@@ -38,8 +38,23 @@ $current_brand_id = !empty($product_brands) ? $product_brands[0]['thuong_hieu_id
 $brand_name = !empty($product_brands) ? $product_brands[0]['ten_thuong_hieu'] : 'Khác';
 $product_brand_ids = array_column($product_brands, 'thuong_hieu_id'); // Mảng chứa tất cả ID thương hiệu liên kết
 
-// --- LẤY BIẾN THỂ SẢN PHẨM CHÍNH (GIỮ NGUYÊN) ---
-$stmt_variants = $pdo->prepare("SELECT * FROM bien_the_san_pham WHERE san_pham_id = ? ORDER BY gia ASC");
+// --- LẤY BIẾN THỂ SẢN PHẨM CHÍNH (FIX: LẤY SỐ LƯỢNG TỪ KHO HOẠT ĐỘNG) ---
+$stmt_variants = $pdo->prepare("
+    SELECT 
+        bt.id,
+        bt.san_pham_id,
+        bt.gia,
+        COALESCE(SUM(CASE WHEN k.trang_thai = 1 THEN ckt.so_luong_ton ELSE 0 END), 0) as so_luong_ton,
+        bt.mau_sac,
+        bt.dung_luong_ssd,
+        bt.hinh_anh
+    FROM bien_the_san_pham bt
+    LEFT JOIN chi_tiet_kho_hang ckt ON bt.id = ckt.bien_the_id
+    LEFT JOIN kho_hang k ON ckt.kho_hang_id = k.id
+    WHERE bt.san_pham_id = ?
+    GROUP BY bt.id, bt.san_pham_id, bt.gia, bt.mau_sac, bt.dung_luong_ssd, bt.hinh_anh
+    ORDER BY bt.gia ASC
+");
 $stmt_variants->execute([$product_id]);
 $variants = $stmt_variants->fetchAll(PDO::FETCH_ASSOC);
 
@@ -88,7 +103,16 @@ if (!empty($variants)) {
 } else {
         $base_price = $product['gia'] ?? 0;
     }
+// --- CHÈN SAU KHI LẤY ĐƯỢC $product ---
+$user_id = $_SESSION['user_id'] ?? 0;
+$is_liked = false;
 
+// Nếu đã đăng nhập, kiểm tra xem ID sản phẩm này có trong danh sách đã like không
+if ($user_id > 0) {
+    // Hàm này bạn đã thêm vào functions.php ở bước trước
+    $liked_ids = getUserLikedProductIds($pdo, $user_id);
+    $is_liked = in_array($product_id, $liked_ids);
+}
     // --- LẤY THÔNG TIN DANH MỤC & THÔNG SỐ (GIỮ NGUYÊN) ---
     $category = 'Không xác định';
     if (!empty($product['danh_muc_id'])) {
@@ -138,14 +162,26 @@ if (!empty($product_brand_ids)) {
     $related_products = $stmt_related->fetchAll(PDO::FETCH_ASSOC);
 }
 
-    // [MỚI] LẤY BIẾN THỂ CHO SẢN PHẨM LIÊN QUAN (Để phục vụ Modal Quick Add) (GIỮ NGUYÊN)
+    // [MỚI] LẤY BIẾN THỂ CHO SẢN PHẨM LIÊN QUAN (Để phục vụ Modal Quick Add) - FIX LẤY SỐ LƯỢNG TỪ KHO HOẠT ĐỘNG
     if (!empty($related_products)) {
         $r_ids = array_column($related_products, 'id');
         $placeholders = implode(',', array_fill(0, count($r_ids), '?'));
         
-        $sql_r_variants = "SELECT id, san_pham_id, gia, so_luong_ton, mau_sac, dung_luong_ssd, hinh_anh 
-                        FROM bien_the_san_pham 
-                        WHERE san_pham_id IN ($placeholders)";
+        $sql_r_variants = "
+            SELECT 
+                bt.id, 
+                bt.san_pham_id, 
+                bt.gia, 
+                COALESCE(SUM(CASE WHEN k.trang_thai = 1 THEN ckt.so_luong_ton ELSE 0 END), 0) as so_luong_ton,
+                bt.mau_sac, 
+                bt.dung_luong_ssd, 
+                bt.hinh_anh 
+            FROM bien_the_san_pham bt
+            LEFT JOIN chi_tiet_kho_hang ckt ON bt.id = ckt.bien_the_id
+            LEFT JOIN kho_hang k ON ckt.kho_hang_id = k.id
+            WHERE bt.san_pham_id IN ($placeholders)
+            GROUP BY bt.id, bt.san_pham_id, bt.gia, bt.mau_sac, bt.dung_luong_ssd, bt.hinh_anh
+        ";
         $stmt_r_variants = $pdo->prepare($sql_r_variants);
         $stmt_r_variants->execute($r_ids);
         $all_r_variants = $stmt_r_variants->fetchAll(PDO::FETCH_ASSOC);
@@ -223,10 +259,14 @@ if (!empty($variants)) {
                                 $variant_key = htmlspecialchars($variant['mau_sac'] . '|' . $variant['dung_luong_ssd']);
                                 $full_price_text = price_format($variant['gia_hien_tai']);
                                 $is_discounted = $variant['gia_hien_tai'] < $variant['gia_goc'];
+                                $is_out_of_stock = $variant['so_luong_ton'] <= 0;
                             ?>
-                            <div class="pd-option-item" data-key="<?= $variant_key ?>">
+                            <div class="pd-option-item <?= $is_out_of_stock ? 'out-of-stock' : '' ?>" data-key="<?= $variant_key ?>" <?= $is_out_of_stock ? 'style="opacity:0.5; cursor:not-allowed;"' : '' ?>>
                                 <span class="pd-opt-name">
                                     <?= htmlspecialchars($variant['mau_sac']) ?> - <?= htmlspecialchars($variant['dung_luong_ssd']) ?>
+                                    <?php if ($is_out_of_stock): ?>
+                                        <span class="badge-out-of-stock" style="color:#dc2626; font-weight:bold; margin-left:8px;">[Hết hàng]</span>
+                                    <?php endif; ?>
                                 </span>
                                 <span class="pd-opt-price">
                                     <?php if ($is_discounted): ?>
@@ -250,11 +290,22 @@ if (!empty($variants)) {
                     <span id="max-stock-hint" style="font-size: 13px; color: #999; margin-left: 10px;"></span>
                 </div>
 
-            <div class="pd-actions">
-                <button class="pd-btn pd-btn-cart" id="addCartBtn" disabled>
+<div class="pd-actions" style="display: flex; gap: 10px;">
+                <button type="button" class="pd-btn btn-wishlist-detail" 
+                        style="width: auto; background: #fff; border: 1px solid #ddd; color: #333; display: flex; align-items: center; justify-content: center; padding: 0 20px;" 
+                        onclick="toggleWishlistDetail(this, <?= $product_id ?>)">
+                    <?php if ($is_liked): ?>
+                        <i class="fa-solid fa-heart text-danger"></i>
+                    <?php else: ?>
+                        <i class="fa-regular fa-heart"></i>
+                    <?php endif; ?>
+                </button>
+
+                <button class="pd-btn pd-btn-cart" id="addCartBtn" disabled style="flex: 1;">
                     <i class="fa-solid fa-cart-plus"></i> Thêm Giỏ Hàng
                 </button>
-                <button class="pd-btn pd-btn-buy" id="buyNowBtn" disabled>
+                
+                <button class="pd-btn pd-btn-buy" id="buyNowBtn" disabled style="flex: 1;">
                     Mua Ngay
                 </button>
             </div>
@@ -395,6 +446,13 @@ if (!empty($variants)) {
             <div class="variant-modal-footer" style="display: flex; justify-content: flex-end; padding-top: 20px;">
                 <button class="btn btn-outline" id="modal-cancel-btn">Hủy</button>
                 <div class="action-buttons-group">
+                                    <button type="button" class="btn btn-outline btn-wishlist-detail" onclick="toggleWishlistDetail(this, <?= $product_id ?>)">
+                        <?php if ($is_liked): ?>
+                            <i class="fa-solid fa-heart text-danger"></i> <span>Đã thích</span>
+                        <?php else: ?>
+                            <i class="fa-regular fa-heart"></i> <span>Yêu thích</span>
+                        <?php endif; ?>
+                    </button>
                     <button class="btn btn-outline" id="modal-add-to-cart-btn" style="display:none;" disabled>🛒 Thêm vào giỏ</button>
                     <button class="btn btn-primary" id="modal-buy-now-btn" style="display:none;" disabled>🔥 Mua ngay</button>
                 </div>
@@ -486,6 +544,12 @@ function checkSelections() {
     }
 
     document.querySelectorAll("#variantOptions .pd-option-item").forEach(opt => {
+        // Ngăn click vào item hết hàng
+        if (opt.classList.contains("out-of-stock")) {
+            opt.style.pointerEvents = "none";
+            return;
+        }
+        
         opt.addEventListener("click", () => {
             document.querySelectorAll("#variantOptions .pd-option-item").forEach(o => o.classList.remove("active"));
             opt.classList.add("active");
@@ -759,5 +823,58 @@ function checkSelections() {
         });
     }
     </script>
+    <script>
+async function toggleWishlistDetail(btn, productId) {
+    const userId = <?= $user_id ?>;
+    
+    // 1. Kiểm tra đăng nhập
+    if (userId === 0) {
+        if(confirm('Bạn cần đăng nhập để lưu sản phẩm yêu thích. Đăng nhập ngay?')) {
+            window.location.href = 'index.php?page=login';
+        }
+        return;
+    }
+
+    // 2. Khóa nút tạm thời
+    btn.disabled = true;
+    const icon = btn.querySelector('i');
+    const textSpan = btn.querySelector('span');
+
+    try {
+        // 3. Gửi Ajax
+        const formData = new FormData();
+        formData.append('product_id', productId);
+        formData.append('action', 'toggle');
+
+        const response = await fetch('wishlist_handler.php', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        // 4. Cập nhật giao diện (Icon + Chữ)
+        if (data.status === 'success') {
+            if (data.state === 'liked') {
+                // Trạng thái: ĐÃ THÍCH
+                icon.className = 'fa-solid fa-heart text-danger';
+                textSpan.textContent = 'Đã thích';
+                btn.classList.add('active'); // Thêm class để CSS nếu cần
+            } else {
+                // Trạng thái: CHƯA THÍCH
+                icon.className = 'fa-regular fa-heart';
+                textSpan.textContent = 'Yêu thích';
+                btn.classList.remove('active');
+            }
+        } else {
+            alert(data.message);
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Có lỗi xảy ra!');
+    } finally {
+        btn.disabled = false;
+    }
+}
+</script>
 
     <?php require_once 'client/layouts/footer.php'; ?>

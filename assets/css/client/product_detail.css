@@ -128,6 +128,14 @@
 .pd-option-item:hover {
   border-color: #0f62fe;
 }
+.pd-option-item.out-of-stock {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f3f4f6;
+}
+.pd-option-item.out-of-stock:hover {
+  border-color: #d1d5db;
+}
 .pd-option-item.active {
   border: 1px solid #0f62fe;
   background-color: #f0f7ff;
@@ -282,7 +290,37 @@
     justify-content: space-around;
     gap:8px;
 }
+/* Nút yêu thích trong trang chi tiết */
+.btn-wishlist-detail {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* Khoảng cách giữa tim và chữ */
+    min-width: 130px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #374151;
+    transition: all 0.2s ease;
+}
 
+.btn-wishlist-detail:hover {
+    border-color: #dc3545;
+    color: #dc3545;
+    background-color: #fff5f5; /* Nền đỏ nhạt khi di chuột */
+}
+
+/* Khi đã thích (Class active hoặc khi icon có text-danger) */
+.btn-wishlist-detail i.text-danger {
+    color: #dc3545;
+    animation: heartBeat 0.3s ease-in-out;
+}
+
+/* Hiệu ứng nảy tim */
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
 /* FOOTER CONTENT */
 .tab-container {
   margin-top: 60px;

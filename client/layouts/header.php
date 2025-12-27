@@ -14,6 +14,10 @@ if (isset($_SESSION['user_id'])) {
             $stmtCnt = $pdo->prepare("SELECT SUM(so_luong) FROM gio_hang WHERE nguoi_dung_id = ?");
             $stmtCnt->execute([$_SESSION['user_id']]);
             $total_cart_items = (int)$stmtCnt->fetchColumn(); // Ép kiểu int để null thành 0
+
+            $stmtWish = $pdo->prepare("SELECT COUNT(*) FROM san_pham_yeu_thich WHERE nguoi_dung_id = ?");
+            $stmtWish->execute([$_SESSION['user_id']]);
+            $total_wishlist_items = (int)$stmtWish->fetchColumn();
             
             // Cập nhật ngược lại session cho các trang khác dùng
             $_SESSION['global_cart_count'] = $total_cart_items;
@@ -38,6 +42,21 @@ if (!isset($page_title)) {
     <title><?php echo htmlspecialchars($page_title); ?></title>
     <link rel="stylesheet" href="/HiShop/assets/css/style-client.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+<style>
+    /* Style cho số lượng (Badge) */
+    .badge-count {
+        position: absolute;
+        top: -5px; right: -8px;
+        background-color: #ef4444; color: white;
+        font-size: 10px; font-weight: bold;
+        height: 18px; min-width: 18px;
+        padding: 0 4px; border-radius: 9px;
+        display: flex; align-items: center; justify-content: center;
+        border: 2px solid #fff;
+    }
+</style>
 </head>
 
 <body>
@@ -76,7 +95,12 @@ if (!isset($page_title)) {
                         <input type="text" name="query" class="nav-search-input" placeholder="Tìm kiếm sản phẩm...">
                         <button type="submit" class="icon-btn nav-search-btn">🔍</button>
                     </form>
-                    
+                    <a href="index.php?page=wishlist" class="icon-btn" title="Sản phẩm yêu thích" style="margin-right: 15px; position: relative; color: #333; font-size: 20px;">
+                        <i class="fa-regular fa-heart"></i>
+                        <?php if (isset($total_wishlist_items) && $total_wishlist_items > 0): ?>
+                            <span class="badge-count"><?= $total_wishlist_items > 99 ? '99+' : $total_wishlist_items ?></span>
+                        <?php endif; ?>
+                    </a>
                    <a href="index.php?page=cart" class="icon-btn cart-icon-wrapper">
                         🛒 <span id="cart-item-count" style="display: <?php echo ($total_cart_items > 0) ? 'flex !important' : 'none !important'; ?>;">
                             <?php echo $total_cart_items; ?>
@@ -101,6 +125,7 @@ if (!isset($page_title)) {
                                     <li><a href="index.php?page=account&section=orders">📦 Đơn hàng của tôi</a></li>
                                     <li><a href="index.php?page=account&section=addresses">📍 Sổ địa chỉ</a></li>
                                     <li style="border-top: 1px solid #eee; margin: 5px 0;"></li>
+                                    <li><a href="index.php?page=wishlist"><i class="fa-solid fa-heart" style="color: #ef4444;"></i> Sản phẩm yêu thích</a></li>
                                     <li><a href="index.php?page=logout" style="color: #dc2626;">🚪 Đăng xuất</a></li>
                                 </ul>
                             </div>

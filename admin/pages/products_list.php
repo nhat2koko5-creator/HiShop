@@ -170,8 +170,8 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_PO
         }
     }
     
-    // [QUAN TRỌNG] Tính lại tổng tồn kho cho sản phẩm cha sau khi update biến thể
-    $pdo->prepare("UPDATE san_pham SET so_luong = (SELECT COALESCE(SUM(so_luong_ton),0) FROM bien_the_san_pham WHERE san_pham_id = ?) WHERE id = ?")->execute([$id, $id]);
+    // [QUAN TRỌNG] Tính lại tổng tồn kho cho sản phẩm cha sau khi update biến thể (chỉ từ kho hoạt động)
+    $pdo->prepare("UPDATE san_pham SET so_luong = (SELECT COALESCE(SUM(CASE WHEN kh.trang_thai = 1 THEN ckt.so_luong_ton ELSE 0 END),0) FROM chi_tiet_kho_hang ckt JOIN kho_hang kh ON ckt.kho_hang_id = kh.id JOIN bien_the_san_pham bt ON ckt.bien_the_id = bt.id WHERE bt.san_pham_id = ?) WHERE id = ?")->execute([$id, $id]);
 
     js_redirect("index.php?page=products_list&updated=1");
 }
@@ -236,7 +236,7 @@ if ($status_filter !== '') {
 // Lọc theo tồn kho (Logic cũ của bạn)
 if ($stock_filter === 'low') {
     $sql_base .= " AND (
-        (SELECT COUNT(*) FROM bien_the_san_pham bt WHERE bt.san_pham_id = sp.id AND bt.so_luong_ton < 5) > 0
+        (SELECT COUNT(*) FROM bien_the_san_pham bt WHERE bt.san_pham_id = sp.id AND COALESCE((SELECT SUM(CASE WHEN kh.trang_thai = 1 THEN ckt.so_luong_ton ELSE 0 END) FROM chi_tiet_kho_hang ckt JOIN kho_hang kh ON ckt.kho_hang_id = kh.id WHERE ckt.bien_the_id = bt.id), 0) < 5) > 0
         OR 
         (SELECT COUNT(*) FROM bien_the_san_pham bt WHERE bt.san_pham_id = sp.id) = 0
     )";
@@ -253,9 +253,13 @@ $totalRecords = $stmtCount->fetchColumn();
 $totalPages = ceil($totalRecords / $limit);
 
 // 5. Lấy dữ liệu sản phẩm
-// [ĐÃ SỬA] Thêm dòng lấy tổng tồn kho (tong_ton)
+// [ĐÃ SỬA] Tính tổng tồn kho chỉ từ kho hoạt động
 $sql = "SELECT sp.*, dm.ten AS ten_danh_muc,
-        (SELECT COALESCE(SUM(so_luong_ton), 0) FROM bien_the_san_pham WHERE san_pham_id = sp.id) AS tong_ton
+        COALESCE((SELECT SUM(CASE WHEN kh.trang_thai = 1 THEN ckt.so_luong_ton ELSE 0 END) 
+                  FROM chi_tiet_kho_hang ckt 
+                  JOIN bien_the_san_pham bt ON ckt.bien_the_id = bt.id
+                  JOIN kho_hang kh ON ckt.kho_hang_id = kh.id
+                  WHERE bt.san_pham_id = sp.id), 0) AS tong_ton
         " . $sql_base . "
         ORDER BY sp.id DESC
         LIMIT :limit OFFSET :offset";

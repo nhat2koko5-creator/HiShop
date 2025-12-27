@@ -34,15 +34,25 @@ if (!empty($search_query)) {
         $stmt->execute([$search_param, $search_param, $search_param]);
         $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // [MỚI] 4. LẤY BIẾN THỂ CHO SẢN PHẨM TÌM THẤY (Để dùng cho nút Mua hàng)
+        // [MỚI] 4. LẤY BIẾN THỂ CHO SẢN PHẨM TÌM THẤY (Để dùng cho nút Mua hàng) - FIX: LẤY TỪ KHO HOẠT ĐỘNG
         if (!empty($products)) {
             $product_ids = array_column($products, 'id');
             $placeholders = implode(',', array_fill(0, count($product_ids), '?'));
 
             $sql_variants = "
-                SELECT id, san_pham_id, gia, so_luong_ton, mau_sac, dung_luong_ssd, hinh_anh
-                FROM bien_the_san_pham
-                WHERE san_pham_id IN ($placeholders)
+                SELECT 
+                    bt.id, 
+                    bt.san_pham_id, 
+                    bt.gia, 
+                    COALESCE(SUM(CASE WHEN k.trang_thai = 1 THEN ckt.so_luong_ton ELSE 0 END), 0) as so_luong_ton,
+                    bt.mau_sac, 
+                    bt.dung_luong_ssd, 
+                    bt.hinh_anh
+                FROM bien_the_san_pham bt
+                LEFT JOIN chi_tiet_kho_hang ckt ON bt.id = ckt.bien_the_id
+                LEFT JOIN kho_hang k ON ckt.kho_hang_id = k.id
+                WHERE bt.san_pham_id IN ($placeholders)
+                GROUP BY bt.id, bt.san_pham_id, bt.gia, bt.mau_sac, bt.dung_luong_ssd, bt.hinh_anh
             ";
             $stmt_variants = $pdo->prepare($sql_variants);
             $stmt_variants->execute($product_ids);

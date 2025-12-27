@@ -8,7 +8,20 @@ $msg = '';
 $msg_type = '';
 $redirect_url = ''; // Biến để lưu link chuyển hướng nếu thành công
 
-// 1. Lấy danh sách kho
+// Kiểm tra nếu truy cập trực tiếp với id kho bị khóa
+$kho_id_from_url = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+if ($kho_id_from_url > 0) {
+    $stmtCheckLockedKho = $pdo->prepare("SELECT id, trang_thai, ten_kho FROM kho_hang WHERE id = ?");
+    $stmtCheckLockedKho->execute([$kho_id_from_url]);
+    $locked_kho = $stmtCheckLockedKho->fetch(PDO::FETCH_ASSOC);
+    
+    if ($locked_kho && $locked_kho['trang_thai'] == 0) {
+        echo "<script>alert('Kho hàng \"" . htmlspecialchars($locked_kho['ten_kho']) . "\" đang bị tạm khóa. Không thể xuất hàng từ kho bị khóa!'); window.location.href='index.php?page=warehouse_list';</script>";
+        exit;
+    }
+}
+
+// 1. Lấy danh sách kho (chỉ kho hoạt động)
 $stmt = $pdo->query("SELECT * FROM kho_hang WHERE trang_thai = 1 ORDER BY id DESC");
 $ds_kho = $stmt->fetchAll();
 
@@ -40,12 +53,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $errors = [];
 
-    // Check kho
-    $stmtCheckKho = $pdo->prepare("SELECT ten_kho FROM kho_hang WHERE id = ? AND trang_thai = 1");
+    // Check kho - kiểm tra cả trạng thái kho
+    $stmtCheckKho = $pdo->prepare("SELECT ten_kho, trang_thai FROM kho_hang WHERE id = ?");
     $stmtCheckKho->execute([$kho_id]);
-    $ten_kho = $stmtCheckKho->fetchColumn();
+    $kho_data = $stmtCheckKho->fetch(PDO::FETCH_ASSOC);
     
-    if (!$ten_kho) $errors[] = "Kho xuất không hợp lệ.";
+    if (!$kho_data) {
+        $errors[] = "Kho xuất không tồn tại.";
+    } else {
+        $ten_kho = $kho_data['ten_kho'];
+        if ($kho_data['trang_thai'] == 0) {
+            $errors[] = "Kho hàng này đang bị tạm khóa. Không thể xuất hàng từ kho bị khóa!";
+        }
+    }
+    
     if (empty($product_ids)) $errors[] = "Chưa chọn sản phẩm nào.";
 
     // Check chi tiết
