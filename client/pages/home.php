@@ -19,7 +19,7 @@ $discountProducts = getDiscountProducts($pdo);
                     
                     <div class="simple-content content-center">
                         <h2 class="simple-title">GIẢI PHÁP CÔNG NGHỆ<br>HIỆN ĐẠI & ĐÁNG TIN CẬY</h2>
-                        <p class="simple-desc">Hỗ trợ doanh nghiệp và cá nhân tiếp cận sản phẩm tốt nhất</p>
+                        <p class="simple-desc" style="margin-left:0px;">Hỗ trợ doanh nghiệp và cá nhân tiếp cận sản phẩm tốt nhất</p>
                         <span class="btn-basic primary">MUA NGAY</span>
                     </div>
                 </a>
@@ -31,10 +31,10 @@ $discountProducts = getDiscountProducts($pdo);
                     
                     <div class="simple-content content-right">
                         <h2 class="simple-title">GIẢI PHÁP CÔNG NGHỆ<br>SANG TRỌNG & ĐẲNG CẤP</h2>
-                        <p class="simple-desc">Đỉnh cao hội tụ - Tuyệt tác doanh nhân</p>
+                        <p class="simple-desc" style="margin-right:20%">Đỉnh cao hội tụ - Tuyệt tác doanh nhân</p>
                         <div class="btn-group">
                             <span class="btn-basic primary" style="margin-right:10px;">Xem sản phẩm</span>
-                            <span class="btn-basic outline">Liên hệ tư vấn</span>
+                            <span class="btn-basic outline" style="margin-right:65px;">Liên hệ tư vấn</span>
                         </div>
                     </div>
                 </a>
@@ -45,9 +45,9 @@ $discountProducts = getDiscountProducts($pdo);
                     <img src="assets/img/banner/banner3.png" alt="Đồ họa">
                     
                     <div class="simple-content content-left">
-                        <h2 class="simple-title text-yellow">ĐỒ HỌA<br>CHUYÊN NGHIỆP</h2>
-                        <p class="simple-desc">Màu sắc chuẩn xác - Sáng tạo không giới hạn</p>
-                        <span class="btn-basic primary">Xem Chi Tiết</span>
+                        <h2 class="simple-title text-yellow" style="text-align:center">MÀN HÌNH CHUẨN ĐỒ HỌA: SẮC MÀU SỐNG ĐỘNG, THIẾT KẾ ĐỈNH CAO</h2>
+                        <p class="simple-desc" style="margin-left:100px;">Màu sắc chuẩn xác - Sáng tạo không giới hạn</p>
+                        <span class="btn-basic primary" style="margin-left:33%;">Xem Chi Tiết</span>
                     </div>
                 </a>
             </div>
@@ -58,8 +58,8 @@ $discountProducts = getDiscountProducts($pdo);
                     
                     <div class="simple-content content-right">
                         <h2 class="simple-title">BACK TO SCHOOL<br>ƯU ĐÃI SINH VIÊN</h2>
-                        <p class="simple-desc">Giảm thêm 5% - Tặng Balo xịn</p>
-                        <span class="btn-basic primary">Săn Deal Ngay</span>
+                        <p class="simple-desc" style="margin-right:60px;">Giảm thêm 5% - Tặng Balo xịn</p>
+                        <span class="btn-basic primary" style="margin-right:14%;">Săn Deal Ngay</span>
                     </div>
                 </a>
             </div>
@@ -70,8 +70,8 @@ $discountProducts = getDiscountProducts($pdo);
                     
                     <div class="simple-content content-right">
                         <h2 class="simple-title">KHẲNG ĐỊNH ĐẲNG CẤP<br>DOANH NHÂN</h2>
-                        <p class="simple-desc">Thiết kế tinh xảo hiệu năng vượt trội</p>
-                        <span class="btn-basic primary">Xem Ngay</span>
+                        <p class="simple-desc" style="margin-right:100px;">Thiết kế tinh xảo hiệu năng vượt trội</p>
+                        <span class="btn-basic primary" style="margin-right:28%;">Xem Ngay</span>
                     </div>
                 </a>
             </div>

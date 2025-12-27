@@ -397,11 +397,6 @@ function format_price($p) {
             <?php endif; ?>
 
 <div class="product-image">
-<div class="product-thumb">
-    <a href="index.php?page=product_detail&id=<?= $p['id'] ?>">
-        <img src="assets/img/products/<?= $p['hinh_anh'] ?>" ... >
-    </a>
-    
     <?php 
         // Kiểm tra: Nếu ID sản phẩm này nằm trong danh sách đã like -> Tim đỏ, ngược lại -> Tim rỗng
         $is_liked = in_array($p['id'], $liked_products);
@@ -410,6 +405,10 @@ function format_price($p) {
     <button class="btn-wishlist" onclick="toggleWishlist(this, <?= $p['id'] ?>)">
         <i class="<?= $heart_icon ?>"></i>
     </button>
+    <div class="product-thumb">
+        <a href="index.php?page=product_detail&id=<?= $p['id'] ?>">
+            <img src="assets/img/products/<?= $p['hinh_anh'] ?>" ... >
+        </a>
     </div>
 </div>
 
