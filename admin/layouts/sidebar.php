@@ -111,6 +111,9 @@ $is_system_group = in_array($page, $system_pages);
                         <a href="index.php?page=warehouse_history" class="<?php echo isActive('warehouse_history', $page); ?>">
                             Lịch sử X/N
                         </a>
+                                                <a href="index.php?page=warehouse_history" class="<?php echo isActive('warehouse_history', $page); ?>">
+                            Lịch sử X/N
+                        </a>
                     </li>
                 </ul>
             </li>
