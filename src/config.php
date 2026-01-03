@@ -30,7 +30,7 @@ define('MAIL_PASSWORD', 'ueib vhxq ohat aevj'); // <<< THAY BẰNG MẬT KHẨU 
 define('MAIL_FROM_NAME', 'HIShop');
 
 define('VNP_TMN_CODE', 'NJJ0R8FS'); 
-define('VNP_HASH_SECRET', 'BYKJBHPPZKQMKBIBGGXIYKWYFAYSJXCW'); // Key ĐÚNG từ ảnh
+define('VNP_HASH_SECRET', 'BYKJBHPPZKQMKBIBGGXIYKWYFAYSJXCW');
 define('VNP_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html');
 define('VNP_RETURN_URL', 'http://localhost/HISHOP/index.php?page=vnpay_return');
 ?>

@@ -629,7 +629,7 @@ function processCheckout(PDO $pdo, $user_id, $cart_items, $customer_info, $payme
             foreach ($warehouses as $wh) {
                 if ($qty_needed <= 0) break; 
                 $deduct = min($qty_needed, $wh['so_luong_ton']);
-                $pdo->prepare("UPDATE chi_tiet_kho_hang SET so_luong_ton = so_luong_ton - ? WHERE id = ?")->execute([$deduct, $wh['id']]);
+                $stmt_stock = $pdo->prepare("UPDATE san_pham SET so_luong = so_luong - ? WHERE id = ?");
                 $qty_needed -= $deduct;
             }
         }
