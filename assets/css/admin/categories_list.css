@@ -1,0 +1,345 @@
+/* admin/assets/css/admin/categories_list.css */
+
+/* === 1. CONTAINER & HEADER === */
+.category-container {
+  padding: 30px;
+  font-family: "Inter", sans-serif;
+}
+
+.page-header-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-header-title i {
+  color: #4f46e5;
+}
+
+/* === 2. STATS GRID (STYLE PRODUCT PAGE) === */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s;
+}
+.stat-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Icon Box đặc (Solid) */
+.stat-icon-box {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #fff;
+  flex-shrink: 0;
+}
+.bg-blue {
+  background: #4f46e5;
+} /* Giống trang Product */
+.bg-green {
+  background: #10b981;
+}
+.bg-gray {
+  background: #64748b;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+}
+.stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* === 3. MAIN CARD (TOOLBAR + TABLE) === */
+.main-card-wrapper {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+/* Toolbar */
+.toolbar-wrapper {
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.search-box {
+  position: relative;
+  width: 320px;
+}
+.search-box input {
+  width: 100%;
+  padding: 10px 16px 10px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  outline: none;
+  font-size: 14px;
+  background: #fff;
+}
+.search-box input:focus {
+  border-color: #4f46e5;
+}
+.search-box button {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+/* Button Add New (Blue) */
+.btn-add {
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-add:hover {
+  background: #4338ca;
+}
+
+/* === 4. TABLE STYLING === */
+.table-list {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table-list th {
+  background: #fff;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  padding: 16px 24px;
+  text-align: left;
+  border-bottom: 2px solid #f1f5f9;
+}
+.table-list td {
+  padding: 16px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 14px;
+  color: #334155;
+}
+.table-list tr:hover {
+  background: #f8fafc;
+}
+.table-list tr:last-child td {
+  border-bottom: none;
+}
+
+/* Badges & Text */
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
+.text-muted {
+  color: #94a3b8;
+}
+.fw-bold {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.count-badge {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.status-badge {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.status-badge.active {
+  background: #dcfce7;
+  color: #166534;
+}
+.status-badge.inactive {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* Actions */
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+/* Edit (Blue) */
+.btn-edit {
+  background: #eff6ff;
+  color: #4f46e5;
+  border-color: #e0e7ff;
+}
+.btn-edit:hover {
+  background: #4f46e5;
+  color: #fff;
+}
+
+/* Hide (Yellow - Product Style) */
+.btn-hide {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fcd34d;
+}
+.btn-hide:hover {
+  background: #f59e0b;
+  color: #fff;
+}
+
+/* Show (Green) */
+.btn-show {
+  background: #ecfdf5;
+  color: #10b981;
+  border-color: #bef264;
+}
+.btn-show:hover {
+  background: #10b981;
+  color: #fff;
+}
+
+/* Pagination */
+.pagination-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-top: 1px solid #f1f5f9;
+}
+.page-info {
+  font-size: 13px;
+  color: #64748b;
+}
+.page-list {
+  display: flex;
+  gap: 5px;
+}
+.page-number {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #64748b;
+  text-decoration: none;
+  font-size: 13px;
+}
+.page-number.active {
+  background: #4f46e5;
+  color: #fff;
+  border-color: #4f46e5;
+}
+
+/* Modal CSS (Included to prevent break) */
+.admin-modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+}
+.admin-modal.show {
+  display: flex;
+}
+.admin-modal-content {
+  background: #fff;
+  width: 400px;
+  padding: 24px;
+  border-radius: 12px;
+}
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+.btn-modal {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn-cancel {
+  background: #f1f5f9;
+  color: #64748b;
+}
+.btn-submit {
+  background: #4f46e5;
+  color: #fff;
+}

@@ -1,0 +1,288 @@
+/* admin/assets/css/admin/warehouse_import.css */
+
+.import-container {
+  padding: 30px;
+  font-family: "Inter", sans-serif;
+}
+
+.page-header-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 25px;
+}
+.btn-back {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  transition: 0.2s;
+  text-decoration: none;
+}
+.btn-back:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+/* Alert */
+.alert {
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.alert-danger {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* GRID LAYOUT */
+.import-grid {
+  display: grid;
+  grid-template-columns: 350px 1fr; /* Cột trái cố định, cột phải co giãn */
+  gap: 24px;
+  align-items: start;
+}
+
+/* CARDS */
+.card-info,
+.card-products {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  font-weight: 700;
+  color: #334155;
+  font-size: 14px;
+  text-transform: uppercase;
+  background: #fafafa;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-header i {
+  color: #4f46e5;
+  font-size: 16px;
+}
+.card-body {
+  padding: 20px;
+}
+
+/* Flex Header */
+.flex-between {
+  justify-content: space-between;
+}
+
+/* FORM ELEMENTS */
+.form-group {
+  margin-bottom: 20px;
+}
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+.text-red {
+  color: #ef4444;
+}
+
+.form-select,
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  outline: none;
+  font-size: 14px;
+  background: #fff;
+  transition: 0.2s;
+  box-sizing: border-box;
+}
+.form-select:focus,
+.form-input:focus,
+.form-textarea:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+.form-textarea {
+  height: 100px;
+  resize: vertical;
+}
+.readonly {
+  background: #f8fafc;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+/* PRODUCT TABLE */
+.table-wrapper {
+  padding: 0;
+}
+.table-import {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table-import th {
+  background: #fff;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 15px 20px;
+  text-align: left;
+  border-bottom: 2px solid #f1f5f9;
+}
+.table-import td {
+  padding: 15px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+}
+.price-hint {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* Buttons */
+.btn-add-row {
+  background: #eff6ff;
+  color: #4f46e5;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: 0.2s;
+}
+.btn-add-row:hover {
+  background: #e0e7ff;
+}
+
+.btn-remove {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fef2f2;
+  color: #ef4444;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-remove:hover {
+  background: #fee2e2;
+  transform: scale(1.1);
+}
+
+/* FOOTER ACTIONS */
+.footer-summary {
+  padding: 20px;
+  border-top: 1px solid #f1f5f9;
+  text-align: right;
+  background: #fcfcfc;
+}
+.total-label {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 5px;
+}
+.total-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #4f46e5;
+}
+
+.footer-actions {
+  padding: 20px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.btn-cancel {
+  padding: 12px 24px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+}
+.btn-cancel:hover {
+  background: #f8fafc;
+  color: #334155;
+}
+
+.btn-submit {
+  padding: 12px 24px;
+  border-radius: 8px;
+  background: #4f46e5;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+  transition: 0.2s;
+}
+.btn-submit:hover {
+  background: #4338ca;
+  transform: translateY(-1px);
+}
+
+    /* Style lại Select2 cho khớp với giao diện */
+    .select2-container .select2-selection--single {
+        height: 38px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #334155;
+        font-size: 14px;
+        padding-left: 12px;
+    }
+    .select2-search__field {
+        border-radius: 4px !important;
+    }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .import-grid {
+    grid-template-columns: 1fr;
+  }
+  .card-info {
+    margin-bottom: 20px;
+  }
+}

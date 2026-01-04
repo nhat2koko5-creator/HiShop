@@ -1,0 +1,216 @@
+/* admin/assets/css/product_form.css */
+.admin-page {
+  padding: 30px;
+  background-color: #f3f4f6;
+  min-height: 100vh;
+  font-family: "Inter", sans-serif;
+}
+
+/* HEADER & ACTIONS */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+.btn-group {
+  display: flex;
+  gap: 10px;
+}
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  font-size: 14px;
+}
+.btn-secondary {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  color: #374151;
+}
+.btn-save {
+  background: #4e73df;
+  color: white;
+  box-shadow: 0 2px 5px rgba(78, 115, 223, 0.3);
+}
+.btn-save:hover {
+  background: #2e59d9;
+}
+
+/* LAYOUT 2 CỘT */
+.form-grid {
+  display: grid;
+  grid-template-columns: 2.5fr 1fr; /* Trái to, Phải nhỏ */
+  gap: 25px;
+}
+
+/* CARDS */
+.card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  margin-bottom: 25px;
+  border: 1px solid #e5e7eb;
+}
+.card-header {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* FORM ELEMENTS */
+.form-group {
+  margin-bottom: 15px;
+}
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 5px;
+}
+.form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: border 0.2s;
+}
+.form-control:focus {
+  border-color: #4e73df;
+}
+textarea.form-control {
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* VARIANT STYLING (NẰM NGANG) */
+.variant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.variant-item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+  position: relative;
+}
+.variant-item .btn-remove {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 24px;
+  height: 24px;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.v-row {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+.v-col {
+  flex: 1;
+  min-width: 100px;
+}
+.v-col-img {
+  width: 80px;
+  flex: none;
+  text-align: center;
+}
+
+/* IMAGE PREVIEW */
+.img-upload-box {
+  width: 100%;
+  height: 80px;
+  border: 2px dashed #d1d5db;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  background: #fff;
+}
+.img-upload-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.img-upload-box input {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.icon-upload {
+  font-size: 24px;
+  color: #9ca3af;
+}
+
+/* MAIN IMAGE UPLOAD (Cột phải) */
+.main-img-preview {
+  width: 100%;
+  height: 200px;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+  position: relative;
+}
+.main-img-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* NÚT THÊM BIẾN THỂ */
+.btn-add-variant {
+  width: 100%;
+  padding: 10px;
+  border: 2px dashed #4e73df;
+  background: #f0f4ff;
+  color: #4e73df;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+}
+.btn-add-variant:hover {
+  background: #e0eaff;
+}

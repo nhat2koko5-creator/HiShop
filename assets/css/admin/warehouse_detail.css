@@ -1,0 +1,234 @@
+/* admin/assets/css/admin/warehouse_detail.css */
+
+/* BUTTONS TOP */
+.btn-back {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  transition: 0.2s;
+}
+.btn-back:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.btn-action-top {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: 0.2s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+.btn-out {
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #ffedd5;
+}
+.btn-out:hover {
+  background: #ea580c;
+  color: #fff;
+  border-color: #ea580c;
+}
+
+.btn-in {
+  background: #4f46e5;
+  color: #fff;
+  border: 1px solid #4f46e5;
+}
+.btn-in:hover {
+  background: #4338ca;
+  border-color: #4338ca;
+}
+
+/* LAYOUT GRID: INFO + STATS */
+.detail-grid {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+  align-items: stretch;
+}
+
+/* Info Card (Bên trái) */
+.info-card {
+  flex: 1;
+  min-width: 300px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.info-header {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  align-items: center;
+}
+.info-icon {
+  width: 50px;
+  height: 50px;
+  background: #e0e7ff;
+  color: #4f46e5;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+.info-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+.info-status {
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.info-status.active {
+  background: #dcfce7;
+  color: #166534;
+}
+.info-status.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.info-body {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 15px;
+}
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #475569;
+  margin-bottom: 6px;
+}
+.info-row i {
+  color: #94a3b8;
+  width: 16px;
+  text-align: center;
+}
+
+/* Stats Mini Grid (Bên phải - 3 ô) */
+.stats-mini-grid {
+  flex: 2;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+/* Style thẻ stat kế thừa từ warehouse_list.css nhưng chỉnh lại chút */
+.stats-mini-grid .stat-card {
+  padding: 20px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 15px;
+  height: 100%;
+  justify-content: center;
+}
+.stats-mini-grid .stat-icon-box {
+  margin-bottom: 5px;
+}
+
+/* TABLE CUSTOM DETAILS */
+.product-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.thumb-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+.prod-name {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+.prod-price {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.variant-badge {
+  background: #f1f5f9;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #475569;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+}
+
+.text-sm {
+  font-size: 12px;
+}
+
+/* Stock Badges */
+.qty-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 40px;
+  text-align: center;
+}
+.qty-badge.high {
+  background: #dcfce7;
+  color: #166534;
+}
+.qty-badge.low {
+  background: #fef9c3;
+  color: #854d0e;
+}
+.qty-badge.out {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Status Text */
+.status-text {
+  font-size: 13px;
+  font-weight: 600;
+}
+.status-text.ready {
+  color: #16a34a;
+}
+.status-text.out-stock {
+  color: #ef4444;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .detail-grid {
+    flex-direction: column;
+  }
+  .info-card {
+    min-width: auto;
+  }
+}

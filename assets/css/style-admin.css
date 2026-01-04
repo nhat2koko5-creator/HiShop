@@ -1,0 +1,486 @@
+/* =========================================
+   1. VARIABLES & RESET
+   ========================================= */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+  /* --- MÀU SẮC --- */
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+
+  --bg-sidebar: #0f172a; /* Dark Navy */
+  --bg-body: #f3f4f6;
+  --bg-header: #ffffff;
+
+  --text-main: #1f2937;
+  --text-sidebar: #94a3b8;
+
+  --sidebar-width: 260px;
+  --header-height: 70px;
+  --radius: 8px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  outline: none;
+}
+body {
+  font-family: "Inter", sans-serif;
+  background-color: var(--bg-body);
+  color: var(--text-main);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+a {
+  text-decoration: none;
+  transition: 0.3s;
+  color: inherit;
+}
+ul {
+  list-style: none;
+}
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* =========================================
+   2. LAYOUT SKELETON
+   ========================================= */
+.admin-layout {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.admin-sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--bg-sidebar);
+  color: var(--text-sidebar);
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.admin-main-content {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: relative;
+  width: calc(100% - var(--sidebar-width));
+}
+
+/* =========================================
+   3. SIDEBAR (ĐÃ ẨN THANH CUỘN)
+   ========================================= */
+.sidebar-brand {
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  flex-shrink: 0; /* Không bị co lại */
+}
+.page-header-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-header-title i {
+  color: #4f46e5;
+}
+.brand-logo {
+  height: 32px;
+  width: auto;
+  margin-right: 10px;
+}
+.brand-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* MENU AREA - ẨN THANH CUỘN */
+.sidebar-menu {
+  flex: 1;
+  padding: 15px 12px;
+  overflow-y: auto; /* Vẫn cho cuộn */
+  /* Ẩn thanh cuộn trên Firefox */
+  scrollbar-width: none;
+  -ms-overflow-style: none; /* IE and Edge */
+}
+/* Ẩn thanh cuộn trên Chrome/Safari/Opera */
+.sidebar-menu::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-group-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 700;
+  margin: 20px 0 8px 12px;
+}
+
+/* Nav Item */
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  margin-bottom: 4px;
+  border-radius: var(--radius);
+  color: var(--text-sidebar);
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.nav-icon {
+  width: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 12px;
+  font-size: 16px;
+}
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+.nav-link.active,
+.nav-link.active-parent {
+  background: var(--primary-gradient);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Submenu */
+.has-submenu {
+  position: relative;
+}
+.arrow-icon {
+  margin-left: auto;
+  font-size: 10px;
+  transition: 0.3s;
+}
+.has-submenu.open .arrow-icon {
+  transform: rotate(90deg);
+  color: #fff;
+}
+
+.submenu {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius);
+  margin-top: 2px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+}
+.has-submenu.open .submenu {
+  max-height: 500px;
+}
+.submenu a {
+  display: flex;
+  padding: 10px 10px 10px 52px;
+  font-size: 13px;
+  color: #94a3b8;
+  transition: 0.2s;
+}
+.submenu a:hover {
+  color: #fff;
+}
+.submenu a.active {
+  color: #60a5fa;
+  font-weight: 600;
+}
+.submenu a.active::before {
+  content: "•";
+  color: #60a5fa;
+  margin-left: -12px;
+  margin-right: 8px;
+}
+
+/* Sidebar Footer */
+.admin-user {
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  margin-top: auto;
+  flex-shrink: 0;
+}
+.btn-view-web {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid #334155;
+  color: #0f172a;
+  background-color: #ffff;
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+.btn-view-web:hover {
+  background: #fff;
+  color: #0f172a;
+  border-color: #fff;
+}
+
+/* =========================================
+   4. HEADER (TOPBAR) - FIX SEARCH & AVATAR
+   ========================================= */
+.admin-topbar {
+  height: var(--header-height);
+  background: var(--bg-header);
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 30px;
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  flex-shrink: 0;
+}
+
+.topbar-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.breadcrumb {
+  font-size: 12px;
+  color: #64748b;
+  display: flex;
+  gap: 5px;
+  margin-bottom: 2px;
+}
+.page-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* --- FIX LỆCH ICON SEARCH --- */
+.header-search {
+  position: relative;
+  /* Đảm bảo icon lấy box này làm chuẩn để căn giữa */
+}
+
+.header-search .search-input {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 99px;
+  width: 280px;
+  padding: 10px 15px 10px 45px; /* Padding trái lớn để chừa chỗ icon */
+  font-size: 13px;
+  height: 40px; /* Cố định chiều cao input */
+  transition: 0.3s;
+}
+
+.header-search .search-input:focus {
+  border-color: var(--primary);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.header-search .search-icon {
+  position: absolute;
+  left: 15px; /* Cách lề trái */
+  top: 50%; /* Đẩy xuống 50% */
+  transform: translateY(
+    -50%
+  ); /* Kéo ngược lại 50% chính nó -> Căn giữa tuyệt đối */
+  color: #94a3b8;
+  font-size: 14px;
+  pointer-events: none; /* Click xuyên qua icon vào input */
+  display: flex; /* Đảm bảo icon nằm giữa box của nó */
+  align-items: center;
+  height: 100%; /* Full height để dễ căn */
+}
+
+/* Action Items */
+.action-item {
+  font-size: 18px;
+  color: #64748b;
+  cursor: pointer;
+  position: relative;
+}
+.badge-dot {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 1px solid #fff;
+}
+
+/* User Profile Fix */
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 20px;
+  border-left: 1px solid #e2e8f0;
+  cursor: pointer;
+  position: relative;
+  height: 100%;
+}
+.user-info {
+  text-align: right;
+}
+.user-name {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1e293b;
+}
+.user-role {
+  display: block;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.user-avatar {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+}
+
+/* User Dropdown */
+.user-dropdown {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  width: 200px;
+  background: #fff;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+  padding: 6px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: 0.2s;
+}
+.header-user:hover .user-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  font-size: 13px;
+  color: #334155;
+  border-radius: 6px;
+}
+.dropdown-item:hover {
+  background: #f1f5f9;
+  color: var(--primary);
+}
+
+/* =========================================
+   5. MODAL (FIX LỖI HIỆN TEXT)
+   ========================================= */
+.logout-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: 0.3s;
+}
+.logout-modal-overlay.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.logout-modal-box {
+  background: #fff;
+  width: 350px;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+.logout-icon {
+  font-size: 40px;
+  color: #ef4444;
+  margin-bottom: 15px;
+}
+.logout-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+.btn-cancel {
+  padding: 8px 20px;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #475569;
+}
+.btn-confirm {
+  padding: 8px 20px;
+  background: #ef4444;
+  color: #fff;
+  border-radius: 6px;
+}
+
+/* =========================================
+   6. FOOTER (LUÔN Ở ĐÁY)
+   ========================================= */
+.admin-page-content {
+  padding: 30px;
+  flex: 1;
+}
+footer {
+  padding: 20px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 12px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  margin-top: auto;
+}

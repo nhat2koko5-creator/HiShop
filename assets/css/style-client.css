@@ -1,0 +1,1304 @@
+/* Rebuilt style-client.css — conservative rebuild keeping rules that appear in project files */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+  /* Colors */
+  --color-primary: #4f46e5; /* Màu xanh Indigo (cho nút, link) */
+  --color-secondary: #3b82f6; /* Màu xanh dương (cho hero) */
+  --color-bg-page: #ffffff; /* Nền trang (trắng) */
+  --color-bg-subtle: #f4f7fc; /* Nền xám xanh nhạt (cho Hero) */
+  --color-fg-base: #1f2937; /* Màu chữ chính (đen xám) */
+  --color-fg-muted: #6b7280; /* Màu chữ phụ (xám) */
+  --color-border: #e5e7eb; /* Màu đường viền (xám rất nhạt) */
+  --color-white: #ffffff;
+
+  --color-green: #10b981; /* Màu xanh lá (nút "Xem chi tiết" sản phẩm) */
+  --color-red: #ef4444; /* Màu đỏ (giá sale, tag sale) */
+  --color-pink: #ec4899; /* Màu hồng (tag danh mục) */
+  --color-cyan: #06b6d4; /* Màu cyan (tag danh mục) */
+  --color-purple: #8b5cf6; /* Màu tím (tag danh mục) */
+
+  /* Kiểu chữ (Typography) */
+  --font-h1: 700 40px/48px "Inter", sans-serif;
+  --font-h2: 700 32px/40px "Inter", sans-serif;
+  --font-h3: 600 24px/32px "Inter", sans-serif;
+  --font-h4: 600 20px/28px "Inter", sans-serif;
+  --font-body-m: 400 16px/24px "Inter", sans-serif;
+  --font-body-s: 400 14px/20px "Inter", sans-serif;
+  --font-small: 500 12px/16px "Inter", sans-serif;
+
+  /* Radius, Spacing, Shadow */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px; /* Bo tròn (pill) */
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-48: 48px;
+  --spacing-64: 64px;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Bóng đổ rất nhẹ */
+}
+
+/* === 2. THIẾT KẾ CƠ BẢN & RESET === */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font: var(--font-body-m);
+  background-color: var(--color-bg-page);
+  color: var(--color-fg-base);
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-24);
+}
+
+a {
+  text-decoration: none;
+  color: var(--color-primary); /* Link mặc định màu xanh */
+}
+
+ul {
+  list-style: none;
+}
+
+/* =======================================================
+   HEADER GLASSMORPHISM (HIỆU ỨNG KÍNH MỜ)
+   ======================================================= */
+
+/* 1. Nền Header: Trắng mờ + Hiệu ứng Blur */
+.site-header-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+    
+    /* Hiệu ứng kính mờ sang trọng */
+    background-color: rgba(255, 255, 255, 0.85); /* Trắng 85% */
+    backdrop-filter: blur(12px); /* Làm mờ nội dung phía sau */
+    -webkit-backdrop-filter: blur(12px); /* Hỗ trợ Safari */
+    
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05); /* Viền siêu mờ */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03); /* Bóng đổ rất nhẹ */
+    transition: all 0.3s ease;
+}
+
+/* 2. Menu Navigation (Liên kết giữa) */
+.nav-center-links {
+    display: flex;
+    gap: 30px; /* Tăng khoảng cách cho thoáng */
+    align-items: center;
+}
+
+.nav-center-links a {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    text-transform: uppercase; /* Chữ in hoa cho chuyên nghiệp */
+    letter-spacing: 0.5px;
+    position: relative;
+    padding: 5px 0;
+}
+
+/* Hiệu ứng gạch chân khi hover */
+.nav-center-links a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: var(--color-primary);
+    transition: width 0.3s ease;
+}
+
+.nav-center-links a:hover::after {
+    width: 100%;
+}
+
+.nav-center-links a:hover {
+    color: var(--color-primary);
+}
+
+/* 3. Thanh tìm kiếm: Bo tròn & Tinh tế hơn */
+.nav-search-form {
+    border: 1px solid transparent; /* Bỏ viền đen cũ */
+    background-color: #f3f4f6; /* Nền xám nhạt */
+    border-radius: 10px; /* Bo tròn hoàn toàn */
+    padding: 2px 15px; /* Padding gọn gàng */
+    width: 280px;
+    transition: all 0.3s ease;
+}
+
+/* Khi bấm vào tìm kiếm thì sáng lên */
+.nav-search-form:focus-within {
+    background-color: #fff;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2); /* Viền light blue */
+    width: 230px; /* Dài ra một chút */
+}
+
+.nav-search-input {
+    background: transparent;
+    border: none;
+    font-size: 14px;
+    width: 100%;
+    color: #333;
+}
+.nav-search-input:focus {
+    width: 100%; /* Fix lỗi input bị co lại */
+}
+
+.nav-search-btn {
+    background: transparent;
+    border: none;
+    border-left: none; /* Bỏ vạch ngăn cách cũ */
+    color: #666;
+    font-size: 16px;
+}
+.nav-search-btn:hover {
+    background: transparent;
+    color: var(--color-primary);
+    transform: scale(1.1);
+}
+
+/* 4. Auth Buttons (Đăng ký / Đăng nhập) - STYLE MỚI */
+/* Biến nút to đùng thành text link sang trọng */
+.auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.auth-buttons .btn {
+    padding: 8px 20px;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+/* Nút Đăng ký: Nền trong suốt, chữ đậm */
+.auth-buttons .btn-register {
+    background: transparent;
+    color: #333;
+    border: 1px solid transparent;
+}
+.auth-buttons .btn-register:hover {
+    color: var(--color-primary);
+}
+
+/* Nút Đăng nhập: Nền màu chủ đạo, đổ bóng nhẹ */
+.auth-buttons .btn-login {
+    background: var(--color-primary); /* Màu Indigo */
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+}
+.auth-buttons .btn-login:hover {
+    background: #4338ca; /* Đậm hơn chút khi hover */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4);
+}
+
+/* === 3. CÁC THÀNH PHẦN (COMPONENTS) (ĐÃ VIẾT LẠI) === */
+.btn {
+  display: inline-block;
+  padding: var(--spacing-12) var(--spacing-24);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.btn-outline {
+  background-color: var(--color-white);
+  color: var(--color-primary);
+  border-color: var(--color-border);
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: var(--spacing-12);
+  font: var(--font-body-m);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-white);
+}
+
+/* Tiêu đề chung cho các mục */
+.section-title {
+  font: var(--font-h2);
+  text-align: center;
+  margin-bottom: var(--spacing-48);
+}
+
+.section-subtitle {
+  display: block;
+  text-align: center;
+  font: var(--font-small);
+  font-weight: 600;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  margin-bottom: var(--spacing-12);
+}
+
+/* === 4. HEADER & FOOTER (ĐÃ VIẾT LẠI) === */
+/* =======================================================
+   CHỈNH SỬA HEADER COMPACT (GỌN GÀNG)
+   ======================================================= */
+
+/* 1. Giảm padding trên dưới của thanh điều hướng */
+.header-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* Cũ là 16px -> Giảm xuống 8px để header mỏng lại */
+  padding: 8px 0; 
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  height: 65px; /* Chiều cao cố định chuẩn */
+}
+
+/* 2. Kiểm soát kích thước Logo bằng CSS (thay vì style cứng trong HTML) */
+.logo img {
+  height: 35px; /* Chiều cao vừa vặn */
+  width: auto;  /* Tự động chỉnh chiều ngang theo tỷ lệ */
+  display: block;
+  object-fit: contain;
+}
+
+/* 3. Chỉnh lại thanh tìm kiếm cho gọn hơn */
+.nav-search-form {
+    display: flex;
+    align-items: center;
+    border: 1px solid black;
+    border-radius: 10px;
+    overflow: hidden;
+    width: 230px;
+}
+
+.nav-search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0 15px;
+  font-size: 13px;
+  width: 100%;
+  height: 100%; /* Full chiều cao form */
+}
+
+.nav-search-btn {
+  border: none;
+  background: transparent;
+  padding: 0 15px;
+  cursor: pointer;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+}
+
+.nav-center-links {
+    display: flex;
+    align-items: center;
+    
+    /* 1. Giảm khoảng cách giữa các menu để tiết kiệm chỗ */
+    gap: 20px; /* Trước đây là 30px, giảm xuống cho gọn */
+    
+    /* 2. Tuyệt đối không cho menu nhảy xuống dòng */
+    flex-wrap: nowrap; 
+}
+
+.nav-center-links a {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #333;
+    
+    /* 3. QUAN TRỌNG: Giữ chữ luôn nằm trên 1 dòng ngang */
+    white-space: nowrap; 
+    
+    /* Đảm bảo link không bị co rúm lại khi thiếu chỗ */
+    flex-shrink: 0; 
+}
+
+/* Tinh chỉnh lại phần bên phải (Tìm kiếm + Nút) để không chiếm quá nhiều chỗ */
+.nav-right-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Giảm gap nếu cần */
+    flex-shrink: 0; /* Không cho phần này bị co lại */
+}
+
+/* Nếu màn hình nhỏ (Laptop nhỏ 13 inch), giảm độ rộng thanh tìm kiếm đi chút */
+@media (max-width: 1200px) {
+    .nav-search-form {
+        width: 200px; /* Thu nhỏ thanh tìm kiếm lại */
+    }
+    .nav-center-links {
+        gap: 15px; /* Thu hẹp khoảng cách menu hơn nữa */
+    }
+}
+/* === (MỚI) CSS CHO HEADER CỐ ĐỊNH === */
+.site-header-sticky {
+  /* (ĐÃ SỬA) Đổi tên class */
+  position: -webkit-sticky; /* Hỗ trợ Safari cũ */
+  position: sticky;
+  top: 0;
+  z-index: 990; /* Đảm bảo nó luôn ở trên cùng */
+
+  /* Thêm nền trắng và bóng mờ để nó che nội dung bên dưới khi cuộn */
+  background-color: var(--color-bg-page);
+  box-shadow: var(--shadow);
+
+  /* (MỚI) Đảm bảo nó chiếm 100% chiều rộng */
+  width: 100%;
+}
+/* === (MỚI) CSS TÁCH TỪ HEADER.PHP === */
+
+/* --- Dropdown --- */
+.nav-item {
+  position: relative;
+}
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  min-width: 180px;
+  z-index: 999;
+}
+.dropdown-menu a {
+  display: block;
+  padding: 10px 14px;
+  color: #1f2937;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.dropdown-menu a:hover {
+  background: #f3f4f6;
+}
+.nav-item.open .dropdown-menu {
+  display: block;
+  animation: dropdownFade 0.2s ease;
+}
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === CSS cho số lượng trên giỏ hàng === */
+.cart-icon-wrapper {
+  position: relative;
+  display: inline-block;
+}
+#cart-item-count {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  background-color: #ef4444; /* Màu đỏ */
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex; /* (ĐÃ SỬA) Đổi từ logic PHP */
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding-bottom: 1px;
+  /* (ĐÃ SỬA) Mặc định ẩn đi, JS (updateCartIconCount) sẽ xử lý việc hiển thị */
+  display: none;
+}
+
+.prompt-buttons .hide {
+  display: none;
+}
+.logo {
+  font: var(--font-h4);
+  font-weight: 700;
+  color: var(--color-fg-base);
+  flex-shrink: 0;
+}
+
+/* (ĐÃ SỬA: Thêm 'align-items: center') */
+.nav-center-links {
+  display: flex;
+  gap: var(--spacing-32);
+  align-items: center; /* Căn giữa các mục */
+}
+
+.nav-center-links a {
+  font: var(--font-body-s);
+  font-weight: 600;
+  color: var(--color-fg-muted);
+  transition: color 0.2s ease;
+}
+
+.nav-center-links a:hover {
+  color: var(--color-fg-base);
+}
+
+.nav-right-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-24);
+}
+
+.nav-right-actions .icon-btn {
+  font-size: 20px;
+  color: var(--color-fg-muted);
+  background-color: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.nav-right-actions .icon-btn:hover {
+  color: var(--color-fg-base);
+}
+
+/* =======================================================
+   5. FOOTER DARK THEME (GIAO DIỆN TỐI CHUYÊN NGHIỆP)
+   ======================================================= */
+.footer {
+  margin-top: var(--spacing-64);
+  padding-top: 60px;
+  background-color: #111827; /* Màu xanh đen đậm */
+  color: #d1d5db; /* Màu chữ xám sáng */
+  border-top: 4px solid var(--color-primary); /* Điểm nhấn viền trên */
+}
+
+.footer-main {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid #374151; /* Đường kẻ mờ */
+}
+
+/* Cột đầu tiên (Logo + Info) */
+.footer-col .logo {
+  color: #fff !important;
+  font-size: 24px;
+  margin-bottom: 15px;
+  display: block;
+}
+.footer-col p {
+  line-height: 1.6;
+  opacity: 0.8;
+}
+
+/* Tiêu đề cột */
+.footer-col h5 {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  letter-spacing: 0.5px;
+}
+
+/* Link trong footer */
+.footer-col ul li a {
+  color: #9ca3af;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+.footer-col ul li a:hover {
+  color: var(--color-primary);
+  padding-left: 5px; /* Hiệu ứng đẩy nhẹ sang phải */
+}
+
+/* Social Icons */
+.social-icons a {
+  background-color: #374151;
+  color: #fff;
+}
+.social-icons a:hover {
+  background-color: var(--color-primary);
+  transform: translateY(-3px);
+}
+
+/* Footer Bottom */
+.footer-bottom {
+  padding: 20px 0;
+  text-align: center;
+  font-size: 13px;
+  color: #6b7280;
+  border-top: none;
+}
+
+/* === 6. STYLES CÁC TRANG CON (ĐÃ CẬP NHẬT THEO SKIN MỚI) === */
+/* (Style cho PDP, Giỏ hàng, Thanh toán, v.v. được giữ lại và điều chỉnh màu sắc) */
+.page-title {
+  font: var(--font-h2);
+  margin: var(--spacing-48) 0 var(--spacing-32);
+}
+
+.product-grid.plp-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.pagination a.active {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border-color: var(--color-primary);
+}
+
+.thumbnail.active {
+  border-color: var(--color-primary);
+  border-width: 2px;
+}
+
+.pdp-specs-short {
+  font: var(--font-body-m);
+  color: var(--color-fg-muted);
+  margin-bottom: var(--spacing-24);
+  line-height: 1.6;
+}
+
+.option-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-s8);
+}
+
+.option-group label {
+  font: var(--font-body-m);
+  font-weight: 600;
+}
+
+.chip.active {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.pdp-actions .btn-primary {
+  flex-grow: 1;
+}
+
+.tab-header.active {
+  color: var(--color-fg-base);
+}
+
+.tab-header.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 100%;
+  height: 2px;
+  background: var(--color-primary);
+}
+
+.tab-content {
+  padding-top: var(--spacing-s32);
+}
+
+/* === (DROPDOWN MENU) === */
+.nav-item.has-dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  min-width: 220px;
+  z-index: 10;
+  padding: var(--spacing-8);
+  margin-top: 8px; /* Thêm khoảng cách nhỏ với menu cha */
+}
+
+.dropdown-menu::before {
+  content: ""; /* Bắt buộc phải có */
+  position: absolute; /* Định vị tuyệt đối (so với .dropdown-menu) */
+  bottom: 100%; /* Đặt nó nằm NGAY TRÊN (dưới đáy của nó là 100% menu) */
+  left: 0;
+  right: 0;
+
+  /* Đây là "cây cầu" của bạn: 
+        Nó có chiều cao 8px, bằng đúng với cái 'margin-top' 8px của menu.
+      */
+  height: 8px;
+
+  background-color: transparent; /* Hoàn toàn vô hình */
+}
+
+.nav-item.has-dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-menu a {
+  display: block;
+  padding: var(--spacing-12);
+  color: var(--color-fg-muted);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+}
+
+.dropdown-menu a:hover {
+  background-color: var(--color-bg-subtle);
+  color: var(--color-primary);
+}
+.nav-search-input {
+  padding: var(--spacing-8) var(--spacing-12);
+  font: var(--font-body-s);
+  border: none; /* Bỏ viền của input */
+  outline: none; /* Bỏ viền xanh khi focus */
+  width: 160px; /* Độ rộng ban đầu */
+  transition: width 0.3s ease;
+  width:88%;
+}
+
+/* Khi focus (bấm) vào ô tìm kiếm */
+.nav-search-input:focus {
+  width: 170px; /* Mở rộng ô input ra */
+}
+
+.nav-search-btn {
+  border: none;
+  background-color: var(--color-bg-subtle); /* Nền xám nhạt */
+  padding: var(--spacing-8) var(--spacing-12);
+  height: 100%;
+  border-left: 1px solid var(--color-border);
+  cursor: pointer;
+}
+
+.nav-search-btn:hover {
+  background-color: #e5e7eb; /* Màu xám đậm hơn khi hover */
+}
+
+.image-container img {
+  max-width: 100%;
+  display: block;
+}
+
+
+
+.discount-badge {
+  position: absolute;
+  background: #e63946;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  opacity: 1 !important;
+  display: block !important;
+}
+
+/* === (MỚI) CSS BỔ SUNG CHO FOOTER ICONS === */
+
+/* 1. Icon Mạng Xã Hội (Cột 1) */
+.social-icons {
+  display: flex;
+  gap: var(--spacing-16);
+  margin-top: var(--spacing-24);
+}
+
+.social-icons a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: var(--color-bg-subtle);
+  border-radius: 50%;
+  color: var(--color-fg-muted);
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.social-icons a:hover {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+/* 2. Icon Liên Hệ (Cột 4) */
+.footer-col.contact-info ul li {
+  display: flex;
+  align-items: flex-start; /* Căn trên nếu text dài */
+  gap: var(--spacing-12);
+  margin-bottom: var(--spacing-16);
+}
+
+.footer-col.contact-info ul li i {
+  font-size: 16px;
+  color: var(--color-primary); /* Cho icon màu nhấn */
+  margin-top: 4px; /* Căn chỉnh icon cho đẹp */
+}
+
+.footer-col.contact-info ul li span,
+.footer-col.contact-info ul li a {
+  /* Ghi đè style cũ để link và text giống nhau */
+  font: var(--font-body-s);
+  color: var(--color-fg-muted);
+  flex: 1;
+}
+
+.footer-col.contact-info ul li a:hover {
+  color: var(--color-primary);
+}
+
+.option:hover {
+  border-color: #007bff;
+}
+
+.option.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 20px;
+}
+
+.btn[disabled] {
+  background-color: #ccc !important;
+  color: #777 !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+.short-desc {
+  margin: 10px 0;
+  color: #444;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* === (MỚI) FIX LAYOUT TRANG LIÊN HỆ=== */
+
+/* 1. Bỏ layout xám cũ đi */
+.contact-layout {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+
+/* 2. Định nghĩa layout 2 cột (ĐÃ SỬA) */
+.contact-layout-new {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: var(--spacing-32);
+
+  /* (SỬA) Thêm 32px (gần 30px) khoảng cách từ tiêu đề */
+  margin-top: var(--spacing-32);
+
+  /* (SỬA) Đổi 'flex-start' thành 'stretch' để 2 cột cao bằng nhau */
+  align-items: stretch;
+}
+
+/* 3. Định nghĩa thẻ "Card" trắng chung */
+.contact-card {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: none; /* Bo góc 12px */
+  padding: var(--spacing-32);
+  box-shadow: var(--shadow);
+}
+
+/* 4. Định nghĩa cột phải (chứa 2 card) */
+.contact-right-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-32);
+}
+
+/* 5. Style cho Form (ĐÃ SỬA ĐỂ GIÃN CHIỀU CAO) */
+.contact-form-card {
+  /* (MỚI) Biến thẻ form thành flex container */
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Bắt buộc thẻ phải giãn 100% chiều cao cột */
+}
+
+.contact-form-card form {
+  /* (MỚI) Cho thẻ form tự giãn ra */
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.contact-form-card .form-group {
+  margin-bottom: var(--spacing-16);
+}
+
+.contact-form-card .form-group label {
+  display: block;
+  font: var(--font-body-s);
+  font-weight: 600;
+  margin-bottom: var(--spacing-8);
+  width: 100%;
+}
+
+.contact-form-card .btn {
+  width: 100%;
+  /* (SỬA) Đẩy nút bấm xuống dưới cùng */
+  margin-top: auto;
+}
+
+.contact-form-card .form-textarea {
+  resize: none;
+  height: 200px;
+}
+
+/* 6. Style cho Thẻ Info */
+.contact-info-card .info-block {
+  margin-bottom: var(--spacing-24);
+}
+
+.contact-info-card .info-block:last-child {
+  margin-bottom: 0;
+}
+
+/* 7. Style cho Thẻ Map */
+.contact-map-card {
+  padding: var(--spacing-12);
+}
+
+.contact-map-card iframe {
+  display: block;
+}
+
+/* 8. Responsive cho điện thoại */
+@media (max-width: 900px) {
+  .contact-layout-new {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ABOUT US*/
+.about-intro-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: var(--spacing-48);
+  align-items: start; /* SỬA LẠI THÀNH 'start': Căn lên đầu */
+  margin: var(--spacing-64) 0;
+}
+
+.about-intro-image img {
+  width: 500px;
+  height: 500px;
+  border-radius: var(--radius-lg); /* Bo góc ảnh */
+  box-shadow: var(--shadow); /* Thêm bóng đổ */
+}
+
+/* Căn lại h2 trong .static-content */
+.about-intro-text .static-content h2 {
+  margin-top: 0;
+}
+
+/* CSS cho điện thoại */
+@media (max-width: 900px) {
+  .about-intro-grid {
+    grid-template-columns: 1fr; /* Xếp dọc */
+    gap: var(--spacing-32);
+  }
+  /* Đảo thứ tự trên di động (ảnh lên trước) */
+  .about-intro-text {
+    order: 2;
+  }
+  .about-intro-image {
+    order: 1;
+  }
+}
+/* =======================================================
+   CSS Tùy chỉnh cho Trang Mã Khuyến Mãi (Sắp xếp lại)
+   ======================================================= */
+
+/* --- 1. LAYOUT & STRUCTURE --- */
+.coupon-section {
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.coupon-title {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 2em;
+  color: #333;
+}
+
+.coupon-grid {
+  /* Đảm bảo responsive */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 25px;
+}
+
+/* --- 2. COMPONENTS (Thẻ Coupon) --- */
+.coupon-card {
+  border: 2px solid #ddd;
+  border-left: 8px solid #ff6347; /* Màu nhấn chính: Cam tươi */
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease;
+  background-color: #fff;
+}
+
+/* Header */
+.coupon-header {
+  background-color: #ff6347;
+  color: white;
+  padding: 15px 20px;
+}
+
+.coupon-code {
+  font-size: 1.6em;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
+/* Body */
+.coupon-body {
+  padding: 20px;
+}
+
+.coupon-value {
+  font-size: 1.3em;
+  color: #ff6347;
+  font-weight: bold;
+  margin-bottom: 10px;
+  border-bottom: 1px dashed #eee;
+  padding-bottom: 10px;
+}
+
+.coupon-detail {
+  margin-bottom: 8px;
+  color: #555;
+  font-size: 0.95em;
+}
+
+/* Copy Area */
+.copy-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+}
+
+.copy-btn {
+  background-color: #4caf50; /* Xanh lá */
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+/* Footer */
+.coupon-footer {
+  background-color: #f7f7f7;
+  padding: 10px 20px;
+  font-size: 0.85em;
+  color: #777;
+  border-top: 1px solid #eee;
+}
+
+/* --- 3. STATES & MODIFIERS (Hover/Active/Disabled) --- */
+.coupon-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.copy-btn:hover {
+  background-color: #45a049;
+}
+
+/* === USER DROPDOWN MENU (STYLE FPT SHOP) === */
+
+/* Định vị menu xổ xuống: Căn phải, nằm dưới icon */
+.dropdown-menu.user-menu {
+  left: auto !important; /* Bỏ căn trái mặc định */
+  right: 0; /* Căn sang phải */
+  top: 100%; /* Nằm ngay dưới */
+  width: 240px; /* Độ rộng menu */
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 10px; /* Khoảng cách nhẹ */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: none;
+}
+
+/* Phần header nhỏ trong menu (Xin chào...) */
+.user-menu-info {
+  background-color: #f8f9fa;
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+  color: #333;
+}
+
+/* Danh sách link */
+.user-menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.user-menu-list li a {
+  display: block;
+  padding: 10px 15px;
+  font-size: 14px;
+  color: #333;
+  text-decoration: none;
+  transition: background 0.2s;
+  border-bottom: 1px dashed #f0f0f0;
+}
+
+.user-menu-list li:last-child a {
+  border-bottom: none;
+}
+
+.user-menu-list li a:hover {
+  background-color: #f0f9ff; /* Màu nền khi hover */
+  color: var(--color-primary); /* Màu chữ xanh */
+  padding-left: 20px; /* Hiệu ứng đẩy chữ sang phải */
+}
+/* =======================================================
+   FIX LỖI HOVER MENU (CẦU NỐI CHUẨN)
+   ======================================================= */
+
+/* 1. Tắt cầu nối cũ (để tránh xung đột) */
+.user-dropdown-wrapper::after {
+  display: none !important;
+}
+
+/* =======================================================
+   FIX LỖI MENU KHÔNG DI CHUYỂN CHUỘT ĐƯỢC (FINAL)
+   ======================================================= */
+
+/* 1. Cấu hình Menu User */
+.dropdown-menu.user-menu {
+  display: none;
+  position: absolute;
+  left: auto !important;
+  right: 0;
+  top: 100%;
+  width: 240px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0;
+
+  /* KHOẢNG CÁCH TỪ ICON XUỐNG MENU */
+  margin-top: 15px !important;
+
+  z-index: 1000;
+  border: 1px solid #eee;
+
+  /* [CỰC KỲ QUAN TRỌNG] 
+       Phải là visible để cầu nối (::before) có thể "thò" lên trên được */
+  overflow: visible !important;
+}
+
+/* 2. Tạo CẦU NỐI (BRIDGE) nằm PHÍA TRÊN menu */
+.dropdown-menu.user-menu::before {
+  content: "";
+  display: block;
+  position: absolute;
+
+  /* VỊ TRÍ: Nằm ngay trên đỉnh của menu */
+  bottom: 100%;
+  left: 0;
+  width: 100%;
+
+  /* CHIỀU CAO: Phải lớn hơn hoặc bằng margin-top (15px) */
+  height: 20px;
+
+  /* MÀU SẮC: Trong suốt */
+  background-color: transparent;
+
+  z-index: 1001;
+}
+
+/* 3. Hiệu ứng Hover & Active */
+.user-dropdown-wrapper:hover .dropdown-menu.user-menu,
+.user-dropdown-wrapper.open .dropdown-menu.user-menu {
+  display: block;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Animation nhẹ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.result-box {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 40px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+.result-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+  display: block;
+}
+.success {
+  color: #10b981;
+}
+.error {
+  color: #ef4444;
+}
+.result-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #333;
+}
+.result-details {
+  margin: 30px 0;
+  text-align: left;
+  background: #f9fafb;
+  padding: 20px;
+  border-radius: 8px;
+}
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  border-bottom: 1px dashed #eee;
+  padding-bottom: 8px;
+}
+.detail-row:last-child {
+  border: none;
+  margin: 0;
+}
+.detail-label {
+  color: #666;
+}
+.detail-value {
+  font-weight: 600;
+  color: #333;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+.btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: 0.2s;
+}
+.btn-outline {
+  border: 1px solid #ddd;
+  color: #333;
+}
+.btn-outline:hover {
+  background: #f3f4f6;
+}
+.btn-primary {
+  background: #0f62fe;
+  color: white;
+  border: 1px solid #0f62fe;
+}
+.btn-primary:hover {
+  background: #0043ce;
+}
+/* ============================================================
+   GLOBAL PAGE HEADER (TIÊU ĐỀ TRANG CHUẨN)
+   (Dùng cho Contact, About Us, Policy...)
+   ============================================================ */
+
+.static-page-header {
+    padding-top: 20px;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #e5e7eb; /* Đường kẻ xám phía dưới */
+}
+
+/* Breadcrumb (Đường dẫn) */
+.static-page-header .breadcrumb {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.static-page-header .breadcrumb a {
+    color: #6b7280;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.static-page-header .breadcrumb a:hover {
+    color: var(--color-primary);
+}
+
+.static-page-header .breadcrumb span {
+    margin: 0 8px;
+    color: #9ca3af; /* Màu dấu gạch/mũi tên */
+}
+
+.static-page-header .breadcrumb .current {
+    color: #111827; /* Màu đen cho trang hiện tại */
+    font-weight: 500;
+}
+
+/* Tiêu đề H1 */
+.static-page-header h1 {
+    font-size: 28px; /* Kích thước chữ lớn */
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+    line-height: 1.2;
+}
